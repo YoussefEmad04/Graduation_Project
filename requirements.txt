@@ -1,0 +1,53 @@
+# ==============================
+# API & Backend
+# ==============================
+fastapi
+uvicorn
+pydantic
+python-dotenv
+python-multipart
+requests
+
+# ==============================
+# LLM + Tokens
+# ==============================
+openai
+tiktoken
+
+# ==============================
+# LangChain Ecosystem
+# ==============================
+langchain
+langchain-community
+langchain-openai
+langgraph
+langsmith
+
+# ==============================
+# RAG (Vector DB + Embeddings)
+# ==============================
+chromadb
+sentence-transformers
+
+# ==============================
+# PDF Processing
+# ==============================
+pypdf
+pdfplumber
+
+# ==============================
+# Knowledge Graph
+# ==============================
+neo4j
+
+# ==============================
+# Database (Chat History)
+# ==============================
+supabase
+
+# ==============================
+# Utilities
+# ==============================
+pyyaml
+openpyxl
+streamlit
