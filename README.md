@@ -1,4 +1,4 @@
-# Smart Academic Advisor 🎓🤖
+# SSSmart Academic Advisor 🎓🤖
 
 An AI-powered academic advisor for the Faculty of Artificial Intelligence (ERU), built with **FastAPI**, **LangGraph**, and **Neo4j**.
 
