@@ -6,6 +6,8 @@ Simple, clean, and chat-focused.
 import requests
 import streamlit as st
 
+import os
+
 # ── Configuration ───────────────────────────────────────────────────
 
 st.set_page_config(
@@ -15,7 +17,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-API_URL = "http://localhost:8000"
+# Get API URL from environment (for Docker) or default to localhost
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # ── Session State ───────────────────────────────────────────────────
 

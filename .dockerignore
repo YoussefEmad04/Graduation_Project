@@ -1,0 +1,10 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.env
+chroma_db/
+high_diagrams/
+neo4j_data/
+neo4j_logs/
