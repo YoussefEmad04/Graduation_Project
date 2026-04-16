@@ -1,9 +1,11 @@
 """
 Populate KG — Load courses, categories, prerequisites into Neo4j.
-Run once: python -m advisor_ai.populate_kg
+Run: python -m advisor_ai.populate_kg
 Safe to re-run (uses MERGE).
+Use --reset to clear existing graph data first.
 """
 
+import argparse
 import os
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
@@ -12,9 +14,26 @@ load_dotenv()
 
 # ── Neo4j Connection ────────────────────────────────────────────────
 
-URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-USER = os.getenv("NEO4J_USER", "neo4j")
-PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+def _env(name: str, default: str = "") -> str:
+    """Read an environment variable and trim deployment-input whitespace."""
+    return (os.getenv(name, default) or "").strip()
+
+
+def get_neo4j_config():
+    """Resolve Neo4j connection settings from environment variables."""
+    return {
+        "uri": _env("NEO4J_URI", "bolt://localhost:7687"),
+        "user": _env("NEO4J_USER") or _env("NEO4J_USERNAME", "neo4j"),
+        "password": _env("NEO4J_PASSWORD", "smart_advisor_local_neo4j_2026"),
+        "database": _env("NEO4J_DATABASE"),
+    }
+
+
+def open_session(driver, database: str):
+    """Open a Neo4j session, targeting NEO4J_DATABASE when configured."""
+    if database:
+        return driver.session(database=database)
+    return driver.session()
 
 
 # ── Programs ────────────────────────────────────────────────────────
@@ -444,15 +463,35 @@ def print_stats(session):
 # ═══════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print(f"[KG] Connecting to Neo4j at {URI}...")
-    driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
+    parser = argparse.ArgumentParser(description="Populate the Smart Advisor Neo4j knowledge graph.")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Clear the Neo4j database before repopulating it.",
+    )
+    args = parser.parse_args()
+
+    config = get_neo4j_config()
+    database = config.get("database", "")
+    database_label = database or "default"
+    print(
+        f"[KG] Connecting to Neo4j at {config['uri']} "
+        f"as {config['user']} (database: {database_label})..."
+    )
+    driver = GraphDatabase.driver(
+        config["uri"],
+        auth=(config["user"], config["password"]),
+    )
 
     try:
         driver.verify_connectivity()
         print("[KG] Connected!")
 
-        with driver.session() as session:
-            clear_database(session)
+        with open_session(driver, database) as session:
+            if args.reset:
+                clear_database(session)
+            else:
+                print("[KG] Reset not requested; upserting graph with MERGE")
             create_programs(session)
             create_categories(session)
             create_courses(session)

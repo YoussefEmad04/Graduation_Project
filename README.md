@@ -1,6 +1,6 @@
 # Smart Academic Advisor 🎓🤖
 
-An AI-powered academic advisor for the Faculty of Artificial Intelligence (ERU), built with **FastAPI**, **LangGraph**, and **Neo4j**.
+An AI-powered academic advisor for the Faculty of Artificial Intelligence (ERU), built with **FastAPI**, **LangGraph**, and **Neo4j Aura**.
 
 This system helps students with course prerequisites, university regulations, elective choices, and academic guidance, using a sophisticated backend-driven architecture.
 
@@ -8,11 +8,12 @@ This system helps students with course prerequisites, university regulations, el
 
 ### 1. 🧠 Intelligent RAG (Policy & Regulations)
 - **Static Regulation Retrieval**: Fast answers about university bylaws, grading systems, and credit hours.
-- **Vector Search**: Uses `ChromaDB` with `sentence-transformers` for semantic search.
-- **Language Aware**: Maintains the language of the query (Arabic/English).
+- **Vector Search**: Uses OpenAI vector stores and file search for semantic retrieval.
+- **Vercel Friendly**: Uses a hosted vector store instead of local ChromaDB files.
+- **Language Aware**: Maintains the language of the query (Arabic/English/Arabizi).
 
 ### 2. 🕸️ Knowledge Graph (AI & Cyber Programs)
-- **Neo4j Integration**: Models the complex dependencies of the AI and Cybersecurity curriculums.
+- **Neo4j Aura Integration**: Models the complex dependencies of the AI and Cybersecurity curriculums.
 - **Recursive Logic**: Traces deep prerequisite chains (e.g., "What do I need for Machine Learning?").
 - **Fuzzy Matching**: Uses `difflib` to understand "Intro to AI" or "CS101" accurately.
 
@@ -35,12 +36,14 @@ This system helps students with course prerequisites, university regulations, el
 
 ## 🛠️ Tech Stack & Requirements
 
-The project relies on a robust set of modern Python libraries (`requirements.txt`):
+The deployable API uses a Vercel-friendly dependency set (`requirements.txt`):
 
 - **Core Backend**: `fastapi`, `uvicorn`, `pydantic`.
 - **Orchestration**: `langgraph`, `langchain`, `langchain-openai`.
-- **Data & AI**: `openai`, `chromadb`, `neo4j`, `sentence-transformers`.
-- **Utilities**: `supabase` (DB), `pdfplumber` (PDFs), `openpyxl` (Excel), `python-dotenv`.
+- **Data & AI**: `openai`, OpenAI vector stores, `neo4j`.
+- **Utilities**: `supabase` (DB), `python-dotenv`, `pyyaml`.
+
+Local-only extras for Streamlit and PDF/Excel elective uploads live in `requirements-full.txt`.
 
 ---
 
@@ -56,7 +59,7 @@ A clean, flat backend architecture optimized for maintainability:
 
 ### Services (`advisor_ai/`)
 - **`kg_service.py`**: Manages **Neo4j** interactions. Handles fuzzy course matching, intent classification, and prerequisite queries.
-- **`rag_service.py`**: Manages **ChromaDB**. Ingests PDF regulations and retrieves relevant context for policy questions.
+- **`rag_service.py`**: Queries an OpenAI vector store that contains the extracted regulations text.
 - **`mental_service.py`**: Provides empathetic academic support and program recommendations using specialized LLM prompts.
 - **`elective_service.py`**: Handles term-specific elective data. Supports ingestion from multiple file formats.
 - **`supabase_client.py`**: simple wrapper to connect to the Supabase database.
@@ -84,16 +87,42 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+For local admin PDF/Excel uploads and Streamlit testing:
+```bash
+pip install -r requirements-full.txt
+```
+
 ### 3. Configuration
 Create a `.env` file with your credentials:
 ```env
 OPENAI_API_KEY=sk-...
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=your_password
+OPENAI_VECTOR_STORE_ID=vs_...
+NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
+NEO4J_USERNAME=your-aura-username
+NEO4J_PASSWORD=your-aura-password
+NEO4J_DATABASE=your-aura-database
+AURA_INSTANCEID=your-instance-id
+AURA_INSTANCENAME=smartadvisor
 SUPABASE_URL=https://...
 SUPABASE_KEY=...
 ```
+
+You can copy `.env.example` as the starting point.
+
+### 4. Create the OpenAI Vector Store
+Run this once after configuring `OPENAI_API_KEY`:
+```bash
+python scripts/setup_openai_vector_store.py
+```
+
+Copy the printed `OPENAI_VECTOR_STORE_ID=vs_...` into `.env` and into your Vercel environment variables.
+
+### 5. Populate Neo4j Aura
+```bash
+python -m advisor_ai.populate_kg --reset
+```
+
+The backend connects to the configured Neo4j Aura URI and database.
 
 ---
 
@@ -132,3 +161,7 @@ streamlit run advisor_ai/streamlit_app.py
 ### Admin Controls
 - **POST** `/admin/upload-electives`: Backend endpoint for uploading schedule files.
 - **POST** `/admin/set-term`: Backend endpoint for changing the academic term.
+- **GET** `/admin/kg/status`: Check Neo4j connection and KG counts.
+- **GET** `/admin/rag/status`: Check OpenAI vector-store RAG status.
+- **GET** `/admin/history/status`: Check Supabase history status.
+- **GET** `/health`: Combined service health check.

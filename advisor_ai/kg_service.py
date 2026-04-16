@@ -50,6 +50,39 @@ ARABIC_ORDINALS = {
 
 PRONOUNS_TO_RESOLVE = {"ها", "هيه", "دي", "it", "this", "unknown", "none"}
 
+COURSE_ALIASES = {
+    "math 1": "mathematics 1",
+    "math1": "mathematics 1",
+    "math one": "mathematics 1",
+    "math 2": "mathematics 2",
+    "math2": "mathematics 2",
+    "math two": "mathematics 2",
+    "math 3": "mathematics 3",
+    "math3": "mathematics 3",
+    "math three": "mathematics 3",
+    "رياضه 1": "mathematics 1",
+    "رياضة 1": "mathematics 1",
+    "رياضه 2": "mathematics 2",
+    "رياضة 2": "mathematics 2",
+    "رياضه 3": "mathematics 3",
+    "رياضة 3": "mathematics 3",
+}
+
+
+def _env(name: str, default: str = "") -> str:
+    """Read an environment variable and trim deployment-input whitespace."""
+    return (os.getenv(name, default) or "").strip()
+
+
+def get_neo4j_config() -> Dict[str, str]:
+    """Resolve Neo4j connection settings from environment variables."""
+    return {
+        "uri": _env("NEO4J_URI", "bolt://localhost:7687"),
+        "user": _env("NEO4J_USER") or _env("NEO4J_USERNAME", "neo4j"),
+        "password": _env("NEO4J_PASSWORD", "smart_advisor_local_neo4j_2026"),
+        "database": _env("NEO4J_DATABASE"),
+    }
+
 
 # ── Models ──────────────────────────────────────────────────────────
 
@@ -69,12 +102,18 @@ class KGService:
     def __init__(self):
         self.driver = None
         self.connected = False
+        self.last_error: Optional[str] = None
+        self.config = get_neo4j_config()
+        self.llm = None
         
         # Initialize LLM for intent extraction
-        self.llm = ChatOpenAI(
-            model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
-            temperature=0,  # Strict output
-        )
+        if os.getenv("OPENAI_API_KEY"):
+            self.llm = ChatOpenAI(
+                model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
+                temperature=0,  # Strict output
+            )
+        else:
+            logger.warning("OPENAI_API_KEY is not configured; KG intent extraction will use fallback matching")
         self.parser = JsonOutputParser(pydantic_object=KGIntent)
         
         self._connect()
@@ -82,30 +121,47 @@ class KGService:
     def _connect(self):
         """Attempt to connect to Neo4j. Gracefully handle failure."""
         try:
-            uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-            user = os.getenv("NEO4J_USER", "neo4j")
-            password = os.getenv("NEO4J_PASSWORD", "password")
+            self.config = get_neo4j_config()
+            uri = self.config["uri"]
+            user = self.config["user"]
+            password = self.config["password"]
 
             self.driver = GraphDatabase.driver(uri, auth=(user, password))
             self.driver.verify_connectivity()
             self.connected = True
+            self.last_error = None
             logger.info("Connected to Neo4j successfully")
         except Exception as e:
+            self.last_error = str(e)
             logger.error(f"Neo4j not available: {e}")
             logger.warning("KG queries will return fallback responses")
             self.connected = False
+
+    def _ensure_connected(self) -> bool:
+        """Reconnect once before treating the knowledge graph as unavailable."""
+        if self.connected and self.driver:
+            return True
+        self._connect()
+        return self.connected and self.driver is not None
 
     def close(self):
         """Close the Neo4j driver connection."""
         if self.driver:
             self.driver.close()
 
+    def _session(self):
+        """Open a Neo4j session, targeting NEO4J_DATABASE when configured."""
+        database = self.config.get("database")
+        if database:
+            return self.driver.session(database=database)
+        return self.driver.session()
+
     def get_all_course_names(self) -> List[str]:
         """Get a list of all course names and codes for routing."""
-        if not self.connected:
+        if not self._ensure_connected():
             return []
         try:
-            with self.driver.session() as session:
+            with self._session() as session:
                 result = session.run("MATCH (c:Course) RETURN c.name AS name, c.code AS code")
                 records = list(result)
                 return [r["name"] for r in records] + [r["code"] for r in records]
@@ -113,13 +169,50 @@ class KGService:
             logger.error(f"Error fetching course names: {e}")
             return []
 
+    def status(self) -> Dict[str, Any]:
+        """Return KG connectivity and graph counts without exposing secrets."""
+        status: Dict[str, Any] = {
+            "connected": False,
+            "uri": self.config.get("uri", "bolt://localhost:7687"),
+            "user": self.config.get("user", "neo4j"),
+            "database": self.config.get("database") or None,
+            "counts": {},
+            "last_error": self.last_error,
+        }
+        if not self._ensure_connected():
+            status["last_error"] = self.last_error
+            return status
+
+        try:
+            with self._session() as session:
+                result = session.run(
+                    """
+                    MATCH (p:Program) WITH count(p) AS programs
+                    MATCH (cat:Category) WITH programs, count(cat) AS categories
+                    MATCH (c:Course) WITH programs, categories, count(c) AS courses
+                    OPTIONAL MATCH ()-[r:REQUIRES]->()
+                    WITH programs, categories, courses, count(r) AS prerequisites
+                    RETURN programs, categories, courses, prerequisites
+                    """
+                )
+                record = result.single()
+                status["counts"] = dict(record) if record else {}
+            status["connected"] = True
+            status["last_error"] = None
+        except Exception as e:
+            self.last_error = str(e)
+            status["last_error"] = self.last_error
+            status["connected"] = False
+            logger.error(f"KG status check failed: {e}")
+        return status
+
     @traceable(name="KG Query", run_type="chain")
     def query(self, question: str, history: Optional[List[Any]] = None) -> str:
         """
         Synthesize an answer using extracted intent and graph queries.
         Accepts optional history for context-aware classification.
         """
-        if not self.connected:
+        if not self._ensure_connected():
             return "Knowledge Graph is currently unavailable."
 
         try:
@@ -147,6 +240,12 @@ class KGService:
 
             elif intent == "category_query" or (intent == "unknown" and category):
                 return self._get_courses_in_category(category if category else question)
+
+            elif self._looks_like_reverse_prereq_query(question):
+                return self._get_prereqs_reverse(course if course else question)
+
+            elif self._looks_like_prereq_query(question):
+                return self._get_prereqs_forward(course if course else question)
             
             else:
                 return self._query_courses(question)
@@ -155,8 +254,36 @@ class KGService:
             logger.error(f"Query error: {e}")
             return self._query_courses(question)
 
+    @staticmethod
+    def _looks_like_prereq_query(question: str) -> bool:
+        """Detect prerequisite wording for fallback routing."""
+        normalized = KGService._normalize_query(question.lower())
+        return any(
+            phrase in normalized
+            for phrase in (
+                "prerequisite", "prerequisites", "pre req", "before",
+                "need before", "need to take", "required before",
+                "محتاج", "قبل", "لازم اخد", "لازم اعدي", "تتفتح",
+            )
+        )
+
+    @staticmethod
+    def _looks_like_reverse_prereq_query(question: str) -> bool:
+        """Detect reverse prerequisite wording for fallback routing."""
+        normalized = KGService._normalize_query(question.lower())
+        return any(
+            phrase in normalized
+            for phrase in (
+                "opens", "open", "unlock", "unlocks", "leads to",
+                "after", "future courses", "بتفتح", "هتفتح", "بتقفل",
+            )
+        )
+
     def _classify_intent(self, question: str, history: Optional[List[Any]] = None) -> dict:
         """Detect intent using LLM (CoT/JSON). Handles follow-ups via history."""
+        if not self.llm:
+            return {"intent": "unknown"}
+
         history_str = self._format_history(history)
         
         system_prompt = (
@@ -171,6 +298,7 @@ class KGService:
             "- If the question uses pronouns like 'it', 'this subject', 'the course', 'ها', 'هيه', 'المادة دي' -> YOU MUST extract the course name from the LAST 'Student' or 'Advisor' message in History.\n"
             "- NEVER return 'ها', 'هيه', 'دي', 'it' as the course name. If you see them, replace them with the actual course from history.\n"
             "- If the user says 'And X?' (e.g., 'And Math 2?'), copy the PREVIOUS intent but change the course to X.\n"
+            "- If the user asks a short follow-up like 'yes, that's what I need', 'اه ده اللي محتاج اعرفه', or 'قول التفاصيل', copy the previous course and previous intent from History.\n"
             "- 'بتقفل ايه' (closes what) or 'بتفتح ايه' (opens what) = reverse_prerequisite.\n"
             "- 'تتفتح بايه' (opened by what) = prerequisite.\n\n"
             "Extraction:\n"
@@ -188,6 +316,9 @@ class KGService:
             '-> {{"intent": "category_query", "category": "Math & Basic Science (Elective)"}}\n'
             'Question: "ايه هي مواد العلوم الاساسية؟"\n'
             '-> {{"intent": "category_query", "category": "Math & Basic Science"}}\n'
+            'History: "User: ايه المطلوب عشان اسجل math 2?" ... "Advisor: Mathematics 2 [MTH103] has no prerequisites."\n'
+            'Question: "اه ده اللي محتاج اعرفه"\n'
+            '-> {{"intent": "prerequisite", "course": "Mathematics 2"}}\n'
         )
 
         prompt = ChatPromptTemplate.from_messages([
@@ -210,7 +341,7 @@ class KGService:
     @traceable(name="KG Category Query", run_type="retriever")
     def _get_courses_in_category(self, query: str) -> str:
         """List all courses in a specific category."""
-        if not self.connected:
+        if not self._ensure_connected():
             return "Knowledge Graph is unavailable."
 
         # Find best matching category
@@ -220,7 +351,7 @@ class KGService:
 
         cat_name = cat_node["name"]
         
-        with self.driver.session() as session:
+        with self._session() as session:
             # Get category details
             cat_res = session.run(
                 "MATCH (cat:Category {name: $name}) RETURN cat.required_hours AS req, cat.type AS type",
@@ -256,12 +387,13 @@ class KGService:
 
     def _find_category_node(self, query: str) -> Optional[dict]:
         """Find best-matching category node using fuzzy matching."""
-        if not self.connected:
+        if not self._ensure_connected():
             return None
 
         clean_query = self._expand_abbreviations(query.lower())
+        clean_query = self._normalize_query(clean_query)
         
-        with self.driver.session() as session:
+        with self._session() as session:
             result = session.run("MATCH (cat:Category) RETURN cat.name AS name")
             categories = [r["name"] for r in result]
 
@@ -319,6 +451,9 @@ class KGService:
 
     def _resolve_course_from_history(self, history_str: str) -> Optional[str]:
         """Fallback: Extract the last discussed course from history."""
+        if not self.llm:
+            return None
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", "Identify the academic course being discussed in the following conversation history. Return ONLY the course name in English. If none, return 'None'."),
             ("user", "{history}")
@@ -331,25 +466,33 @@ class KGService:
 
     def _find_course_node(self, query: str) -> Optional[dict]:
         """Find best-matching course node using fuzzy matching (difflib)."""
-        if not self.connected:
+        if not self._ensure_connected():
             return None
 
         clean_query = self._expand_abbreviations(query.lower())
+        clean_query = self._normalize_query(clean_query)
         
         # strip non-alphanumeric (keep spaces)
         clean_query = re.sub(r'[^\w\s]', ' ', clean_query)
         
         # get all courses
-        with self.driver.session() as session:
-            result = session.run("MATCH (c:Course) RETURN c.code AS code, c.name AS name")
+        with self._session() as session:
+            result = session.run(
+                "MATCH (c:Course) RETURN c.code AS code, c.name AS name, "
+                "c.credit_hours AS credits, c.level AS level"
+            )
             courses = [dict(r) for r in result]
 
         if not courses:
             return None
 
-        # 1. Exact match (code or name)
+        aliased_query = self._apply_course_aliases(clean_query)
+
+        # 1. Exact match (code, name, or supported alias)
         for c in courses:
-            if c['code'].lower() in clean_query or c['name'].lower() in clean_query:
+            code = c['code'].lower()
+            name = c['name'].lower()
+            if code in clean_query or name in clean_query or name in aliased_query:
                 return c
 
         # 2. Fuzzy match
@@ -359,12 +502,12 @@ class KGService:
             candidates[c['name'].lower()] = c
             candidates[c['code'].lower()] = c
         
-        matches = difflib.get_close_matches(clean_query, candidates.keys(), n=1, cutoff=0.6)
+        matches = difflib.get_close_matches(aliased_query, candidates.keys(), n=1, cutoff=0.6)
         if matches:
             return candidates[matches[0]]
             
         # 3. Partial word match (fallback for multi-word queries)
-        q_words = set(clean_query.split())
+        q_words = set(aliased_query.split())
         best_c = None
         max_overlap = 0
         
@@ -380,12 +523,47 @@ class KGService:
 
         return None
 
+    @staticmethod
+    def _apply_course_aliases(text: str) -> str:
+        """Expand common student shorthand course names before matching."""
+        for alias, canonical in COURSE_ALIASES.items():
+            text = re.sub(r"\b" + re.escape(alias) + r"\b", canonical, text)
+        return text
+
     def _expand_abbreviations(self, text: str) -> str:
         """Replace known abbreviations with full terms."""
         for abbr, expanded in ABBREVIATIONS.items():
             pattern = r'\b' + abbr + r'\b'
             text = re.sub(pattern, expanded, text)
         return text
+
+    @staticmethod
+    def _normalize_query(text: str) -> str:
+        """Normalize Arabic and Arabizi variants for fuzzy matching."""
+        replacements = {
+            "أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "ه",
+            "zakaa": "artificial intelligence",
+            "zeka": "artificial intelligence",
+            "zaka": "artificial intelligence",
+            "saiber": "cybersecurity",
+            "cyber security": "cybersecurity",
+            "baramg": "program",
+            "barnamg": "program",
+            "mawade": "courses",
+            "mawad": "courses",
+            "madda": "course",
+            "prereq": "prerequisite",
+            "pre req": "prerequisite",
+            "بريريك": "prerequisite",
+            "سايبر": "cybersecurity",
+            "ذكاء": "artificial intelligence",
+            "خوارزميات": "algorithms",
+            "تعلم الاله": "machine learning",
+            "تعلم الآله": "machine learning",
+        }
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        return re.sub(r"\s+", " ", text).strip()
 
     @traceable(name="KG Prereqs Forward", run_type="retriever")
     def _get_prereqs_forward(self, query: str) -> str:
@@ -396,7 +574,7 @@ class KGService:
 
         code, name = course["code"], course["name"]
         
-        with self.driver.session() as session:
+        with self._session() as session:
             # Direct prerequisites
             res = session.run(
                 "MATCH (c:Course {code: $code})-[:REQUIRES]->(p:Course) RETURN p.code AS code, p.name AS name",
@@ -437,7 +615,7 @@ class KGService:
 
         code, name = course["code"], course["name"]
 
-        with self.driver.session() as session:
+        with self._session() as session:
             result = session.run(
                 "MATCH (f:Course)-[:REQUIRES]->(c:Course {code: $code}) RETURN f.name AS name, f.code AS code",
                 code=code
@@ -464,11 +642,11 @@ class KGService:
     @traceable(name="KG Get Study Path", run_type="retriever")
     def get_study_path(self, level: int, major: str) -> str:
         """Get recommended study path."""
-        if not self.connected:
+        if not self._ensure_connected():
             return "Knowledge Graph is unavailable."
 
         try:
-            with self.driver.session() as session:
+            with self._session() as session:
                 query = """
                     MATCH (p:Program)-[:OFFERS]->(c:Course)
                     WHERE c.level = $level
@@ -525,7 +703,7 @@ class KGService:
                 )
 
             # Query list
-            with self.driver.session() as session:
+            with self._session() as session:
                 cypher = "MATCH (p:Program)-[:OFFERS]->(c:Course) WHERE 1=1"
                 params: Dict[str, Any] = {}
                 if target_prog:

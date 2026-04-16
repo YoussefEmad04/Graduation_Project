@@ -1,0 +1,45 @@
+# ==============================
+# API & Backend
+# ==============================
+fastapi
+uvicorn
+pydantic
+python-dotenv
+python-multipart
+requests
+
+# ==============================
+# LLM + Tokens
+# ==============================
+openai
+tiktoken
+
+# ==============================
+# LangChain Ecosystem
+# ==============================
+langchain
+langchain-openai
+langgraph
+langsmith
+
+# ==============================
+# PDF Processing for elective admin uploads
+# ==============================
+pdfplumber
+
+# ==============================
+# Knowledge Graph
+# ==============================
+neo4j
+
+# ==============================
+# Database (Chat History)
+# ==============================
+supabase
+
+# ==============================
+# Utilities
+# ==============================
+pyyaml
+openpyxl
+streamlit

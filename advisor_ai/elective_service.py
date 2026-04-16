@@ -9,8 +9,6 @@ import os
 import base64
 import logging
 import yaml
-import pdfplumber
-import openpyxl
 from typing import List, Dict, Union, Any
 
 from dotenv import load_dotenv
@@ -20,6 +18,16 @@ from langchain_core.messages import HumanMessage
 from langsmith import traceable
 
 from advisor_ai.constants import ELECTIVE_QUERY_PROMPT
+
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
+try:
+    import openpyxl
+except ImportError:
+    openpyxl = None
 
 load_dotenv()
 
@@ -37,20 +45,25 @@ class ElectiveService:
     def __init__(self):
         self.context_file = CONTEXT_FILE
         self._ensure_context_file()
+        self.llm = None
+        self.vision_llm = None
 
-        self.llm = ChatOpenAI(
-            model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
-            temperature=0.3,
-        )
+        if os.getenv("OPENAI_API_KEY"):
+            self.llm = ChatOpenAI(
+                model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
+                temperature=0.3,
+            )
 
-        # Vision model for image OCR
-        self.vision_llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0,
-            max_tokens=2000,
-        )
+            # Vision model for image OCR
+            self.vision_llm = ChatOpenAI(
+                model="gpt-4o-mini",
+                temperature=0,
+                max_tokens=2000,
+            )
+            logger.info("Elective Service initialized (LLM-powered)")
+        else:
+            logger.warning("OPENAI_API_KEY is not configured; Elective Service will use local parsing and fallback answers")
 
-        logger.info("Elective Service initialized (LLM-powered)")
 
     def _ensure_context_file(self):
         """Create default context file if it doesn't exist."""
@@ -134,6 +147,9 @@ class ElectiveService:
 
     def upload_from_excel(self, file_path: str) -> list:
         """Parse electives from Excel."""
+        if openpyxl is None:
+            raise RuntimeError("Excel uploads require openpyxl. Install requirements-full.txt locally.")
+
         electives = []
         try:
             wb = openpyxl.load_workbook(file_path)
@@ -179,6 +195,9 @@ class ElectiveService:
 
     def upload_from_pdf(self, file_path: str) -> list:
         """Parse electives from a PDF."""
+        if pdfplumber is None:
+            raise RuntimeError("PDF uploads require pdfplumber. Install requirements-full.txt locally.")
+
         electives = []
         try:
             with pdfplumber.open(file_path) as pdf:
@@ -214,6 +233,11 @@ class ElectiveService:
 
     def upload_from_image(self, file_path: str) -> list:
         """Extract elective data from an image using GPT-4o vision OCR."""
+        if not self.vision_llm:
+            raise RuntimeError(
+                "OPENAI_API_KEY is not configured. Image elective uploads require OpenAI vision."
+            )
+
         try:
             with open(file_path, "rb") as f:
                 image_data = base64.b64encode(f.read()).decode("utf-8")
@@ -271,6 +295,9 @@ class ElectiveService:
     @traceable(name="Elective Query", run_type="chain")
     def query(self, question: str) -> str:
         """LLM-powered elective query."""
+        if not self.llm:
+            return self.get_electives_text()
+
         try:
             term_data = self._build_term_context()
 

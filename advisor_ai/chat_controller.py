@@ -23,14 +23,27 @@ class ChatController:
     """Manages chat sessions with Supabase persistence."""
 
     def __init__(self):
-        self.graph = AdvisorGraph()
-        self.db = get_supabase()
+        self._graph = None
+        try:
+            self.db = get_supabase()
+        except Exception as e:
+            logger.error(f"Supabase unavailable; chat history will be disabled: {e}")
+            self.db = None
         logger.info("Chat Controller initialized (Supabase)")
+
+    @property
+    def graph(self) -> AdvisorGraph:
+        """Lazy-load the advisor graph only for endpoints that need AI services."""
+        if self._graph is None:
+            self._graph = AdvisorGraph()
+        return self._graph
 
     # ── Session helpers ─────────────────────────────────────────────
 
     def _get_session(self, session_id: str) -> dict:
         """Get or create a session from Supabase."""
+        if not self.db:
+            return {"session_id": session_id}
         try:
             result = (
                 self.db.table("sessions")
@@ -54,6 +67,8 @@ class ChatController:
 
     def _update_session(self, session_id: str, updates: dict):
         """Update session fields in Supabase."""
+        if not self.db:
+            return
         try:
             self.db.table("sessions").update(updates).eq(
                 "session_id", session_id
@@ -63,6 +78,8 @@ class ChatController:
 
     def _save_message(self, session_id: str, role: str, content: str):
         """Insert a message into Supabase."""
+        if not self.db:
+            return
         try:
             self.db.table("messages").insert(
                 {"session_id": session_id, "role": role, "content": content}
@@ -85,10 +102,12 @@ class ChatController:
 
     def get_history(self, session_id: str) -> List[Dict[str, Any]]:
         """Get chat history from Supabase (as dicts)."""
+        if not self.db:
+            return []
         try:
             result = (
                 self.db.table("messages")
-                .select("role, content")
+                .select("role, content, created_at")
                 .eq("session_id", session_id)
                 .order("created_at")
                 .execute()
@@ -111,6 +130,8 @@ class ChatController:
 
     def start_session(self, session_id: str) -> str:
         """Start or reset a chat session."""
+        if not self.db:
+            return GREETING_RESPONSE
         try:
             self.db.table("sessions").upsert(
                 {"session_id": session_id, "student_level": None, "student_major": None}
@@ -126,13 +147,12 @@ class ChatController:
     def handle_message(self, session_id: str, message: str) -> str:
         """Process a student message."""
         session = self._get_session(session_id)
-        self._save_message(session_id, "user", message)
-
         msg_lower = message.strip().lower()
 
         # ── Greeting ────────────────────────────────────────────────
         if msg_lower in GREETINGS:
             response = GREETING_RESPONSE
+            self._save_message(session_id, "user", message)
             self._save_message(session_id, "assistant", response)
             return response
 
@@ -145,9 +165,10 @@ class ChatController:
                 "student_major": major,
             })
             response = (
-                f"✅ Got it, you're in Level {level}!\n"
-                f"Feel free to ask me anything. 😊"
+                f"Got it, you're in Level {level}.\n"
+                f"Ask me anything about courses, prerequisites, regulations, or electives."
             )
+            self._save_message(session_id, "user", message)
             self._save_message(session_id, "assistant", response)
             return response
 
@@ -164,8 +185,9 @@ class ChatController:
                 session["student_major"] = major
 
         # ── Route through advisor graph ─────────────────────────────
-        # Convert history for context-aware routing
+        # Convert previous history for context-aware routing before storing this turn.
         history = self._get_history_objects(session_id)
+        self._save_message(session_id, "user", message)
         
         try:
             response = self.graph.run(

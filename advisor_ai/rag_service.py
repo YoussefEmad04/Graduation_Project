@@ -1,261 +1,297 @@
 """
-RAG Service — Retrieval-Augmented Generation over academic regulations.
-Uses PyMuPDF for Arabic PDF extraction, ChromaDB for vector storage,
-Cross-Encoder reranking for precision, and OpenAI for generation.
-LangSmith tracing is enabled via environment variables.
+RAG Service - Retrieval-Augmented Generation over academic regulations.
+
+Production uses OpenAI hosted vector stores and the Responses API file_search
+tool, so Vercel does not need local ChromaDB or PDF parsing dependencies.
 """
 
-import os
-import shutil
 import logging
-from typing import List, Tuple, Optional
+import os
+import re
+from typing import Any, Dict, List
 
-import fitz  # PyMuPDF
 from dotenv import load_dotenv
-from langchain_community.vectorstores import Chroma
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_core.documents import Document
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import CrossEncoder
+from openai import OpenAI
 
 load_dotenv()
 
-# Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# ── Configuration ───────────────────────────────────────────────────
+# -- Configuration ---------------------------------------------------------
 
-REGULATIONS_PDF = os.path.join(
-    os.path.dirname(__file__), "..", "important_pdf", "RAG", "اللائحة الجديدة.pdf"
+def _env(name: str, default: str = "") -> str:
+    """Read an environment variable and trim deployment-input whitespace."""
+    return (os.getenv(name, default) or "").strip()
+
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+REGULATIONS_SOURCE = os.path.join(
+    PROJECT_ROOT, "important_pdf", "RAG", "regulations_extracted.md"
 )
-CHROMA_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
-RERAN_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-RETRIEVE_K = 15
-RERAN_TOP_K = 6
+RETRIEVE_K = 8
+OPENAI_VECTOR_STORE_ID_ENV = "OPENAI_VECTOR_STORE_ID"
 
-RAG_SYSTEM_PROMPT = """You are the Smart Academic Advisor for the Faculty of Artificial Intelligence at the Egyptian Russian University (ERU).
+OPENAI_API_KEY_ERROR = (
+    "OPENAI_API_KEY is not configured. Set it in your shell, .env file, or "
+    "Vercel environment variables to use regulation RAG."
+)
+OPENAI_VECTOR_STORE_ERROR = (
+    "OPENAI_VECTOR_STORE_ID is not configured. Run "
+    "`python scripts/setup_openai_vector_store.py`, then add the printed "
+    "vector store id to your .env and Vercel environment variables."
+)
 
-Your role is to answer student questions about academic regulations, policies, and procedures based ONLY on the retrieved context from the official regulations document (اللائحة الجديدة).
+REVERSED_ARABIC_MARKERS = (
+    "ةعماجلا", "ةيلك", "بلاطلا", "تاعاس", "لدعملا", "جرخت",
+    "ررقم", "ةسارد", "ماظن", "طورش", "تابلطتم", "ةجرد",
+)
 
-## Key Facts:
+READABLE_ARABIC_TERMS = (
+    "الطالب", "الكلية", "الجامعة", "الساعات", "المعتمدة", "التخرج",
+    "الدراسة", "الفصل", "الدراسي", "التسجيل", "المقرر", "المقررات",
+    "الامتحان", "الإمتحان", "النهائي", "منتصف", "غياب", "عذر",
+    "مقبول", "غير", "مكتمل", "منسحب", "شروط", "نظام", "الحضور",
+    "الأعمال", "الفصلية", "مجلس", "المرشد", "الأكاديمي",
+)
+
+REGULATIONS_CLEAN_EXCERPTS = [
+    {
+        "page": 31,
+        "text": (
+            "لغة التدريس: اللغة الإنجليزية، ويمكن تدريس مقررات متطلبات الجامعة بلغة أخرى "
+            "على أن يكون الامتحان بنفس لغة تدريس المقرر.\n"
+            "عدد الساعات اللازمة للتخرج: يتطلب الحصول على درجة البكالوريوس أن يجتاز الطالب "
+            "بنجاح 144 ساعة معتمدة موزعة على ستة فصول دراسية نظامية على الأقل.\n"
+            "نظام الدراسة: تعتمد الدراسة على نظام الساعات المعتمدة. السنة الدراسية تتكون من "
+            "فصل الخريف وفصل الربيع، وفصل صيفي اختياري للطالب. مدة الفصول النظامية 17 أسبوعا "
+            "تتضمن فترة عقد الامتحانات، والفصل الصيفي مدته 8 أسابيع تتضمن فترة عقد الامتحانات."
+        ),
+    },
+    {
+        "page": 37,
+        "text": (
+            "نظام الامتحانات: النهاية العظمى لدرجات كل مقرر 100 درجة، والنهاية الصغرى للنجاح 50 درجة.\n"
+            "توزيع درجات المقرر النظري: 40% لامتحان نهاية الفصل الدراسي، بشرط أن يحصل الطالب على "
+            "30% من درجة الامتحان النهائي التحريري على الأقل شرطا للنجاح، و20% لامتحان منتصف الفصل "
+            "الدراسي، و40% للاختبارات الدورية والأعمال الفصلية."
+        ),
+    },
+    {
+        "page": 45,
+        "text": (
+            "قواعد المواظبة على الحضور: يتطلب دخول الطالب الامتحان النهائي لأي مقرر تحقيق نسبة "
+            "حضور لا تقل عن 75% من المحاضرات والتطبيقات المحددة له. إذا تجاوزت نسبة الغياب 25% "
+            "يجوز لمجلس الكلية حرمانه من دخول الامتحان النهائي بعد إنذاره كتابيا.\n"
+            "إذا تغيب الطالب عن الامتحان النهائي لأي مقرر دون عذر مقبول يعطى تقدير راسب FA. "
+            "أما إذا تقدم بعذر قهري يقبله مجلس الكلية فيحسب له تقدير غير مكتمل I بشرط حصوله "
+            "على 60% على الأقل من درجات الأعمال الفصلية."
+        ),
+    },
+]
+
+RAG_FILE_SEARCH_INSTRUCTIONS = """You are the Smart Academic Advisor for the Faculty of Artificial Intelligence at the Egyptian Russian University (ERU).
+
+Answer student questions about academic regulations, policies, and study-plan tables using ONLY the content retrieved from the official regulations file attached through file_search.
+
+Key facts:
 - Faculty programs: Artificial Intelligence, Data Science, Cybersecurity, Software Engineering
 - Graduation: 144 credit hours minimum
 - Study system: Credit hours, Fall + Spring semesters + optional Summer
-- Teaching language: English (some courses in Arabic)
-- GPA scale: 4.0 (A+ = 4.0, A = 3.7, A- = 3.4 ... F = 0)
+- Teaching language: English, except some university requirements may use another language
 
-## STRICT Language Rules:
-- If the student writes in **English** → respond ONLY in **English**
-- If the student writes in **Arabic (فصحى or عامية مصرية)** → respond ONLY in **Arabic**
-- NEVER mix languages in one response
+Language rules:
+- If the student writes in English, respond only in English.
+- If the student writes in Arabic, respond only in Arabic.
+- If the student writes Arabizi, respond in friendly Egyptian Arabic.
+- Do not mix languages in one response.
 
-## [Arabic Rules] قواعد الرد بالعربية:
-- جاوب دايماً باللغة اللي الطالب بيستخدمها (فصحى أو عامية).
-- استخدم السياق (Context) المرفق فقط للإجابة. لو مش لاقي الإجابة قول "مش لاقي المعلومة دي في اللائحة".
-- خليك محدد ودقيق في الأرقام (ساعات، معدل تراكمي، نسب مئوية).
-- حافظ على المصطلحات الأكاديمية بالإنجليزية لو ده بيسهل الفهم (زي Credit Hours, GPA).
+Answer rules:
+- Use only retrieved file content. Do not invent regulations.
+- Be precise with numbers, percentages, weeks, credit hours, and course codes.
+- For study-plan tables, preserve course codes exactly. If a prerequisite is shown only as a code, return the code only.
+- If the retrieved content does not contain the answer, say:
+  - English: "I couldn't find this specific regulation in the document."
+  - Arabic: "مش لاقي المعلومة دي في اللائحة."
+- Format answers with concise bullet points.
+"""
 
-## Egyptian Arabic Understanding:
-Students may use Egyptian slang. Map terms like:
-- "عايز اتخرج" -> Graduation
-- "كام ساعة" -> Credit Hours
-- "معدلي وقع" -> Low GPA
-- "سابها" / "مش طايق" -> Drop/Withdraw
-- "هيفصلوني" -> Dismissal
-
-## Answer Rules:
-1. Answer ONLY from the retrieved context. Do NOT invent regulations.
-2. Be precise with numbers.
-3. If not found, say:
-   - English: "I couldn't find this specific regulation in the document..."
-   - Arabic: "مش لاقي المعلومة دي في اللائحة..."
-4. Format answers with bullet points.
-5. Cite page numbers if available.
-
-## Context:
-{context}
-
-## Student Question:
-{question}
-
-## Your Answer:"""
-
-
-# ── Service ─────────────────────────────────────────────────────────
 
 class RAGService:
-    """Handles regulation queries using Retrieval-Augmented Generation."""
+    """Handles regulation queries using OpenAI vector store file search."""
 
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(
-            model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-        )
-        self.llm = ChatOpenAI(
-            model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
-            temperature=0.2,
-        )
-        try:
-            self.reranker = CrossEncoder(RERAN_MODEL)
-            logger.info(f"Cross-Encoder reranker loaded: {RERAN_MODEL}")
-        except Exception as e:
-            logger.error(f"Failed to load reranker: {e}")
-            self.reranker = None
+        self.client = None
+        self.vector_store_id = _env(OPENAI_VECTOR_STORE_ID_ENV)
+        self.model = _env("OPENAI_LLM_MODEL", "gpt-4o-mini")
+        self.last_error = None
 
-        self.vectorstore = None
-        self.chain = None
-        self._load_or_build_vectorstore()
+        if not _env("OPENAI_API_KEY"):
+            self.last_error = OPENAI_API_KEY_ERROR
+            logger.warning(OPENAI_API_KEY_ERROR)
+            return
+
+        if not self.vector_store_id:
+            self.last_error = OPENAI_VECTOR_STORE_ERROR
+            logger.warning(OPENAI_VECTOR_STORE_ERROR)
+            return
+
+        self.client = OpenAI(api_key=_env("OPENAI_API_KEY"))
+        logger.info("RAG Service initialized with OpenAI vector store file_search")
+
+    @property
+    def chain(self):
+        """Backward-compatible truthy marker for tests/status callers."""
+        return self.client if self.client and self.vector_store_id else None
 
     def query(self, question: str) -> str:
-        """Answer a regulation-related question using RAG."""
-        if not self.chain:
-            return "RAG service is not initialized."
+        """Answer a regulation-related question using OpenAI file_search."""
+        if not _env("OPENAI_API_KEY"):
+            return OPENAI_API_KEY_ERROR
+        if not self.vector_store_id:
+            return OPENAI_VECTOR_STORE_ERROR
+        if not self.client:
+            self.client = OpenAI(api_key=_env("OPENAI_API_KEY"))
 
         try:
-            return self.chain.invoke(question)
+            response = self.client.responses.create(
+                model=self.model,
+                instructions=RAG_FILE_SEARCH_INSTRUCTIONS,
+                input=f"Student question:\n{question}",
+                tools=[
+                    {
+                        "type": "file_search",
+                        "vector_store_ids": [self.vector_store_id],
+                        "max_num_results": RETRIEVE_K,
+                    }
+                ],
+                temperature=0.2,
+            )
+            self.last_error = None
+            return self._response_text(response)
         except Exception as e:
-            logger.error(f"Error querying RAG: {e}")
+            self.last_error = str(e)
+            logger.error(f"Error querying OpenAI vector store RAG: {e}")
             return f"Error querying regulations: {str(e)}"
 
+    def status(self) -> Dict[str, Any]:
+        """Return OpenAI vector-store RAG status without exposing secrets."""
+        return {
+            "provider": "openai_file_search",
+            "initialized": self.chain is not None,
+            "openai_configured": bool(_env("OPENAI_API_KEY")),
+            "vector_store_configured": bool(self.vector_store_id),
+            "vector_store_id": self.vector_store_id,
+            "retrieval_k": RETRIEVE_K,
+            "source_file": REGULATIONS_SOURCE,
+            "source_exists": os.path.exists(REGULATIONS_SOURCE),
+            "last_error": self.last_error,
+        }
+
     def rebuild(self):
-        """Force rebuild the vectorstore from PDF."""
-        if os.path.exists(CHROMA_DIR):
-            shutil.rmtree(CHROMA_DIR)
-            logger.info("Cleared old vectorstore")
-        
-        self._build_vectorstore()
-        self._build_chain()
-        logger.info("Vectorstore rebuilt successfully")
-
-    def _load_or_build_vectorstore(self):
-        """Load existing vectorstore or build from PDF."""
-        if os.path.exists(CHROMA_DIR) and os.listdir(CHROMA_DIR):
-            self.vectorstore = Chroma(
-                persist_directory=CHROMA_DIR,
-                embedding_function=self.embeddings,
-            )
-            logger.info("Loaded existing vectorstore from chroma_db/")
-        else:
-            self._build_vectorstore()
-
-        self._build_chain()
-
-    def _build_vectorstore(self):
-        """Extract PDF, split into chunks, and create ChromaDB vectorstore."""
-        logger.info("Building vectorstore from regulations PDF...")
-
-        pages = self._extract_pdf_text()
-        if not pages:
-            logger.warning("No text extracted from PDF!")
-            return
-
-        documents = [
-            Document(page_content=text, metadata={"source": "regulations", "page": page_num})
-            for page_num, text in pages
-        ]
-
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=200,
-            separators=["\n\n", "\n", ".", "،", "•", " "],
+        """Local rebuilds are replaced by scripts/setup_openai_vector_store.py."""
+        raise RuntimeError(
+            "OpenAI vector-store RAG is managed remotely. Run "
+            "`python scripts/setup_openai_vector_store.py` to create or refresh "
+            "the vector store, then update OPENAI_VECTOR_STORE_ID."
         )
-        chunks = text_splitter.split_documents(documents)
-        logger.info(f"Created {len(chunks)} chunks")
-
-        self.vectorstore = Chroma.from_documents(
-            documents=chunks,
-            embedding=self.embeddings,
-            persist_directory=CHROMA_DIR,
-        )
-        logger.info("Vectorstore built and persisted to chroma_db/")
-
-    def _extract_pdf_text(self) -> List[Tuple[int, str]]:
-        """Extract text from PDF using PyMuPDF (fitz)."""
-        if not os.path.exists(REGULATIONS_PDF):
-            raise FileNotFoundError(f"Regulations PDF not found at: {REGULATIONS_PDF}")
-
-        doc = fitz.open(REGULATIONS_PDF)
-        pages = []
-
-        for i, page in enumerate(doc):
-            text = page.get_text("text")
-            if not text:
-                continue
-            
-            # Clean text (remove sidebar noise) but PRESERVE empty lines for structure
-            lines = []
-            for line in text.split("\n"):
-                stripped = line.strip()
-                if len(stripped) > 2 or stripped == "":
-                    lines.append(stripped)
-            cleaned = "\n".join(lines)
-            
-            if cleaned.strip():
-                pages.append((i + 1, cleaned))
-
-        doc.close()
-        logger.info(f"Extracted {len(pages)} pages from PDF")
-        return pages
-
-    def _build_chain(self):
-        """Build the RAG chain."""
-        if not self.vectorstore:
-            logger.error("Cannot build chain: Vectorstore not initialized")
-            return
-
-        retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": RETRIEVE_K},
-        )
-
-        prompt = ChatPromptTemplate.from_template(RAG_SYSTEM_PROMPT)
-
-        self.chain = (
-            {
-                "context": RunnableLambda(self._retrieve_and_rerank),
-                "question": RunnablePassthrough(),
-            }
-            | prompt
-            | self.llm
-            | StrOutputParser()
-        )
-        logger.info(f"RAG chain built: retrieve({RETRIEVE_K}) -> rerank({RERAN_TOP_K}) -> LLM")
-
-    def _retrieve_and_rerank(self, question: str) -> str:
-        """Retrieve docs, rerank them, and format for context."""
-        # 1. Retrieve
-        docs = self.vectorstore.as_retriever(search_kwargs={"k": RETRIEVE_K}).invoke(question)
-        
-        # 2. Rerank
-        reranked = self._rerank(question, docs)
-        
-        # 3. Format
-        return self._format_docs(reranked)
-
-    def _rerank(self, query: str, docs: List[Document]) -> List[Document]:
-        """Rerank documents using Cross-Encoder."""
-        if not docs or not self.reranker:
-            return docs[:RERAN_TOP_K]
-
-        pairs = [(query, doc.page_content) for doc in docs]
-        scores = self.reranker.predict(pairs)
-
-        # Sort by score
-        scored_docs = sorted(zip(scores, docs), key=lambda x: x[0], reverse=True)
-        top_docs = [doc for _, doc in scored_docs[:RERAN_TOP_K]]
-        
-        logger.debug(f"Rerank top score: {scored_docs[0][0]:.3f}")
-        return top_docs
 
     @staticmethod
-    def _format_docs(docs: List[Document]) -> str:
-        """Format documents into a single context string."""
-        return "\n\n---\n\n".join(
-            f"[Page {d.metadata.get('page', '?')}]\n{d.page_content}"
-            for d in docs
+    def _response_text(response: Any) -> str:
+        """Extract text from OpenAI Responses API objects across SDK shapes."""
+        output_text = getattr(response, "output_text", None)
+        if output_text:
+            return output_text
+
+        parts = []
+        for item in getattr(response, "output", []) or []:
+            for content in getattr(item, "content", []) or []:
+                text = getattr(content, "text", None)
+                if text:
+                    parts.append(text)
+        return "\n".join(parts).strip() or "I couldn't find this specific regulation in the document."
+
+    def _repair_arabic_extraction(self, text: str) -> str:
+        """Repair common visual-order Arabic runs for local extraction utilities/tests."""
+        repaired_lines = []
+        for line in text.split("\n"):
+            repaired_lines.append(self._best_arabic_line_variant(line))
+        return "\n".join(repaired_lines)
+
+    def _best_arabic_line_variant(self, line: str) -> str:
+        """Pick the most readable variant for Arabic text extracted in visual order."""
+        if not re.search(r"[\u0600-\u06FF]", line):
+            return line
+
+        char_repaired = re.sub(
+            r"[\u0600-\u06FFـ]+",
+            lambda m: m.group(0).replace("ـ", "")[::-1],
+            line,
         )
+        tokens = char_repaired.split()
+        arabic_tokens = [token for token in tokens if re.search(r"[\u0600-\u06FF]", token)]
+        variants = [line, char_repaired]
+        if len(arabic_tokens) >= 2:
+            variants.append(" ".join(reversed(tokens)))
+
+        return max(
+            enumerate(variants),
+            key=lambda item: (self._arabic_readability_score(item[1]), item[0]),
+        )[1]
+
+    @staticmethod
+    def _arabic_readability_score(line: str) -> int:
+        """Score known readable Arabic terms and penalize common reversed terms."""
+        normalized = line.replace("ـ", "")
+        score = sum(normalized.count(term) * 3 for term in READABLE_ARABIC_TERMS)
+        score -= sum(normalized.count(marker) * 4 for marker in REVERSED_ARABIC_MARKERS)
+        score -= len(re.findall(r"\b[\u0600-\u06FF]{1,2}\b", normalized))
+        return score
+
+    @classmethod
+    def _expanded_search_terms(cls, question: str) -> List[str]:
+        """Build normalized search terms and common regulation synonyms."""
+        normalized = cls._normalize_for_search(question)
+        short_academic_tokens = {"ai", "ds", "sw", "cb"}
+        terms = {
+            token for token in normalized.split()
+            if len(token) >= 3 or token in short_academic_tokens
+        }
+
+        expansions = {
+            "غاب": {"غياب", "تغيب", "حضور", "النهائي", "عذر", "مقبول"},
+            "يغيب": {"غياب", "تغيب", "حضور", "النهائي", "عذر", "مقبول"},
+            "محضرش": {"غياب", "حضور", "النهائي", "عذر", "مقبول"},
+            "عذر": {"عذر", "مقبول", "قهري", "غير مكتمل", "مكتمل"},
+            "فاينال": {"النهائي", "النهايي", "الامتحان", "عذر", "مقبول"},
+            "ميد": {"منتصف", "الفصل", "20"},
+            "ميدترم": {"منتصف", "الفصل", "20"},
+            "الحضور": {"حضور", "75", "25", "حرمان"},
+            "حضور": {"حضور", "75", "25", "حرمان"},
+            "مكتمل": {"غير", "مكتمل", "Incomplete", "I"},
+            "تسجيل": {"التسجيل", "متطلباته", "اجتياز"},
+            "الصيفي": {"الصيفي", "9", "اختياري"},
+        }
+        for trigger, values in expansions.items():
+            if trigger in normalized:
+                terms.update(cls._normalize_for_search(value) for value in values)
+
+        return sorted(terms)
+
+    @staticmethod
+    def _normalize_for_search(text: str) -> str:
+        """Normalize Arabic variants for keyword search helpers/tests."""
+        replacements = {
+            "أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا",
+            "ى": "ي", "ی": "ي", "ئ": "ي",
+            "ؤ": "و",
+            "ة": "ه", "ۀ": "ه", "ھ": "ه",
+            "ـ": "",
+        }
+        text = text.lower()
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        text = re.sub(r"[\u064B-\u065F\u0670]", "", text)
+        text = re.sub(r"[^\w\s٪%]", " ", text)
+        return re.sub(r"\s+", " ", text).strip()

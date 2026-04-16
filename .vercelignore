@@ -1,0 +1,13 @@
+.env
+.env.*
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+desktop.ini
+pdf/
+High_Diagrams/
+tests/
+chroma_db/
+important_pdf/**/*.pdf
+important_pdf/**/*.pptx

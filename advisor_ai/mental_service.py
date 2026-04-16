@@ -33,22 +33,29 @@ class MentalSupportService:
     """Provides LLM-powered academic motivation and major recommendation."""
 
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
-            temperature=0.7,  # Warmer for empathetic responses
-        )
+        self.llm = None
+        self.mental_chain = None
+        self.major_chain = None
 
-        self.mental_chain = ChatPromptTemplate.from_messages([
-            ("system", MENTAL_SYSTEM_PROMPT),
-            ("human", "{question}"),
-        ]) | self.llm
+        if os.getenv("OPENAI_API_KEY"):
+            self.llm = ChatOpenAI(
+                model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
+                temperature=0.7,  # Warmer for empathetic responses
+            )
 
-        self.major_chain = ChatPromptTemplate.from_messages([
-            ("system", MAJOR_SYSTEM_PROMPT),
-            ("human", "{question}"),
-        ]) | self.llm
+            self.mental_chain = ChatPromptTemplate.from_messages([
+                ("system", MENTAL_SYSTEM_PROMPT),
+                ("human", "{question}"),
+            ]) | self.llm
 
-        logger.info("Mental Support Service initialized (LLM-powered)")
+            self.major_chain = ChatPromptTemplate.from_messages([
+                ("system", MAJOR_SYSTEM_PROMPT),
+                ("human", "{question}"),
+            ]) | self.llm
+
+            logger.info("Mental Support Service initialized (LLM-powered)")
+        else:
+            logger.warning("OPENAI_API_KEY is not configured; Mental Support Service will use fallback responses")
 
     def is_triggered(self, message: str) -> bool:
         """Check if the message contains emotional distress keywords."""
@@ -66,6 +73,9 @@ class MentalSupportService:
         Generate a personalized, level-aware supportive response using the LLM.
         Detects language automatically and responds accordingly.
         """
+        if not self.mental_chain:
+            return self._fallback_response(message)
+
         try:
             # Inject level context into the question for the LLM
             prompt_message = message
@@ -85,6 +95,12 @@ class MentalSupportService:
         """
         Generate a major recommendation (AI vs Cybersecurity) using the LLM.
         """
+        if not self.major_chain:
+            return (
+                "Both AI and Cybersecurity are excellent programs at ERU! "
+                "Please visit your academic advisor for personalized guidance."
+            )
+
         try:
             result = self.major_chain.invoke({"question": message})
             return result.content

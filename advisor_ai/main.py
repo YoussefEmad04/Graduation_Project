@@ -5,7 +5,7 @@ Provides student chat, history, and admin endpoints.
 
 import os
 import tempfile
-from typing import Optional
+from typing import Any, Dict, Optional
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -53,6 +53,11 @@ def get_elective_service():
         from advisor_ai.elective_service import ElectiveService
         _elective_service = ElectiveService()
     return _elective_service
+
+
+def _dependency_error(error: Exception) -> Dict[str, Any]:
+    """Format dependency failures without leaking secrets."""
+    return {"connected": False, "last_error": str(error)}
 
 
 # ── Request / Response Models ───────────────────────────────────────
@@ -171,6 +176,36 @@ def set_term(request: TermRequest):
     )
 
 
+@app.get("/admin/kg/status")
+def kg_status():
+    """Return Neo4j knowledge graph status."""
+    try:
+        controller = get_chat_controller()
+        return controller.graph.kg_service.status()
+    except Exception as e:
+        return _dependency_error(e)
+
+
+@app.get("/admin/rag/status")
+def rag_status():
+    """Return RAG vectorstore and extraction status."""
+    try:
+        controller = get_chat_controller()
+        return controller.graph.rag_service.status()
+    except Exception as e:
+        return _dependency_error(e)
+
+
+@app.get("/admin/history/status")
+def history_status():
+    """Return Supabase chat-history status."""
+    try:
+        from advisor_ai.supabase_client import supabase_status
+        return supabase_status()
+    except Exception as e:
+        return _dependency_error(e)
+
+
 # ── Health Check ────────────────────────────────────────────────────
 
 @app.get("/")
@@ -180,6 +215,21 @@ def root():
         "service": "Smart Academic Advisor",
         "status": "running",
         "version": "1.0.0",
+    }
+
+
+@app.get("/health")
+def health():
+    """Dependency-aware health check endpoint."""
+    return {
+        "service": "Smart Academic Advisor",
+        "status": "running",
+        "version": "1.0.0",
+        "dependencies": {
+            "kg": kg_status(),
+            "rag": rag_status(),
+            "history": history_status(),
+        },
     }
 
 

@@ -13,16 +13,26 @@ RAG_KEYWORDS = [
     "withdrawal", "drop", "add", "warning",
     "grading", "mark", "marks", "score", "scores",
     "change major", "transfer program",
+    "exam", "exams", "midterm", "mid term", "final", "absence",
+    "absent", "excuse", "medical excuse", "missed exam",
     # Arabic (فصحى)
     "لائحة", "قوانين", "تخرج", "ساعات", "معدل", "تحويل", "نقل",
     "إنذار", "فصل", "متطلبات التخرج", "انسحاب", "حذف", "إضافة",
     "تقدير", "درجات", "نقاط", "حول", "احول", "غيرت",
+    "امتحان", "امتحانات", "اختبار", "منتصف الفصل", "نهائي",
+    "غياب", "عذر", "أعذار", "اعذار", "حضور",
     # Egyptian Arabic (عامية مصرية)
     "عايز اتخرج", "كام ساعة", "معدلي", "معدلي وقع", "هيفصلوني",
     "هيطردوني", "اسيب مادة", "سابها", "مش طايق", "شيل مادة",
     "زود مادة", "حذف مادة", "انقل", "رسبت", "سقطت", "وقعت في مادة",
     "عايز ارفع معدلي", "القوانين", "اللوايح", "الدرجات",
     "تحذير", "إنذار أكاديمي", "نظام الساعات", "درجاتي",
+    "ميد", "ميدترم", "ميد ترم", "فاينال", "محضرش", "يحضر",
+    "حصلو ظرف", "حصل له ظرف", "ظرف", "عذر مرضي",
+    # Arabizi / Latin Arabic
+    "kam sa3a", "kam saa", "el gpa", "gpa eh", "ta5arog", "takharog",
+    "lawaye7", "lawe7a", "enazar", "enzar", "fasl", "drop subject",
+    "asheil mada", "asahel mada", "a7awel", "a3la el gpa",
 ]
 
 KG_KEYWORDS = [
@@ -42,6 +52,11 @@ KG_KEYWORDS = [
     "عايز اعرف المواد", "ايه البريريك", "لازم اعدي ايه",
     "هتفتحلي ايه", "ايه اللي بعدها", "تقفلي", "هتقفل", "مش هعرف افتح",
     "رياضة", "ماث", "علوم اساسية", "بيزك", "basic science", "math elective",
+    # Arabizi / Latin Arabic
+    "madda", "mada", "mawade", "mawad", "kors", "course bta3",
+    "prereq", "pre req", "el pre", "btfta7", "betfta7", "bt2fel",
+    "bet2fel", "lazem a5od", "akhod eh abl", "khota", "leveli",
+    "zakaa", "zeka", "saiber", "cyber security", "baramg",
 ]
 
 ELECTIVE_KEYWORDS = [
@@ -52,6 +67,8 @@ ELECTIVE_KEYWORDS = [
     # Egyptian Arabic (عامية مصرية)
     "مواد اختياري", "ايه المواد المتاحة", "الترم ده فيه ايه",
     "اختار ايه", "ايه الاختياري", "مواد الترم ده",
+    "ekhtiyari", "e5tiary", "available electives", "term da",
+    "a5tar eh", "akhtar eh",
 ]
 
 MENTAL_KEYWORDS = [
@@ -69,6 +86,8 @@ MENTAL_KEYWORDS = [
     "كل حاجة صعبة", "مش لاحق", "ضغط نفسي", "محتاج مساعدة",
     "مكتئب", "حزين", "خايف ارسب", "مش هعرف اعديها",
     "مخنوق", "مش عارف", "نفسيتي", "تعبان", "دمرت",
+    "mesh ader", "msh ader", "ta3ban", "zah2an", "makhno2",
+    "khaief", "5ayef", "mota3ab", "msh la7e2", "nafseyty",
 ]
 
 MAJOR_KEYWORDS = [
@@ -80,27 +99,31 @@ MAJOR_KEYWORDS = [
     "سايبر ولا ذكاء", "انهي تخصص", "تخصص ايه", "ادخل ايه",
     "محتار", "محتار بين", "اختار برنامج", "انهي برنامج",
     "عايز اعرف الفرق", "الفرق بين", "ايهم احسن",
+    "ai wala cyber", "cyber wala ai", "a5tar takhasos",
+    "akhtar takhasos", "me7tar", "mehtar", "anhi program",
 ]
 
 PATH_KEYWORDS = [
     "schedule", "plan", "courses", "subjects", "what should i take",
     "my list", "curriculum", "roadmap", "my courses",
-    "المواد", "الجدول", "الخطة", "اخد ايه", "كورساتي"
+    "المواد", "الجدول", "الخطة", "اخد ايه", "كورساتي",
+    "mawade", "gdwal", "gedwal", "khota", "akhod eh", "korsaty",
 ]
 
 GREETINGS = {
     "hi", "hello", "hey", "sup", "yo", "hii", "hiii",
     "مرحبا", "اهلا", "ازيك", "سلام", "هاي", "يا هلا",
-    "السلام عليكم", "ahlan", "salam",
+    "السلام عليكم", "ahlan", "salam", "ezayak", "ezzayak",
+    "3amel eh", "عامل ايه",
 }
 
 GREETING_RESPONSE = (
-    "Hello! 👋 Welcome to the Smart Academic Advisor.\n\n"
+    "Hello! Welcome to the Smart Academic Advisor.\n\n"
     "I can help you with:\n"
-    "  📚 Course information & prerequisites\n"
-    "  📋 Academic regulations\n"
-    "  📝 Available electives\n"
-    "  💪 Study guidance & motivation\n\n"
+    "  • Course information and prerequisites\n"
+    "  • Academic regulations\n"
+    "  • Available electives\n"
+    "  • Study guidance and academic support\n\n"
     "How can I assist you today?"
 )
 
@@ -117,8 +140,9 @@ Instructions:
 1. Answer naturally: If the context says 'is a prerequisite for', say 'X opens Y'. If it says 'Prerequisites for X are Y', say 'You need Y before X'.
 2. If the user asks 'Can I take X?', look at the Context to see if it has prereqs. If empty, say 'Yes, it has no prerequisites'.
 3. Keep the response in the SAME LANGUAGE as the User Question (Arabic or English).
-4. CRITICAL: Course codes [CS101] and names (e.g. Algorithms) MUST remain in English.
-5. Redact emojis if they look like raw [Emoji] text, but keep standard symbols like 📚 or 🔓 if relevant.
+4. If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
+5. CRITICAL: Course codes [CS101] and names (e.g. Algorithms) MUST remain in English.
+6. Use a friendly student-facing tone, but do not overuse emojis.
 
 SPECIAL RULE FOR CATEGORIES & REQUIREMENTS:
 - If the user asks about a specific Category (e.g. "Math Electives", "AI Electives", "University Requirements"):
@@ -172,6 +196,7 @@ STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally (e.g., "متقلقش", "إنت تقدر", "خطوة خطوة").
+- If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.
 
 DYNAMIC GUIDANCE:
@@ -198,6 +223,7 @@ STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally.
+- If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.
 
 Provide a helpful comparison covering:
@@ -239,6 +265,7 @@ STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally.
+- If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.
 
 RESPONSE RULES:
