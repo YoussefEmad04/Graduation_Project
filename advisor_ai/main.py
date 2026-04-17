@@ -3,12 +3,10 @@ Main — FastAPI application for the Smart Academic Advisor.
 Provides student chat, history, and admin endpoints.
 """
 
-import os
-import tempfile
-from typing import Any, Dict, Optional
-from fastapi import FastAPI, UploadFile, File, Form
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -63,13 +61,36 @@ def _dependency_error(error: Exception) -> Dict[str, Any]:
 # ── Request / Response Models ───────────────────────────────────────
 
 class ChatRequest(BaseModel):
-    session_id: str
-    message: str
+    student_id: str = Field(..., min_length=1)
+    session_id: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1)
+    title: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
+    student_id: str
     session_id: str
     response: str
+
+
+class SessionCreateRequest(BaseModel):
+    student_id: str = Field(..., min_length=1)
+    title: Optional[str] = None
+
+
+class SessionCreateResponse(BaseModel):
+    student_id: str
+    session_id: str
+    title: str
+
+
+class SessionSummary(BaseModel):
+    student_id: Optional[str] = None
+    session_id: str
+    title: Optional[str] = None
+    last_message: str = ""
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 class TermRequest(BaseModel):
@@ -77,7 +98,7 @@ class TermRequest(BaseModel):
 
 
 class ElectiveTextRequest(BaseModel):
-    text: str
+    electives: List[str] = Field(..., min_length=1)
 
 
 class StatusResponse(BaseModel):
@@ -86,6 +107,22 @@ class StatusResponse(BaseModel):
 
 
 # ── Student Endpoints ───────────────────────────────────────────────
+
+@app.post("/sessions", response_model=SessionCreateResponse)
+def create_session(request: SessionCreateRequest):
+    """Create a backend-owned chat session for one student."""
+    controller = get_chat_controller()
+    session = controller.create_session(request.student_id, title=request.title)
+    return SessionCreateResponse(**session)
+
+
+@app.get("/sessions", response_model=List[SessionSummary])
+def list_sessions(student_id: Optional[str] = None):
+    """List ChatGPT-style recent sessions as a JSON array."""
+    controller = get_chat_controller()
+    sessions = controller.list_sessions(student_id)
+    return sessions
+
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
@@ -97,72 +134,52 @@ def chat(request: ChatRequest):
     controller = get_chat_controller()
 
     if request.message.strip().lower() in ["start", "new", "reset", "/start"]:
-        response = controller.start_session(request.session_id)
+        response = controller.start_session(
+            request.student_id,
+            request.session_id,
+            title=request.title,
+        )
     else:
-        response = controller.handle_message(request.session_id, request.message)
+        response = controller.handle_message(
+            request.student_id,
+            request.session_id,
+            request.message,
+            title=request.title,
+        )
 
-    return ChatResponse(session_id=request.session_id, response=response)
+    return ChatResponse(
+        student_id=request.student_id,
+        session_id=request.session_id,
+        response=response,
+    )
 
 
 @app.get("/history")
-def get_history(session_id: str):
+def get_history(student_id: str, session_id: str):
     """Get chat history for a session."""
     controller = get_chat_controller()
-    history = controller.get_history(session_id)
-    return {"session_id": session_id, "history": history}
+    history = controller.get_history(student_id, session_id)
+    return {"student_id": student_id, "session_id": session_id, "history": history}
 
 
 # ── Admin Endpoints ─────────────────────────────────────────────────
 
 @app.post("/admin/upload-electives", response_model=StatusResponse)
-async def upload_electives(
-    file: Optional[UploadFile] = File(None),
-    text: Optional[str] = Form(None),
-):
+def upload_electives(request: ElectiveTextRequest):
     """
-    Upload electives from Excel, PDF, or plain text.
-    - Send a file (Excel .xlsx or PDF .pdf)
-    - OR send text in the 'text' form field
+    Upload electives from a JSON list.
     """
     service = get_elective_service()
+    electives = [elective.strip() for elective in request.electives if elective.strip()]
 
-    if file:
-        # Save uploaded file to temp location
-        if not file.filename:
-            return StatusResponse(status="error", message="Filename is missing")
-        suffix = os.path.splitext(file.filename)[1].lower()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            content = await file.read()
-            tmp.write(content)
-            tmp_path = tmp.name
+    if not electives:
+        return StatusResponse(status="error", message="No electives provided.")
 
-        try:
-            if suffix in [".xlsx", ".xls"]:
-                electives = service.upload_from_excel(tmp_path)
-            elif suffix == ".pdf":
-                electives = service.upload_from_pdf(tmp_path)
-            elif suffix in [".png", ".jpg", ".jpeg", ".webp", ".bmp"]:
-                electives = service.upload_from_image(tmp_path)
-            else:
-                # Try as text
-                text_content = content.decode("utf-8", errors="ignore")
-                electives = service.upload_from_text(text_content)
-        finally:
-            os.unlink(tmp_path)
-
-        return StatusResponse(
-            status="success",
-            message=f"Uploaded {len(electives)} electives: {', '.join(electives)}",
-        )
-
-    elif text:
-        electives = service.upload_from_text(text)
-        return StatusResponse(
-            status="success",
-            message=f"Uploaded {len(electives)} electives: {', '.join(electives)}",
-        )
-
-    return StatusResponse(status="error", message="No file or text provided.")
+    service.set_electives(electives)
+    return StatusResponse(
+        status="success",
+        message=f"Uploaded {len(electives)} electives: {', '.join(electives)}",
+    )
 
 
 @app.post("/admin/set-term", response_model=StatusResponse)

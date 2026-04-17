@@ -155,11 +155,13 @@ streamlit run advisor_ai/streamlit_app.py
 ## 🔌 API Endpoints
 
 ### Student Chat
-- **POST** `/chat`: Main interaction endpoint. Requires `session_id` and `message`.
-- **GET** `/history`: Retrieve past conversation history for a session.
+- **POST** `/sessions`: Create a new backend-owned chat session for a `student_id`.
+- **GET** `/sessions`: Retrieve ChatGPT-style recent sessions for one student.
+- **POST** `/chat`: Main interaction endpoint. Requires `student_id`, `session_id`, and `message`.
+- **GET** `/history`: Retrieve past conversation history for one `student_id` + `session_id`.
 
 ### Admin Controls
-- **POST** `/admin/upload-electives`: Backend endpoint for uploading schedule files.
+- **POST** `/admin/upload-electives`: Backend endpoint for replacing electives from a JSON list.
 - **POST** `/admin/set-term`: Backend endpoint for changing the academic term.
 - **GET** `/admin/kg/status`: Check Neo4j connection and KG counts.
 - **GET** `/admin/rag/status`: Check OpenAI vector-store RAG status.
