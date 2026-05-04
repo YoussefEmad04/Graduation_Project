@@ -18,7 +18,7 @@ from openai import OpenAI
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = PROJECT_ROOT / "important_pdf" / "RAG" / "regulations_extracted.md"
+DEFAULT_SOURCE = PROJECT_ROOT / "important_pdf" / "RAG" / "regulations_clean.md"
 DEFAULT_NAME = "smart-academic-advisor-regulations"
 
 

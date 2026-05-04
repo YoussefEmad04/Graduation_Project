@@ -16,7 +16,7 @@ from langsmith import traceable
 from neo4j import GraphDatabase
 
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from pydantic import BaseModel, Field
@@ -66,6 +66,45 @@ COURSE_ALIASES = {
     "رياضة 2": "mathematics 2",
     "رياضه 3": "mathematics 3",
     "رياضة 3": "mathematics 3",
+    "ai applications": "ai406",
+    "artificial intelligence applications": "ai406",
+}
+
+CATEGORY_ALIASES = {
+    "basic computer science": "Basic Computer Science",
+    "computer science basics": "Basic Computer Science",
+    "basic cs": "Basic Computer Science",
+    "علوم الحاسب الاساسيه": "Basic Computer Science",
+    "علوم الحاسب الاساسية": "Basic Computer Science",
+    "اساسيات علوم الحاسب": "Basic Computer Science",
+    "متطلبات الجامعه الاجباريه": "University Requirements (Compulsory)",
+    "متطلبات الجامعة الاجبارية": "University Requirements (Compulsory)",
+    "متطلبات الجامعه": "University Requirements (Compulsory)",
+    "متطلبات الجامعة": "University Requirements (Compulsory)",
+    "university requirements": "University Requirements (Compulsory)",
+    "university compulsory requirements": "University Requirements (Compulsory)",
+    "university requirements elective": "University Requirements (Elective)",
+    "university elective requirements": "University Requirements (Elective)",
+    "elective courses university requirements": "University Requirements (Elective)",
+    "math electives": "Math & Basic Science (Elective)",
+    "مواد العلوم الاساسيه والاختياريه بتاعت الرياضه": "Math & Basic Science (Elective)",
+    "مواد العلوم الاساسية والاختيارية بتاعت الرياضة": "Math & Basic Science (Elective)",
+    "مواد الرياضه الاختياريه": "Math & Basic Science (Elective)",
+    "math & basic science": "Math & Basic Science",
+    "math and basic science": "Math & Basic Science",
+    "basic science": "Math & Basic Science",
+    "math basic science elective": "Math & Basic Science (Elective)",
+    "math and basic science elective": "Math & Basic Science (Elective)",
+    "math & basic science elective courses": "Math & Basic Science (Elective)",
+    "ai elective courses": "AI Major Electives",
+    "ai electives": "AI Major Electives",
+    "elective courses": "AI Major Electives",
+    "major requirements": "AI Major Requirements",
+    "مواد ai الاختياريه": "AI Major Electives",
+    "cybersecurity elective courses": "Cybersecurity Major Electives",
+    "cyber electives": "Cybersecurity Major Electives",
+    "مواد cyber الاختياريه": "Cybersecurity Major Electives",
+    "مواد cyber security الاختياريه": "Cybersecurity Major Electives",
 }
 
 
@@ -216,13 +255,52 @@ class KGService:
             return "Knowledge Graph is currently unavailable."
 
         try:
-            # 1. Classify intent and extracted entities
+            category_hours_answer = self._get_category_required_hours_answer(question)
+            if category_hours_answer:
+                return category_hours_answer
+
+            # Let the LLM understand ambiguous wording before falling back to
+            # direct keyword/fuzzy matching.
             extraction = self._classify_intent(question, history)
+            llm_answer = self._answer_from_intent(question, extraction)
+            if llm_answer:
+                return llm_answer
+
+            study_path_request = self._parse_study_path_request(question)
+            if study_path_request:
+                return self.get_study_path(
+                    study_path_request["level"],
+                    study_path_request["program"],
+                )
+
+            direct_category = self._direct_category_from_question(question)
+            if direct_category:
+                return self._get_courses_in_category(direct_category)
+
+            direct_course = self._find_course_node(question)
+            if direct_course and self._looks_like_reverse_prereq_query(question):
+                return self._get_prereqs_reverse(direct_course["code"])
+            if direct_course and self._looks_like_prereq_query(question):
+                return self._get_prereqs_forward(direct_course["code"])
+
+            return self._query_courses(question)
+
+        except Exception as e:
+            logger.error(f"Query error: {e}")
+            return self._query_courses(question)
+
+    def _answer_from_intent(self, question: str, extraction: dict) -> Optional[str]:
+        """Execute a Neo4j-backed answer from the LLM-extracted KG intent."""
+        intent = extraction.get("intent", "unknown")
+        if intent == "unknown":
+            return None
+
+        try:
             intent = extraction.get("intent", "unknown")
             course = extraction.get("course")
             category = extraction.get("category")
             level = extraction.get("level")
-            program = extraction.get("program")
+            program = self._normalize_program_name(extraction.get("program"))
 
             logger.info(f"Intent: {intent}, Course: {course}, Cat: {category}, Lvl: {level}, Prog: {program}")
 
@@ -241,18 +319,173 @@ class KGService:
             elif intent == "category_query" or (intent == "unknown" and category):
                 return self._get_courses_in_category(category if category else question)
 
-            elif self._looks_like_reverse_prereq_query(question):
-                return self._get_prereqs_reverse(course if course else question)
-
-            elif self._looks_like_prereq_query(question):
-                return self._get_prereqs_forward(course if course else question)
-            
-            else:
-                return self._query_courses(question)
-
         except Exception as e:
-            logger.error(f"Query error: {e}")
-            return self._query_courses(question)
+            logger.warning(f"LLM KG intent handling failed; using fallback matching: {e}")
+
+        return None
+
+    @staticmethod
+    def _normalize_program_name(program: Optional[str]) -> str:
+        """Map LLM program shorthand to Neo4j program names."""
+        normalized = KGService._normalize_query((program or "").lower()).strip()
+        if not normalized:
+            return ""
+        if normalized in {"ai", "artificial intelligence", "ai program", "ذكاء", "الذكاء الاصطناعي"}:
+            return "Artificial Intelligence"
+        if normalized in {"cyber", "cybersecurity", "cyber security", "سايبر", "الامن السيبراني", "الأمن السيبراني"}:
+            return "Cybersecurity"
+        return program or ""
+
+    def _get_category_required_hours_answer(self, question: str) -> Optional[str]:
+        """Return required credit hours for known course categories/groups."""
+        if not self._ensure_connected():
+            return None
+        if not self._looks_like_category_hours_query(question):
+            return None
+
+        direct = self._semantic_category_hours_match(question)
+        if direct:
+            label, hours = direct
+            return self._format_required_hours_answer(question, label, hours)
+
+        category = self._direct_category_from_question(question)
+        if category:
+            req = self._lookup_category_required_hours(category)
+            if req is not None:
+                return self._format_required_hours_answer(question, category, req)
+
+        return None
+
+    @classmethod
+    def _semantic_category_hours_match(cls, question: str) -> Optional[tuple]:
+        """Resolve category-hour questions from loose Arabic/English wording."""
+        normalized = cls._normalize_query(question.lower())
+        normalized = normalized.replace("&", " and ")
+        compact = re.sub(r"\s+", " ", normalized).strip()
+
+        def has_any(*terms: str) -> bool:
+            return any(term in compact for term in terms)
+
+        is_elective = has_any(
+            "elective", "electives", "اختياري", "اختياريه", "اختيارية",
+        )
+        is_university = has_any(
+            "university", "جامعه", "جامعة",
+        )
+        is_math_science = (
+            has_any("math", "mathematics", "رياضه", "رياضة")
+            and has_any("science", "basic science", "علوم", "اساسيه", "اساسية")
+        ) or has_any("math and basic science", "math basic science")
+        is_basic_cs = has_any(
+            "basic computer science", "computer science basics", "basic cs",
+            "علوم الحاسب", "اساسيات علوم الحاسب", "اساسيات الحاسب",
+        )
+        is_major = has_any(
+            "major requirements", "major requirement", "specialization requirements",
+            "specialization courses", "specialization", "متطلبات التخصص",
+            "مواد التخصص", "تخصص",
+        )
+
+        if is_university and is_elective:
+            return ("University Requirements (Elective)", 2)
+        if is_math_science and is_elective:
+            return ("Math & Basic Science (Elective)", 3)
+        if is_major:
+            return ("Major Requirements", 48)
+        if is_basic_cs:
+            return ("Basic Computer Science", 39)
+        if is_university:
+            return ("University Requirements (Compulsory)", 10)
+        if is_math_science:
+            return ("Math & Basic Science", 21)
+        if is_elective:
+            return ("Elective Courses", 21)
+
+        return None
+
+    def _lookup_category_required_hours(self, category_name: str) -> Optional[int]:
+        """Read required_hours from Neo4j for a specific category."""
+        with self._session() as session:
+            res = session.run(
+                "MATCH (cat:Category {name: $name}) RETURN cat.required_hours AS req",
+                name=category_name,
+            )
+            record = res.single()
+        if not record:
+            return None
+        req = record.get("req")
+        return int(req) if req is not None else None
+
+    @staticmethod
+    def _looks_like_category_hours_query(question: str) -> bool:
+        """Detect category/group credit-hour questions."""
+        normalized = KGService._normalize_query(question.lower())
+        asks_hours = any(
+            term in normalized
+            for term in (
+                "credit hour", "credit hours", "required hours", "how many hours",
+                "how many credit", "كم ساعه", "كم ساعة", "كام ساعه", "كام ساعة",
+                "عدد الساعات", "ساعات معتمده", "ساعات معتمدة",
+            )
+        )
+        asks_category = any(
+            term in normalized
+            for term in (
+                "basic computer science", "university requirements", "major requirements",
+                "elective courses", "math & basic science", "math and basic science",
+                "math and science", "math science",
+                "specialization", "specialization requirements", "specialization courses",
+                "علوم الحاسب", "متطلبات الجامعه", "متطلبات الجامعة", "متطلبات التخصص",
+                "مواد التخصص", "مواد اختياريه", "مواد اختيارية", "العلوم الاساسيه", "العلوم الاساسية",
+                "تخصص", "اختياري", "اختيارية", "اختياريه", "رياضه", "رياضة",
+                "جامعه", "جامعة", "اساسيات علوم الحاسب", "اساسيات الحاسب",
+            )
+        )
+        return asks_hours and asks_category
+
+    @staticmethod
+    def _contains_arabic(text: str) -> bool:
+        return bool(re.search(r"[\u0600-\u06FF]", text or ""))
+
+    def _format_required_hours_answer(self, question: str, category_label: str, hours: int) -> str:
+        """Format required category hours in Arabic or English."""
+        if self._contains_arabic(question):
+            return f"- عدد الساعات المعتمدة المطلوبة في {category_label} هو {hours} ساعة معتمدة."
+        return f"- The required credit hours for {category_label} are {hours} credit hours."
+
+    def _parse_study_path_request(self, question: str) -> Optional[Dict[str, Any]]:
+        """Extract a direct study-path request without relying on the LLM classifier."""
+        normalized = self._normalize_query(question.lower())
+        if not any(term in normalized for term in ("مواد", "خطه", "خطة", "study path", "plan", "materials", "courses", "المواد")):
+            return None
+
+        level = None
+        if any(term in normalized for term in ("level 1", "first year", "الفرقه الاولي", "الفرقة الاولي", "سنه اولي", "سنة اولي", "اولي", "الفرقه الاولي", "الفرقة الأولى")):
+            level = 1
+        elif any(term in normalized for term in ("level 2", "second year", "الفرقه التانيه", "الفرقة التانيه", "سنه تانيه", "سنة تانيه")):
+            level = 2
+        elif any(term in normalized for term in ("level 3", "third year", "سنه تالته", "سنة تالته", "سنه ثالثه", "سنة ثالثه", "تالته", "ثالثه")):
+            level = 3
+        elif any(term in normalized for term in ("level 4", "fourth year", "سنه رابعه", "سنة رابعه", "رابعه")):
+            level = 4
+
+        if level is None:
+            return None
+
+        program = "General"
+        if any(term in normalized for term in ("cybersecurity", "cyber", "سايبر", "الامن السيبراني", "الأمن السيبراني")):
+            program = "Cybersecurity"
+        elif any(term in normalized for term in ("artificial intelligence", "ai program", "ذكاء", "الذكاء الاصطناعي")):
+            program = "Artificial Intelligence"
+        return {"level": level, "program": program}
+
+    def _direct_category_from_question(self, question: str) -> Optional[str]:
+        """Map explicit category questions to known category names."""
+        normalized = self._normalize_query(question.lower())
+        for alias, category in CATEGORY_ALIASES.items():
+            if alias in normalized:
+                return category
+        return None
 
     @staticmethod
     def _looks_like_prereq_query(question: str) -> bool:
@@ -264,6 +497,7 @@ class KGService:
                 "prerequisite", "prerequisites", "pre req", "before",
                 "need before", "need to take", "required before",
                 "محتاج", "قبل", "لازم اخد", "لازم اعدي", "تتفتح",
+                "متطلبات", "متطلبات ماده", "متطلبات مادة",
             )
         )
 
@@ -375,13 +609,13 @@ class KGService:
         if not courses:
             return f"No courses found in category '{cat_name}'."
 
-        lines = [f"📂 Category: {cat_name}"]
-        lines.append(f"   • Type: {cat_type.capitalize()}")
-        lines.append(f"   • Required Hours: {req_hours}")
-        lines.append(f"   • Available Courses ({len(courses)}):")
+        lines = [f"**Category:** {cat_name}"]
+        lines.append(f"- **Type:** {cat_type.capitalize()}")
+        lines.append(f"- **Required Hours:** {req_hours}")
+        lines.append(f"- **Available Courses:** {len(courses)}")
         
         for c in courses:
-            lines.append(f"     - [{c['code']}] {c['name']} ({c['ch']} CH)")
+            lines.append(f"- [{c['code']}] {c['name']} ({c['ch']} CH)")
         
         return "\n".join(lines)
 
@@ -431,8 +665,11 @@ class KGService:
         """Format history list into a string block."""
         if not history:
             return ""
-        context_msgs = history[-6:] # Last 3 rounds
         lines = []
+        memory_msgs = [m for m in history if isinstance(m, SystemMessage)]
+        for m in memory_msgs[-1:]:
+            lines.append(f"Memory: {m.content}")
+        context_msgs = [m for m in history if not isinstance(m, SystemMessage)][-6:] # Last 3 rounds
         for m in context_msgs:
             role = "Student" if isinstance(m, HumanMessage) else "Advisor"
             lines.append(f"{role}: {m.content}")
@@ -587,9 +824,9 @@ class KGService:
 
             wants_full = any(kw in query.lower() for kw in ["all", "full", "chain", "everything", "كل", "بالكامل"])
             
-            lines = [f"📚 Prerequisites for [{code}] {name}:"]
+            lines = [f"**Prerequisites for [{code}] {name}:**"]
             direct_text = ", ".join(f"{p['name']} [{p['code']}]" for p in direct)
-            lines.append(f"  ➤ Core Requirements: {direct_text}")
+            lines.append(f"- **Core Requirements:** {direct_text}")
 
             if wants_full:
                 chain_res = session.run(
@@ -598,11 +835,11 @@ class KGService:
                 )
                 chain = [dict(r) for r in chain_res]
                 if len(chain) > len(direct):
-                    lines.append(f"\n  🔗 Full Prerequisite Chain ({len(chain)} total):")
+                    lines.append(f"\n**Full Prerequisite Chain ({len(chain)} total):**")
                     for p in chain:
-                        lines.append(f"    • Level {p['level']}: [{p['code']}] {p['name']}")
+                        lines.append(f"- **Level {p['level']}:** [{p['code']}] {p['name']}")
             else:
-                lines.append("\n💡 Hint: Ask for the 'full chain' to see all dependencies.")
+                lines.append("\n- **Hint:** Ask for the full chain to see all dependencies.")
             
             return "\n".join(lines)
 
@@ -625,9 +862,9 @@ class KGService:
             if not futures:
                 return f"The course [{code}] {name} is not a prerequisite for any future courses."
 
-            lines = [f"🔓 [{code}] {name} is a prerequisite for:"]
+            lines = [f"**[{code}] {name} is a prerequisite for:**"]
             for f in futures:
-                lines.append(f"  ➤ [{f['code']}] {f['name']}")
+                lines.append(f"- [{f['code']}] {f['name']}")
             return "\n".join(lines)
 
     def _handle_study_path(self, question: str, level: str, program: str) -> str:
@@ -663,11 +900,11 @@ class KGService:
             if not courses:
                 return f"No courses found for {major} at Level {level}."
 
-            lines = [f"📚 Recommended courses for {major} — Level {level}:\n"]
+            lines = [f"**Recommended courses for {major} - Level {level}:**\n"]
             for c in courses:
                 prereqs = [p for p in c.get("prerequisites", []) if p]
                 prereq_text = f" (Prerequisites: {', '.join(prereqs)})" if prereqs else ""
-                lines.append(f"  • {c['course']} [{c.get('code', '')}] — {c.get('credits', '?')} credits{prereq_text}")
+                lines.append(f"- {c['course']} [{c.get('code', '')}] - {c.get('credits', '?')} credits{prereq_text}")
             return "\n".join(lines)
 
         except Exception as e:
@@ -696,10 +933,10 @@ class KGService:
             if (not target_prog and not target_level) and best_match:
                 c = best_match
                 return (
-                    f"📚 Course Info: [{c['code']}] {c['name']}\n"
-                    f"   • Credits: {c.get('credits', '?')}\n"
-                    f"   • Level: {c.get('level', '?')}\n"
-                    f"   • Description: Standard core course." # Placeholder description
+                    f"**Course Info:** [{c['code']}] {c['name']}\n"
+                    f"- **Credits:** {c.get('credits', '?')}\n"
+                    f"- **Level:** {c.get('level', '?')}\n"
+                    f"- **Description:** Standard core course." # Placeholder description
                 )
 
             # Query list
@@ -731,13 +968,13 @@ class KGService:
         """Format the course list output."""
         if target_level or target_prog:
             # Detailed list
-            lines = ["📚 Courses:\n"]
+            lines = ["**Courses:**\n"]
             current_prog = ""
             for r in records:
                 if r["program"] != current_prog:
-                    lines.append(f"\n🎓 {r['program']}:")
+                    lines.append(f"\n**{r['program']}:**")
                     current_prog = r["program"]
-                lines.append(f"  • [{r['code']}] {r['course']} — {r['credits']} credits")
+                lines.append(f"- [{r['code']}] {r['course']} - {r['credits']} credits")
             return "\n".join(lines)
         else:
             # Summary
@@ -749,9 +986,9 @@ class KGService:
                 if lvl not in summary[prog]: summary[prog][lvl] = 0
                 summary[prog][lvl] += 1
             
-            lines = ["📚 Course Summary:\n"]
+            lines = ["**Course Summary:**\n"]
             for prog, levels in summary.items():
-                lines.append(f"🎓 {prog}:")
+                lines.append(f"**{prog}:**")
                 for lvl in sorted(levels.keys()):
-                    lines.append(f"  Level {lvl}: {levels[lvl]} courses")
+                    lines.append(f"- **Level {lvl}:** {levels[lvl]} courses")
             return "\n".join(lines)

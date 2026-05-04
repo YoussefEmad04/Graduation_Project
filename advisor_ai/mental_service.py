@@ -103,7 +103,7 @@ class MentalSupportService:
 
         try:
             result = self.major_chain.invoke({"question": message})
-            return result.content
+            return self._normalize_major_response(result.content, message)
         except Exception as e:
             logger.error(f"LLM error on major recommendation: {e}")
             return (
@@ -112,27 +112,55 @@ class MentalSupportService:
             )
 
     @staticmethod
+    def _normalize_major_response(response: str, message: str) -> str:
+        """Keep official major names explicit in comparisons, including Arabic replies."""
+        content = (response or "").strip()
+        if not content:
+            return "Both Artificial Intelligence (AI) and Cybersecurity are excellent programs at ERU."
+
+        has_arabic = any("\u0600" <= c <= "\u06FF" for c in message)
+        lower = content.lower()
+        has_ai = "artificial intelligence" in lower or "(ai)" in lower or " ai" in lower
+        has_cyber = "cybersecurity" in lower
+
+        if has_ai and has_cyber:
+            if has_arabic and ("الذكاء الاصطناعي" not in content or "الأمن السيبراني" not in content):
+                prefix = (
+                    "مقارنة سريعة بين الذكاء الاصطناعي Artificial Intelligence (AI) "
+                    "والأمن السيبراني Cybersecurity:\n\n"
+                )
+                return prefix + content
+            return content
+
+        prefix = (
+            "مقارنة سريعة بين الذكاء الاصطناعي Artificial Intelligence (AI) "
+            "والأمن السيبراني Cybersecurity:\n\n"
+            if has_arabic else
+            "Quick comparison between Artificial Intelligence (AI) and Cybersecurity:\n\n"
+        )
+        return prefix + content
+
+    @staticmethod
     def _fallback_response(message: str) -> str:
         """Fallback if LLM is unavailable."""
         # Detect language
         has_arabic = any('\u0600' <= c <= '\u06FF' for c in message)
         if has_arabic:
             return (
-                "🌟 أنا فاهم إنك بتمر بوقت صعب، وده طبيعي جداً.\n\n"
-                "• حاول تنظم وقتك وترتب أولوياتك\n"
-                "• خد بريك كل شوية — العقل المرتاح بيذاكر أحسن\n"
-                "• اتكلم مع الدكتور أو المعيد — ده شغلهم يساعدوك\n"
-                "• قسّم المذاكرة لأجزاء صغيرة — خطوة خطوة\n\n"
-                "إنت وصلت لحد هنا، وده معناه إنك تقدر تكمل! 💪\n\n"
-                "⚠️ لو حاسس إن الموضوع أكبر من كده، كلّم خدمات الإرشاد في الجامعة."
+                "**دعم أكاديمي**\n\n"
+                "أنا فاهم إنك بتمر بوقت صعب، وده طبيعي جداً.\n\n"
+                "- حاول تنظم وقتك وترتب أولوياتك.\n"
+                "- خد بريك كل شوية، العقل المرتاح بيذاكر أحسن.\n"
+                "- اتكلم مع الدكتور أو المعيد، ده دورهم يساعدوك.\n"
+                "- قسّم المذاكرة لأجزاء صغيرة، خطوة خطوة.\n\n"
+                "لو حاسس إن الموضوع أكبر من كده، كلّم خدمات الإرشاد في الجامعة."
             )
         return (
-            "🌟 I understand you're going through a tough time, and that's completely normal.\n\n"
-            "• Organize your time and prioritize your tasks\n"
-            "• Take breaks — a rested mind learns 10x better\n"
-            "• Talk to your professor or TA — they're here to help\n"
-            "• Break your study into small chunks — step by step\n\n"
-            "You've made it this far, which means you CAN keep going! 💪\n\n"
-            "⚠️ If you're experiencing severe distress, please reach out to "
-            "university counseling services."
+            "**Academic support**\n\n"
+            "I understand you're going through a tough time, and that's completely normal.\n\n"
+            "- Organize your time and prioritize your tasks.\n"
+            "- Take breaks so your mind has time to reset.\n"
+            "- Talk to your professor or TA, they are there to help.\n"
+            "- Break your study into small chunks, step by step.\n\n"
+            "If you're experiencing severe distress, please reach out to university counseling services."
         )

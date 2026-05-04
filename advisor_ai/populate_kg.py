@@ -261,9 +261,10 @@ PREREQUISITES = [
     # CS chain
     ("CS102", "CS101"),       # Structured Programming needs Intro CS
     ("CS201", "CS102"),       # OOP needs Structured Programming
+    ("CS202", "MTH103"),      # Signal and System needs Mathematics 2
     ("CS203", "CS201"),       # Data Structures needs OOP
     ("CS204", "CS201"),       # OS needs OOP
-    ("CS205", "CS203"),       # Algorithms needs Data Structures
+    ("CS205", "CS102"),       # Algorithms needs Structured Programming
     ("CS302", "CS204"),       # Computer Architecture needs OS
 
     # IS chain
@@ -273,6 +274,7 @@ PREREQUISITES = [
 
     # Math chain
     ("MTH103", "MTH101"),     # Math 2 needs Math 1
+    ("MTH104", "MTH101"),     # Probability and Statistics 1 needs Mathematics 1
     ("MTH201", "MTH103"),     # Math 3 needs Math 2
     ("MTH202", "MTH104"),     # Stats 2 needs Stats 1
     ("MTH203", "MTH103"),     # Numerical Analysis needs Math 2
@@ -284,7 +286,7 @@ PREREQUISITES = [
     ("HM010", "HM005"),       # Russian 3 needs Russian 2
 
     # AI chain
-    ("AI201", "CS102"),       # Intro AI needs Programming
+    ("AI201", "MTH102"),      # Intro AI needs Linear Algebra
     ("AI301", "AI201"),       # Machine Learning needs Intro AI
     ("AI301", "MTH104"),      # Machine Learning needs Stats
     ("AI302", "AI301"),       # NLP needs Machine Learning
@@ -297,6 +299,8 @@ PREREQUISITES = [
     ("AI403", "AI301"),       # Deep Learning needs ML
     ("AI404", "AI301"),       # Graduation Project 1 needs ML
     ("AI405", "AI301"),       # Multi Agent Systems needs ML
+    ("AI406", "AI401"),       # AI Applications needs Intelligent Algorithms
+    ("AI406", "AI304"),       # AI Applications also accepts Computer Vision
     ("AI407", "AI404"),       # Graduation Project 2 needs Project 1
 
     # AI Electives
@@ -331,8 +335,8 @@ PREREQUISITES = [
     ("CB401", "CB307"),       # Countermeasures needs Cyber Attacks
     ("CB402", "CB304"),       # Digital Forensics needs Intro Cyber
     ("CB403", "CB303"),       # Advanced Crypto needs Cryptography
-    ("CB404", "CB307"),       # Ethical Hacking needs Cyber Attacks
-    ("CB405", "CB404"),       # Pen Testing needs Ethical Hacking
+    ("CB404", "CB308"),       # Ethical Hacking needs Real-Time Auditing & Defense
+    ("CB405", "CB307"),       # Pen Testing needs Intro Cyber Attacks
     ("CB406", "CB304"),       # Graduation Project 1 needs Intro Cyber
     ("CB407", "CB406"),       # Graduation Project 2 needs Project 1
     ("CB310", "CB304"),       # Usable Security needs Intro Cyber

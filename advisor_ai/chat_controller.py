@@ -11,12 +11,13 @@ import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from advisor_ai.graph import AdvisorGraph
+from advisor_ai.kg_service import KGService
 from advisor_ai.supabase_client import get_supabase
-from advisor_ai.constants import GREETINGS, GREETING_RESPONSE
+from advisor_ai.constants import GREETINGS, GREETING_RESPONSE, HELP_INTENTS
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -259,12 +260,71 @@ class ChatController:
         """Get chat history as LangChain message objects."""
         raw_history = self.get_history(student_id, session_id)
         messages: List[BaseMessage] = []
+        session = self._get_session(student_id, session_id)
+        memory_summary = self._build_memory_summary(raw_history, session)
+        if memory_summary:
+            messages.append(SystemMessage(content=memory_summary))
         for msg in raw_history:
             if msg["role"] == "user":
                 messages.append(HumanMessage(content=msg["content"]))
             else:
                 messages.append(AIMessage(content=msg["content"]))
         return messages
+
+    @staticmethod
+    def _compact_text(text: str, limit: int = 220) -> str:
+        """Compact long history snippets for internal memory context."""
+        compact = re.sub(r"\s+", " ", text or "").strip()
+        return compact[: limit - 3].rstrip() + "..." if len(compact) > limit else compact
+
+    def _build_memory_summary(self, raw_history: List[Dict[str, Any]], session: dict) -> str:
+        """Build a lightweight per-session memory summary from stored history."""
+        if not raw_history and not (session.get("student_level") or session.get("student_major")):
+            return ""
+
+        lines = ["Session memory summary:"]
+        if session.get("student_level"):
+            lines.append(f"- Student level: {session['student_level']}")
+        if session.get("student_major"):
+            lines.append(f"- Student major: {session['student_major']}")
+
+        recent = raw_history[-8:]
+        last_user = next((m for m in reversed(recent) if m.get("role") == "user"), None)
+        last_assistant = next((m for m in reversed(recent) if m.get("role") == "assistant"), None)
+
+        if last_user:
+            lines.append(f"- Last student question: {self._compact_text(last_user.get('content', ''))}")
+        if last_assistant:
+            lines.append(f"- Last advisor answer: {self._compact_text(last_assistant.get('content', ''))}")
+
+        joined = "\n".join(m.get("content", "") for m in recent)
+        course_codes = sorted(set(re.findall(r"\b[A-Z]{2,4}\d{3}\b", joined)))
+        if course_codes:
+            lines.append(f"- Recently discussed course codes: {', '.join(course_codes[-8:])}")
+
+        topics = []
+        normalized = joined.lower()
+        topic_markers = {
+            "withdrawal": ("withdraw", "withdrawal", "انسحاب", "ينسحب", "اسحب"),
+            "transfer": ("transfer", "تحويل", "احول", "التحويل"),
+            "admission": ("admission", "قبول", "القبول"),
+            "graduation": ("graduation", "تخرج", "التخرج"),
+            "cgpa": ("cgpa", "gpa", "معدل", "التراكمي"),
+            "attendance": ("attendance", "غياب", "حضور"),
+            "prerequisites": ("prerequisite", "متطلب", "متطلبات", "قبلها", "تفتح"),
+        }
+        for topic, markers in topic_markers.items():
+            if any(marker in normalized for marker in markers):
+                topics.append(topic)
+        if topics:
+            lines.append(f"- Recently discussed topics: {', '.join(topics)}")
+
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_response(response: str) -> str:
+        """Apply final chatbot formatting rules before storing/returning."""
+        return AdvisorGraph._clean_response_format(response)
 
     def start_session(self, student_id: str, session_id: str, title: Optional[str] = None) -> str:
         """Start or reset a chat session."""
@@ -304,7 +364,13 @@ class ChatController:
 
         # ── Greeting ────────────────────────────────────────────────
         if msg_lower in GREETINGS:
-            response = GREETING_RESPONSE
+            response = self._format_response(GREETING_RESPONSE)
+            self._save_message(student_id, session_id, "user", message)
+            self._save_message(student_id, session_id, "assistant", response)
+            return response
+
+        if any(intent in msg_lower for intent in HELP_INTENTS):
+            response = self._format_response(GREETING_RESPONSE)
             self._save_message(student_id, session_id, "user", message)
             self._save_message(student_id, session_id, "assistant", response)
             return response
@@ -321,6 +387,7 @@ class ChatController:
                 f"Got it, you're in Level {level}.\n"
                 f"Ask me anything about courses, prerequisites, regulations, or electives."
             )
+            response = self._format_response(response)
             self._save_message(student_id, session_id, "user", message)
             self._save_message(student_id, session_id, "assistant", response)
             return response
@@ -342,6 +409,12 @@ class ChatController:
         self._ensure_title(session, student_id, session_id, message)
         history = self._get_history_objects(student_id, session_id)
         self._save_message(student_id, session_id, "user", message)
+
+        if KGService._looks_like_category_hours_query(message):
+            response = self.graph.kg_service.query(message)
+            response = self._format_response(response)
+            self._save_message(student_id, session_id, "assistant", response)
+            return response
         
         try:
             response = self.graph.run(
@@ -357,5 +430,6 @@ class ChatController:
                 "Please try again or rephrase your question."
             )
 
+        response = self._format_response(response)
         self._save_message(student_id, session_id, "assistant", response)
         return response

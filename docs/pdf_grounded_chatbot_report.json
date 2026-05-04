@@ -1,0 +1,977 @@
+{
+  "timestamp_utc": "2026-05-01T22:59:07.998565+00:00",
+  "base_url": "https://smart-academic-advisor-api.vercel.app",
+  "summary": {
+    "RAG": {
+      "total": 30,
+      "passed": 30
+    },
+    "KG": {
+      "total": 30,
+      "passed": 30
+    },
+    "GENERAL": {
+      "total": 30,
+      "passed": 30
+    }
+  },
+  "results": [
+    {
+      "category": "RAG",
+      "prompt": "كام ساعة معتمدة لازم الطالب يجتازها عشان يتخرج؟",
+      "response": "- يجب على الطالب اجتياز 144 ساعة معتمدة كحد أدنى للتخرج.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الدراسة في الكلية ماشية بأي نظام؟",
+      "response": "- الدراسة في الكلية بنظام الساعات المعتمدة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "مدة الفصل الدراسي النظامي كام أسبوع؟",
+      "response": "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الفصل الصيفي مدته كام أسبوع؟",
+      "response": "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "هل الفصل الصيفي إجباري ولا اختياري؟",
+      "response": "- الفصل الصيفي اختياري للطالب.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الحد الأقصى للتسجيل في الفصل الصيفي كام ساعة؟",
+      "response": "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "أقل عدد ساعات للتسجيل في فصل خريف أو ربيع كام؟",
+      "response": "- أقل عدد ساعات للتسجيل في فصل الخريف أو الربيع هو 9 ساعات معتمدة، إلا إذا كانت الساعات المتبقية للتخرج أقل من ذلك.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الطالب صاحب CGPA أعلى من أو يساوي 3 يقدر يسجل كام ساعة؟",
+      "response": "- الطالب صاحب CGPA أعلى من أو يساوي 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل كام ساعة؟",
+      "response": "- الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل 18 ساعة معتمدة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الطالب صاحب CGPA من 1 إلى أقل من 2 يقدر يسجل كام ساعة؟",
+      "response": "- الطالب صاحب CGPA من 1 إلى أقل من 2 يقدر يسجل 15 ساعة معتمدة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الطالب صاحب CGPA أقل من 1 يقدر يسجل كام ساعة؟",
+      "response": "- الطالب صاحب CGPA أقل من 1 يقدر يسجل 12 ساعة معتمدة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "التسجيل في المقررات يستمر لحد إمتى؟",
+      "response": "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الحذف والإضافة بيكونوا لحد إمتى؟",
+      "response": "- الحذف والإضافة يكونان حتى نهاية الأسبوع الثالث بعد موافقة المرشد الأكاديمي.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "إيه شرط التسجيل في مقرر؟",
+      "response": "- يسمح للطالب بالتسجيل في أي مقرر بعد اجتياز متطلباته السابقة.",
+      "passed": true,
+      "missing_any": [
+        "اجتياز المتطلبات"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "هل رأي المرشد الأكاديمي إلزامي؟",
+      "response": "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الطالب يقدر ينسحب من مقرر لحد إمتى؟",
+      "response": "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "لو الطالب انسحب في الميعاد، هل يعتبر راسب؟",
+      "response": "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "لو الطالب انسحب بعد الفترة المحددة دون عذر قهري مقبول، يحصل إيه؟",
+      "response": "- لو الطالب انسحب بعد الفترة المحددة دون عذر قهري مقبول، يحتسب له تقدير راسب في المقررات التي انسحب منها.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "الدرجة النهائية لأي مقرر من كام؟",
+      "response": "- الدرجة النهائية لأي مقرر هي 100 درجة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "أقل درجة للنجاح في أي مقرر كام؟",
+      "response": "- أقل درجة للنجاح في أي مقرر هي 50 درجة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "توزيع درجات المقرر النظري إيه؟",
+      "response": "- توزيع درجات المقرر النظري: 40% للامتحان النهائي، 20% لامتحان منتصف الفصل، 40% للاختبارات الدورية والأعمال الفصلية.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "امتحان الميدترم عليه كام في المقرر النظري؟",
+      "response": "- امتحان منتصف الفصل في المقرر النظري عليه 20%.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "شرط النجاح المرتبط بالامتحان النهائي التحريري إيه؟",
+      "response": "- من شروط النجاح أن يحصل الطالب على 30% على الأقل من درجة الامتحان النهائي التحريري.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "توزيع درجات المقرر الذي يحتوي على تطبيقات عملية إيه؟",
+      "response": "- توزيع درجات المقرر الذي يحتوي على تطبيقات عملية: 40% نهائي، 20% منتصف الفصل، 20% اختبارات دورية وأعمال فصلية، 20% تطبيقات عملية.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "زمن امتحان نهاية الفصل لأي مقرر كام؟",
+      "response": "- زمن امتحان نهاية الفصل لأي مقرر هو ساعتان.",
+      "passed": true,
+      "missing_any": [
+        "2"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟",
+      "response": "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "لو نسبة غياب الطالب تجاوزت 25% يحصل إيه؟",
+      "response": "- إذا تجاوزت نسبة الغياب 25% يجوز لمجلس الكلية حرمان الطالب من دخول الامتحان النهائي بعد إنذاره كتابيًا.",
+      "passed": true,
+      "missing_any": [
+        "حرمانه"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "لو الطالب غاب عن الامتحان النهائي بدون عذر مقبول يحصل إيه؟",
+      "response": "- إذا غاب الطالب عن الامتحان النهائي بدون عذر مقبول يعطى تقدير راسب FA.",
+      "passed": true,
+      "missing_any": [
+        "abs"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "لو الطالب غاب عن الامتحان النهائي بعذر قهري مقبول يحصل إيه؟",
+      "response": "- إذا غاب الطالب عن الامتحان النهائي بعذر قهري مقبول يحتسب له تقدير غير مكتمل I بشرط حصوله على 60% على الأقل من درجات الأعمال الفصلية وألا يكون محروماً من الامتحان.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "RAG",
+      "prompt": "ما معنى تقدير غير مكتمل I؟",
+      "response": "- تقدير غير مكتمل I يُمنح لطالب لم يحضر الامتحان النهائي بعذر قهري مقبول مع استيفاء شرط 60% من الأعمال الفصلية.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "مادة Algorithms (CS205) محتاجة إيه قبلها عشان أقدر أسجلها؟",
+      "response": "عشان تسجل في مادة Algorithms (CS205)، محتاج قبلها تأخذ مادة Structured Programming (CS102). يعني لازم تكون خلصت CS102 قبل ما تسجل في CS205.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "مادة Data Structures تتفتح بإيه؟",
+      "response": "مادة Data Structures [CS203] تتفتح بإيه؟ \n\nالمادة بتفتح بعد ما تكون أخدت Object Oriented Programming [CS201].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "إيه هي سلسلة المواد اللي محتاجها كلها بالكامل عشان أوصل لمشروع التخرج 2 في الـ AI؟",
+      "response": "عشان توصل لمشروع التخرج 2 [AI407] في الـ AI، هتحتاج تاخد السلسلة التالية من المواد:\n\n1. [AI404] Graduation Project 1\n2. [AI401] Intelligent Algorithms\n3. [AI402] Computational Cognitive Systems\n4. [AI403] Deep Learning\n5. [AI405] Multi Agent Systems\n6. [AI406] AI Applications\n\nلازم تكمل المواد دي قبل ما تقدر تاخد مشروع التخرج 2. لو محتاج أي مساعدة تانية، أنا هنا!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "مادة Introduction to Computer Science (CS101) بتفتح إيه في المستويات اللي بعد كده؟",
+      "response": "مادة Introduction to Computer Science (CS101) بتفتح مادة Structured Programming (CS102) في المستويات اللي بعد كده.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "لو شلت مادة Math 1 لا قدر الله، دي بتقفل إيه؟",
+      "response": "لو شلت مادة [MTH101] Mathematics 1، ده هيقفل عليك [MTH103] Mathematics 2 و[MTH104] Probability and Statistics 1. يعني مش هتقدر تاخدهم من غير ما تكون أخدت [MTH101].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "مادة Human Rights بتفتح إيه؟",
+      "response": "مادة Human Rights & Anticorruption مش مرتبطة بأي مواد تانية، يعني هي مش شرط لأخذ مواد مستقبلية.",
+      "passed": true,
+      "missing_any": [
+        "not a prerequisite",
+        "ليست متطلب",
+        "is not a prerequisite",
+        "مش متطلب"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "إيه هي المواد المقترحة لسنة تالتة في برنامج الأمن السيبراني؟",
+      "response": "المواد المقترحة لسنة تالتة في برنامج الأمن السيبراني هي:\n\n1. Blockchain & Cryptocurrencies [CB311] — 3 credits (Prerequisites: Cryptography)\n2. Computer Architecture [CB302] — 3 credits\n3. Computer Networks [CB301] — 3 credits (Prerequisites: Object Oriented Programming)\n4. Cryptography [CB303] — 3 credits (Prerequisites: Linear Algebra)\n5. Cyber Security for Internet of Things [CB312] — 3 credits (Prerequisites: Computer Networks)\n6. Data Mining & Big Data Analysis [DS301] — 3 credits\n7. Hardware Security [CB309] — 3 credits (Prerequisites: Logic Design)\n8. Internet of Things [IS306] — 3 credits\n9. Introduction to Cyber Attacks [CB307] — 3 credits (Prerequisites: Introduction to Cyber-Security)\n10. Introduction to Cyber-Security [CB304] — 3 credits (Prerequisites: Computer Networks)\n11. Network Security [CB305] — 3 credits (Prerequisites: Computer Networks, Introduction to Cyber-Security)\n12. Operations Research [STA301] — 3 credits\n13. Real-Time Auditing & Defense [CB308] — 3 credits (Prerequisites: Network Security)\n14. Reverse Engineering & Disassemblers [CB313] — 3 credits (Prerequisites: Introduction to Cyber-Security)\n15. Software Security [CB306] — 3 credits (Prerequisites: Object Oriented Programming, Introduction to Cyber-Security)\n16. Threat Detection and Mitigation [CB314] — 3 credits (Prerequisites: Network Security)\n17. Usable Security [CB310] — 3 credits (Prerequisites: Introduction to Cyber-Security)\n\nلو عندك أي استفسار عن مادة معينة أو متطلبات، أنا هنا للمساعدة!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "عاوز خطة الدراسة للفرقة الأولى عامةً.",
+      "response": "بالنسبة لخطة الدراسة للفرقة الأولى، هنا المواد الموصى بها:\n\n### متطلبات الرياضيات والعلوم الأساسية:\n- **إجباري**: 21 ساعة معتمدة.\n- **اختياري**: 3 ساعات معتمدة (مادة واحدة).\n  - يمكنك اختيار أي مادة من الرياضيات الاختيارية (MTH201، MTH202، إلخ) لأنها ملهاش متطلبات مسبقة.\n\n### متطلبات علوم الكمبيوتر الأساسية:\n- **إجباري**: 39 ساعة معتمدة.\n  - المواد:\n    - Discrete Structure [CS103] — 3 credits\n    - Fundamentals of Information Systems [IS101] — 3 credits\n    - Introduction to Computer Science [CS101] — 3 credits\n    - Structured Programming [CS102] — 3 credits (Prerequisites: Introduction to Computer Science)\n    - Mathematics 1 [MTH101] — 3 credits\n    - Mathematics 2 [MTH103] — 3 credits (Prerequisites: Mathematics 1)\n    - Linear Algebra [MTH102] — 3 credits\n    - Probability and Statistics 1 [MTH104] — 3 credits (Prerequisites: Mathematics 1)\n    - Electronics [ELC101] — 3 credits\n    - Physics [PH101] — 3 credits\n\n### متطلبات الجامعة:\n- **إجباري**: 10 ساعات معتمدة.\n- **اختياري**: 2 ساعات معتمدة (اختر مادة واحدة).\n\n### ملاحظات:\n- تأكد من متابعة المتطلبات المسبقة لكل مادة، خاصة المواد اللي فيها prerequisites. لو عندك أي استفسار تاني، أنا هنا للمساعدة!",
+      "passed": true,
+      "missing_any": [
+        "Level 1"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "إيه هي متطلبات الجامعة الإجبارية؟",
+      "response": "المتطلبات الجامعية الإجبارية هي 10 ساعات معتمدة. المواد المتاحة هي:\n\n- [HM001] English Language 1 (2 CH)\n- [HM002] English Language 2 (2 CH)\n- [HM003] Human Rights & Anticorruption (2 CH)\n- [HM004] Russian Language 1 (2 CH)\n- [HM005] Russian Language 2 (2 CH)\n\nكل المواد دي إجباري.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "قوللي مواد العلوم الأساسية والاختيارية بتاعت الرياضة؟",
+      "response": "بالنسبة لمواد العلوم الأساسية والاختيارية بتاعت الرياضة، عندك:\n\n- **عدد الساعات المطلوبة**: 3 ساعات\n- **النوع**: اختياري\n\nتقدر تختار من المواد دي:\n- [MTH201] Mathematics 3 (3 CH)\n- [MTH202] Probability and Statistics 2 (3 CH)\n- [MTH203] Numerical Analysis (3 CH)\n\nتقدر تختار أي مادة من المواد دي، لأنها ملهاش متطلبات مسبقة.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "كلمني عن مادة الـ ML",
+      "response": "مادة الـ ML، أو [AI301] Machine Learning، هي مادة أساسية في البرنامج. عدد الساعات المعتمدة لها هو 3 ساعات، وهي في المستوى الثالث. المادة بتغطي أساسيات تعلم الآلة وتعتبر جزء مهم من دراسة الذكاء الاصطناعي. لو عندك أي استفسارات تانية عن المادة أو محتاج معلومات إضافية، أنا هنا للمساعدة!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "عاوز اعرف معلومات عن مادة رياضه 2",
+      "response": "مادة رياضه 2 (MTH103) هي مادة أساسية بمستوى 1، وبتدي 3 ساعات معتمدة. المادة دي تعتبر جزء من المقررات الأساسية في البرنامج. لو عندك أي استفسار تاني عن المادة أو محتاج معلومات إضافية، أنا هنا للمساعدة!",
+      "passed": true,
+      "missing_any": [
+        "Mathematics 2"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Mathematics 2 [MTH103] في Level 1؟",
+      "response": "عشان تاخد Mathematics 2 [MTH103]، محتاج تكون خلصت Mathematics 1 [MTH101] الأول. يعني لازم تخلص MTH101 قبل ما تبدأ MTH103.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Probability and Statistics 1 [MTH104]؟",
+      "response": "عشان تاخد مادة Probability and Statistics 1 [MTH104]، لازم تكون أخدت مادة Mathematics 1 [MTH101] قبلها.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Structured Programming [CS102]؟",
+      "response": "عشان تاخد مادة Structured Programming [CS102]، لازم تكون أخدت مادة Introduction to Computer Science [CS101] قبلها. يعني، تحتاج [CS101] قبل ما تاخد [CS102].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Signal and System [CS202] في Level 2؟",
+      "response": "المتطلب المسبق لمادة Signal and System [CS202] في Level 2 هو Mathematics 2 [MTH103]. يعني لازم تكون أخدت MTH103 قبل ما تقدر تسجل في CS202.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Algorithms [CS205]؟",
+      "response": "عشان تاخد مادة Algorithms [CS205]، لازم تكون أخدت مادة Structured Programming [CS102] قبلها. يعني، محتاج [CS102] قبل [CS205].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Data Structure [CS203]؟",
+      "response": "عشان تاخد مادة Data Structures [CS203]، لازم تكون أخدت مادة Object Oriented Programming [CS201] قبلها. يعني، تحتاج [CS201] قبل [CS203].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب Introduction to Artificial Intelligence [AI201]؟",
+      "response": "عشان تاخد مادة Introduction to Artificial Intelligence [AI201]، لازم تكون أخدت Linear Algebra [MTH102] قبلها. يعني، تحتاج MTH102 قبل AI201.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "اذكر مواد AI program في Level 4 Semester 1.",
+      "response": "مواد برنامج الذكاء الاصطناعي في المستوى 4، الفصل الدراسي الأول هي:\n\n- **AI402**: Computational Cognitive Systems\n- **AI403**: Deep Learning\n- **AI404**: Graduation Project 1\n- **AI401**: Intelligent Algorithms\n- **Major elective 4**: upon the selection\n- **Major elective 5**: upon the selection.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب AI406 AI Applications؟",
+      "response": "عشان تاخد مادة [AI406] AI Applications، محتاج تكون خلصت المواد المسبقة: [AI304] Computer Vision و[AI401] Intelligent Algorithms. يعني لازم تكون عندك الأساسيات دي قبل ما تبدأ في [AI406].",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب AI407 Graduation Project 2؟",
+      "response": "متطلب AI407 Graduation Project 2 هو:\n\n- **المتطلب السابق**: AI404 Graduation Project 1.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "اذكر بعض مواد AI elective courses.",
+      "response": "بالنسبة لمواد AI elective courses، عندك 21 ساعة اختيارية. تقدر تختار من المواد دي:\n\n- [AI307] Computational Learning Theory (3 CH)\n- [AI308] Language Modeling (3 CH)\n- [AI309] User Models (3 CH)\n- [AI310] Handwriting Recognition (3 CH)\n- [AI311] Expert Systems (3 CH)\n- [AI312] Architecture of Intelligence (3 CH)\n- [AI314] Artificial Intelligence in Games (3 CH)\n- [AI408] Cognitive Modeling (3 CH)\n- [AI409] Cognitive Engineering (3 CH)\n- [AI410] Cognitive Natural Networks (3 CH)\n- [AI411] Language and Speech Technology (3 CH)\n- [AI412] Statistical Language Modeling (3 CH)\n- [AI413] AI for Robotics (3 CH)\n- [AI415] Selected Topic in AI 1 (3 CH)\n- [AI416] Selected Topic in AI 2 (3 CH)\n- [CS301] Operations Research (3 CH)\n- [CS303] Image Processing (3 CH)\n- [CS307] Computer Graphics (3 CH)\n- [CS309] Embedded Systems (3 CH)\n- [CS403] Advanced Knowledge Representation and Reasoning (3 CH)\n- [ROB302] Fundamental of Cognitive Interaction with Robots (3 CH)\n- [SW305] Software Development for Mobile Devices (3 CH)\n- [SW401] Software Testing & Quality Assurance (3 CH)\n\nتقدر تختار من المواد دي حسب اهتماماتك.",
+      "passed": true,
+      "missing_any": [
+        "STA301",
+        "DS307",
+        "CB310",
+        "CB311"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "اذكر مواد Data Science Level 3 Semester 1.",
+      "response": "مواد Data Science Level 3 Semester 1 هي:\n\n- **DS304**: Data Visualization\n- **DS303**: Exploratory Data Analysis\n- **DS302**: Fundamental of Data Science\n- **AI301**: Machine Learning\n- **Major elective 1**: (اختياري)\n- **Major elective 2**: (اختياري)\n\n",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب DS306 Advanced Database Systems؟",
+      "response": "المادة DS306 Advanced Database Systems متطلباتها المسبقة مش موجودة في الـ Context. يعني، أقدر أقول لك إنك ممكن تاخدها من غير أي متطلبات مسبقة.",
+      "passed": true,
+      "missing_any": [
+        "IS201"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب DS407 Graduation Project 2؟",
+      "response": "- متطلب **DS407 Graduation Project 2** هو **DS406 Graduation Project 1** .",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "اذكر مواد Cybersecurity Level 3 Semester 1.",
+      "response": "مواد Cybersecurity Level 3 Semester 1 هي:\n\n- **CB302**: Computer Architecture\n- **CB301**: Computer Networks\n- **CB303**: Cryptography\n- **CB304**: Introduction to Cyber-Security\n- **Major elective 1**: upon selection\n- **Major elective 2**: upon selection.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب CB404 Ethical Hacking؟",
+      "response": "عشان تاخد مادة [CB404] Ethical Hacking، محتاج تكون أخدت مادة [CB308] Real-Time Auditing & Defense قبلها.",
+      "passed": true,
+      "missing_any": [
+        "CB307"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "ما متطلب CB405 Penetration Testing & Vulnerabilities Discovery؟",
+      "response": "عشان تاخد مادة [CB405] Penetration Testing & Vulnerabilities Discovery، محتاج تكون أخدت مادة Introduction to Cyber Attacks [CB307] قبلها.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "KG",
+      "prompt": "اذكر بعض Cybersecurity elective courses.",
+      "response": "بالطبع! في مواد اختيارية في مجال Cybersecurity، عندك 21 ساعة اختيارية. تقدر تختار من المواد التالية:\n\n- [CB310] Usable Security (3 CH)\n- [CB311] Blockchain & Cryptocurrencies (3 CH)\n- [CB312] Cyber Security for Internet of Things (3 CH)\n- [CB313] Reverse Engineering & Disassemblers (3 CH)\n- [CB314] Threat Detection and Mitigation (3 CH)\n- [CB408] Firewalls and Web Application Firewall (3 CH)\n- [CB409] Cybercrime Investigator (3 CH)\n- [CB410] Cryptanalysis (3 CH)\n- [CB411] Selected Topic in Networks 1 (3 CH)\n- [CB412] Selected Topic in Networks 2 (3 CH)\n- [CB413] Computer Networks Defense (3 CH)\n- [CB414] Information Security (3 CH)\n- [CS402] Theory of Computation (3 CH)\n- [DS301] Data Mining & Big Data Analysis (3 CH)\n- [IS306] Internet of Things (3 CH)\n- [STA301] Operations Research (3 CH)\n\nتقدر تختار من المواد دي حسب اهتماماتك!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "hi",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "hello",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "مرحبا",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "ازيك",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "I am afraid I will fail this semester",
+      "response": "I understand how overwhelming that feeling can be. Remember, you're not alone in this; many students experience similar worries. Let's focus on practical steps you can take to regain control and confidence in your studies.\n\nHere are some actionable tips to help you navigate this semester:\n\n- **Create a Study Schedule**: Break down your syllabus into smaller, manageable tasks. Allocate specific times for studying each subject to maintain a balanced approach.\n  \n- **Set Realistic Goals**: Instead of aiming for perfection, set achievable goals for each study session. Celebrate small victories to keep your motivation high.\n\n- **Utilize ERU Resources**: Don't hesitate to reach out to your professors or TAs if you're struggling with specific topics. They can offer guidance and support.\n\n- **Form Study Groups**: Connect with classmates to study together. Sharing knowledge and discussing concepts can reinforce your understanding and make studying more enjoyable.\n\n- **Practice Self-Care**: Ensure you're taking breaks, eating well, and getting enough sleep. A healthy mind and body can significantly boost your academic performance.\n\nYou’ve got this! Believe in yourself, and take it one step at a time. If you're feeling really overwhelmed, consider visiting the university counseling services for extra support. I'm here for you if you have any other questions or need further advice! 🌟",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "I am stressed and need study tips",
+      "response": "I'm really sorry to hear that you're feeling stressed. It's completely normal, especially during busy academic times. Let's work together to create a plan that can help you feel more in control and focused. \n\nHere are some practical study tips you can try:\n\n- **Break it Down**: Divide your study material into smaller, manageable sections. Tackle one section at a time to avoid feeling overwhelmed.\n- **Create a Study Schedule**: Set specific times for studying each subject. Consistency can help reduce anxiety and improve retention.\n- **Use Active Learning Techniques**: Try summarizing what you’ve learned, teaching it to someone else, or using flashcards. These methods can make studying more engaging and effective.\n- **Take Regular Breaks**: Use techniques like the Pomodoro Technique (25 minutes of studying followed by a 5-minute break). This can help keep your mind fresh.\n- **Reach Out for Support**: Don’t hesitate to ask your professors, TAs, or classmates if you need help with difficult topics. Collaboration can lighten the load.\n\nRemember, it’s okay to feel stressed, but taking these small steps can help you regain your focus. You're capable of handling this! If you need more personalized support, consider visiting the university counseling services as well. \n\nKeep pushing forward, and don't hesitate to reach out if you have more questions! You've got this! 💪📚",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "I feel overwhelmed and burned out",
+      "response": "I'm really sorry to hear that you're feeling this way. It's completely understandable to feel overwhelmed, especially with the demands of academic life. Remember, you're not alone in this, and there are ways to manage these feelings. 🌟\n\nHere are some practical tips to help you navigate through this:\n\n- **Take Breaks:** Schedule short breaks during your study sessions. Even a 5-10 minute walk or a change of scenery can refresh your mind.\n- **Prioritize Tasks:** Make a list of what needs to be done and prioritize tasks based on deadlines and importance. Focus on one task at a time.\n- **Set Realistic Goals:** Break your work into smaller, achievable goals. Celebrate each small victory to keep yourself motivated.\n- **Stay Connected:** Reach out to classmates or friends for study groups or just to talk. Sharing your thoughts can lighten the load.\n- **Utilize ERU Resources:** Don’t hesitate to reach out to your professors, TAs, or academic advisors for support and guidance. They can provide valuable insights.\n\nIt's okay to feel this way, and taking steps to manage it is a sign of strength. Keep pushing through, and remember, you’ve got this! If you feel like you need more support, consider visiting the university counseling services. They can offer additional help. 💪\n\nIf you have any specific concerns or questions, feel free to share!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "I am worried about my exams",
+      "response": "I completely understand how you feel; exam periods can be really stressful! It’s important to remember that with the right strategies, you can manage this stress and prepare effectively. Here are some practical tips to help you:\n\n- **Create a Study Schedule**: Break down your study materials into manageable chunks and allocate specific times for each subject. This will help you stay organized and feel less overwhelmed.\n\n- **Practice Past Papers**: Familiarize yourself with the exam format by practicing past exam questions. This can boost your confidence and help you identify areas where you need more review.\n\n- **Take Care of Yourself**: Make sure to get enough rest, eat well, and take breaks during your study sessions. A healthy body supports a healthy mind!\n\n- **Reach Out for Help**: Don’t hesitate to ask your professors or TAs for clarification on topics you find challenging. They are there to support you!\n\n- **Stay Positive**: Remind yourself of your strengths and past successes. Positive self-talk can really make a difference in your mindset.\n\nIf you’re feeling really overwhelmed, please consider visiting the university counseling services for additional support. You’ve got this, and I believe in your ability to succeed! If you have any more questions or need further support, feel free to ask. 🌟",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "انا خايف اسقط الترم ده",
+      "response": "متقلقش، كلنا بنمر بأوقات صعبة في دراستنا، وده شيء طبيعي. المهم إنك تتعامل مع الوضع بشكل إيجابي وتبدأ تخطط. هنا شوية نصائح ممكن تساعدك:\n\n- **تنظيم الوقت:** حاول تعمل جدول زمني لمذاكرتك، حدد أوقات معينة للدراسة وخصص وقت للراحة.\n- **تحديد الأهداف:** قسم المواد الكبيرة إلى مواضيع أصغر، وحدد هدف لكل يوم، وركز على نقطة واحدة في كل مرة.\n- **المراجعة المستمرة:** حاول تراجع المعلومات بشكل دوري، مش بس قبل الامتحانات. كده هتكون المعلومات في ذاكرتك أفضل.\n- **التواصل مع الدكاترة وزملائك:** لو عندك أي استفسارات، متترددش تسأل الأساتذة أو زملائك. تقدر كمان تتواصل مع المساعدين الأكاديميين لو احتجت دعم إضافي.\n- **استغلال الموارد المتاحة:** اتأكد إنك تستخدم المكتبة والمصادر على الإنترنت، وكمان لو حابب، تقدر تروح لمكتب الإرشاد الأكاديمي في الجامعة.\n\nإنت تقدر تتخطى الفترة دي! خليك متفائل واستمر في المحاولة. وإذا حسيت إن الضغط زيادة، ممكن تتواصل مع خدمات الإرشاد في الجامعة. أنا هنا لو عندك أي سؤال أو محتاج دعم إضافي! 🌟",
+      "passed": true,
+      "missing_any": [
+        "متفهم",
+        "الدكتور",
+        "المساعده",
+        "الاستشاره",
+        "مساعده"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "محتاج نصايح للمذاكرة",
+      "response": "طبعًا، أنا هنا علشان أساعدك! المذاكرة ممكن تكون مرهقة أحيانًا، لكن مع بعض الخطوات البسيطة تقدر تنظم وقتك وتحقق أفضل نتائج. إليك بعض النصائح:\n\n- **حدد أهداف واضحة**: قبل ما تبدأ مذاكرتك، حط أهداف معينة لكل جلسة. مثلاً، \"هذا اليوم هركز على مادة الذكاء الاصطناعي\".\n  \n- **استخدم تقنية بومودورو**: قسم وقت المذاكرة إلى فترات (25 دقيقة مذاكرة، 5 دقائق راحة). ده هيساعدك تحافظ على تركيزك.\n\n- **خلق بيئة مناسبة**: تأكد إن المكان اللي بتذاكر فيه مريح وهادئ. استخدم إضاءة جيدة وابتعد عن المشتتات.\n\n- **استعن بالموارد المتاحة**: لو عندك أي أسئلة، متترددش تسأل الأساتذة أو المساعدين الأكاديميين. هم هنا لدعمك.\n\n- **ممارسة الاسترخاء**: خصص وقت لممارسة الرياضة أو هواية تحبها. ده هيساعدك على تخفيف الضغط.\n\nإنت قادر على تحقيق أهدافك! لو عندك أي أسئلة أو محتاج مساعدة إضافية، أنا هنا ليك. 💪📚",
+      "passed": true,
+      "missing_any": [
+        "نصايح",
+        "تنظيم"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "حاسس اني مش لاحق ومتوتر",
+      "response": "أنا فاهم مشاعرك تمامًا، وده طبيعي جدًا في فترة الدراسة. متقلقش، إنت مش لوحدك، وفيه خطوات ممكن تساعدك تخرج من الحالة دي.\n\n**إليك بعض النصائح:**\n\n- **خطط لوقتك:** حاول تعمل جدول زمني للمذاكرة، وخصص وقت لكل مادة. حاول تبعد عن المشتتات خلال المذاكرة.\n- **خذ فترات راحة:** بعد كل ساعة أو ساعتين من المذاكرة، خد قسط من الراحة عشان تقدر تركز أفضل.\n- **حدد أولوياتك:** ركز على المهمات الأكثر أولوية، وابدأ بأصعب المواد في البداية لما تكون طاقتك عالية.\n- **تواصل مع زملائك:** حاول تدرس مع زملائك في المجموعة. ده هيخليك تحس بالراحة، وكمان ممكن تستفيد من بعضكم.\n- **اطلب المساعدة:** لو في حاجة مش فاهمها، متترددش تسأل الأستاذ أو مساعد التدريس (TA) بتاعك.\n\nتذكر، كل خطوة صغيرة بتقربك لهدفك. إنت قادر على التحدي ده، وخليك واثق في نفسك. لو عاوز أي مساعدة إضافية، أنا هنا. 💪",
+      "passed": true,
+      "missing_any": [
+        "تنظم",
+        "الدكتور"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "خايف من الامتحانات ومش عارف ابدا",
+      "response": "متقلقش، دا إحساس طبيعي جدًا قبل الامتحانات! أنا هنا عشان أساعدك، وهنعدي المرحلة دي مع بعض. إليك شوية نصائح ممكن تساعدك:\n\n- **خطط لدراستك**: حاول تعمل جدول زمني للدراسة، وتوزع المواد على الأيام. كده هتكون مرتاح أكتر وتقدر تركز على كل مادة.\n\n- **قسم المواد**: بدلاً من الدراسة لكل المادة دفعة واحدة، قسمها لمواضيع صغيرة وادرس كل موضوع على حدة. هيساعدك تفهم المعلومات بشكل أفضل.\n\n- **استخدم أساليب متنوعة**: جرب تستخدم الرسوم البيانية، أو الملاحظات الملونة، أو حتى التسميع مع زملائك. كل ما تستخدم أساليب مختلفة، هتتذكر أكتر.\n\n- **استرح بشكل كويس**: خليك واخد فترات راحة قصيرة بين كل جلسة دراسية. ده هيساعدك تفضل مركز ومتحمس.\n\n- **تواصل مع زملاءك**: حاول تذاكر مع أصدقائك أو تسألهم عن أي حاجة مش واضحة. الدراسة المشتركة بتكون مفيدة جدًا.\n\nوأنا واثق إنك هتقدر تخطي الامتحانات بنجاح! لو حسيت إنك محتاج دعم أكتر، ممكن تتوجه لخدمات الاستشارات في الجامعة. إنت مش لوحدك في ده! 💪📚",
+      "passed": true,
+      "missing_any": [
+        "ابدا",
+        "تنظيم",
+        "الدكتور",
+        "مساعده",
+        "خطه",
+        "الاساتذه",
+        "المستشارين"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "Which major should I choose, AI or Cybersecurity?",
+      "response": "To help you decide between **Artificial Intelligence (AI)** and **Cybersecurity**, I’d like to know what you enjoy more. Here’s a quick comparison of both programs:\n\n### About **Artificial Intelligence (AI)**:\n- **Focuses on**: Machine Learning, Deep Learning, NLP, Computer Vision, Pattern Recognition, Robotics\n- **Career paths**: ML Engineer, Data Scientist, AI Researcher, NLP Engineer, Computer Vision Engineer\n- **Best for students who love**: Math, algorithms, building intelligent systems, research\n- **Market demand**: Very high globally, growing rapidly in Egypt and the Middle East\n- **Key skills**: Python, TensorFlow/PyTorch, statistics, linear algebra\n\n### About **Cybersecurity**:\n- **Focuses on**: Network Security, Ethical Hacking, Cryptography, Digital Forensics, Penetration Testing\n- **Career paths**: Security Analyst, Penetration Tester, SOC Analyst, Security Consultant, Forensics Investigator\n- **Best for students who love**: Problem-solving, puzzles, protecting systems, networking\n- **Market demand**: Critical shortage worldwide, extremely high demand in banking/government/enterprise\n- **Key skills**: Networking, Linux, security tools (Wireshark, Metasploit, Burp Suite)\n\n### Key Considerations:\n- Both programs are excellent career paths with high demand.\n- You'll have a foundation in both areas due to shared Level 1-2 courses.\n- **AI** is great if you're more into math and technology, while **Cybersecurity** is ideal if you enjoy problem-solving and protecting information.\n\nLet me know what interests you more, and I can provide more tailored advice!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "I am confused between AI and Cybersecurity",
+      "response": "To help you decide between **Artificial Intelligence (AI)** and **Cybersecurity**, it would be useful to know what you enjoy more. Here’s a quick comparison of both programs:\n\n### **Artificial Intelligence (AI)**\n- **Focuses on**: Machine Learning, Deep Learning, NLP, Computer Vision, Robotics.\n- **Career paths**: ML Engineer, Data Scientist, AI Researcher, NLP Engineer.\n- **Best for**: Students who love math, algorithms, and building intelligent systems.\n- **Market demand**: Very high globally; rapidly growing in Egypt and the Middle East.\n- **Key skills**: Python, TensorFlow/PyTorch, statistics.\n\n### **Cybersecurity**\n- **Focuses on**: Network Security, Ethical Hacking, Cryptography, Digital Forensics.\n- **Career paths**: Security Analyst, Penetration Tester, Security Consultant.\n- **Best for**: Students who enjoy problem-solving, puzzles, and protecting systems.\n- **Market demand**: Critical shortage worldwide; extremely high demand in banking/government.\n- **Key skills**: Networking, Linux, security tools.\n\n### **General Notes**\n- Both programs offer excellent career paths.\n- Since you’ve completed Level 1 and 2 courses, you already have a foundation in both fields.\n- Consider your interests: If you prefer logical problem-solving and security, go for **Cybersecurity**. If you're passionate about algorithms and building intelligent systems, choose **Artificial Intelligence (AI)**. \n\nFeel free to share what you enjoy more, and I can provide more tailored advice!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "Should I choose AI or Cyber?",
+      "response": "To help you decide between **Artificial Intelligence (AI)** and **Cybersecurity**, I’d like to know what you enjoy most about technology. Here’s a quick comparison of both programs:\n\n### Artificial Intelligence (AI):\n- **Focuses on**: Machine Learning, Deep Learning, NLP, Computer Vision, Robotics\n- **Career paths**: ML Engineer, Data Scientist, AI Researcher, NLP Engineer\n- **Best for**: Students who love math, algorithms, and building intelligent systems\n- **Market demand**: Very high globally, rapidly growing in Egypt and the Middle East\n- **Key skills**: Python, TensorFlow/PyTorch, statistics\n\n### Cybersecurity:\n- **Focuses on**: Network Security, Ethical Hacking, Cryptography, Digital Forensics\n- **Career paths**: Security Analyst, Penetration Tester, SOC Analyst, Forensics Investigator\n- **Best for**: Students who enjoy problem-solving, protecting systems, and networking\n- **Market demand**: Critical shortage worldwide, especially in banking and government sectors\n- **Key skills**: Networking, Linux, security tools (Wireshark, Metasploit)\n\n### Conclusion:\n- Both fields offer excellent career opportunities.\n- You already have a foundation in both areas from your Level 1-2 courses.\n- Consider your interests: \n  - If you enjoy math and algorithms, go for **Artificial Intelligence (AI)**.\n  - If you prefer problem-solving and security, choose **Cybersecurity**.\n\nFeel free to share what you enjoy more, and I can help you further!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "اختار AI ولا Cyber؟",
+      "response": "أولًا، لازم أعرف إنت بتحب إيه عشان أقدر أساعدك تختار بين البرنامجين. هنا مقارنة بسيطة بينهم:\n\n### برنامج الذكاء الاصطناعي (AI):\n- **التركيز**: تعلم الآلة، التعلم العميق، معالجة اللغة الطبيعية، رؤية الحاسوب، التعرف على الأنماط، الروبوتات.\n- **مسارات العمل**: مهندس تعلم آلة، عالم بيانات، باحث في الذكاء الاصطناعي، مهندس معالجة اللغة الطبيعية، مهندس رؤية حاسوبية.\n- **أفضل للطلاب الذين يحبون**: الرياضيات، الخوارزميات، بناء أنظمة ذكية، البحث.\n- **طلب السوق**: مرتفع جدًا عالميًا، وبيزيد بسرعة في مصر والشرق الأوسط.\n- **المهارات الأساسية**: بايثون، TensorFlow/PyTorch، الإحصاء، الجبر الخطي.\n\n### برنامج الأمن السيبراني (Cybersecurity):\n- **التركيز**: أمان الشبكات، القرصنة الأخلاقية، التشفير، الطب الشرعي الرقمي، اختبار الاختراق.\n- **مسارات العمل**: محلل أمان، مختبر اختراق، محلل مركز العمليات الأمنية، مستشار أمان، محقق في الطب الشرعي.\n- **أفضل للطلاب الذين يحبون**: حل المشكلات، الألغاز، حماية الأنظمة، الشبكات.\n- **طلب السوق**: نقص حاد عالميًا، وطلب مرتفع جدًا في البنوك والحكومة والشركات.\n- **المهارات الأساسية**: الشبكات، لينكس، أدوات الأمان (Wireshark، Metasploit، Burp Suite).\n\n### نصيحة:\n- كلا البرنامجين ممتازين وبيوفروا فرص عمل قوية.\n- الدورات المشتركة في المستويات 1-2 ساعدتك تبني أساس قوي في الاثنين.\n- لو عندك اهتمامات محددة، قولي عشان أقدر أنصحك بشكل أفضل.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "انا محتار بين الذكاء الاصطناعي والامن السيبراني",
+      "response": "مقارنة سريعة بين الذكاء الاصطناعي Artificial Intelligence (AI) والأمن السيبراني Cybersecurity:\n\nعشان أقدر أساعدك بشكل أفضل، ممكن تقولي إنت بتحب إيه أو إيه اللي يثير اهتمامك في مجالات الذكاء الاصطناعي أو الأمن السيبراني؟\n\nلكن بشكل عام، هنا مقارنة سريعة بين البرنامجين:\n\n### برنامج الذكاء الاصطناعي (AI):\n- **المجالات**: تعلم الآلة، التعلم العميق، معالجة اللغة الطبيعية، رؤية الكمبيوتر، التعرف على الأنماط، الروبوتات.\n- **مسارات العمل**: مهندس تعلم الآلة، عالم بيانات، باحث في الذكاء الاصطناعي، مهندس معالجة اللغة الطبيعية، مهندس رؤية الكمبيوتر.\n- **الأفضل للي بيحبوا**: الرياضيات، الخوارزميات، بناء أنظمة ذكية، البحث.\n- **طلب السوق**: عالي جداً عالمياً، في نمو سريع في مصر والشرق الأوسط.\n- **المهارات الأساسية**: بايثون، TensorFlow/PyTorch، الإحصاء، الجبر الخطي.\n\n### برنامج الأمن السيبراني:\n- **المجالات**: أمان الشبكات، الاختراق الأخلاقي، التشفير، الطب الشرعي الرقمي، اختبار الاختراق.\n- **مسارات العمل**: محلل أمان، مختبر اختراق، محلل SOC، مستشار أمان، محقق في الطب الشرعي.\n- **الأفضل للي بيحبوا**: حل المشكلات، الألغاز، حماية الأنظمة، الشبكات.\n- **طلب السوق**: نقص حاد عالمياً، طلب عالي جداً في البنوك والحكومة والشركات الكبيرة.\n- **المهارات الأساسية**: الشبكات، لينكس، أدوات الأمان (Wireshark، Metasploit، Burp Suite).\n\n**نقاط مهمة:**\n- كلا البرنامجين مسارات مهنية ممتازة.\n- المواد المشتركة في المستوى 1-2 تعني إنك عندك أساس في الاثنين.\n- كل برنامج له ميزاته وعيوبه، فاختيارك يعتمد على اهتماماتك الشخصية.\n\nإذا عندك جوانب معينة تحب تركز عليها، قولي وأنا هساعدك أكتر!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "ايه الفرق بين AI و Cybersecurity؟",
+      "response": "مقارنة سريعة بين الذكاء الاصطناعي Artificial Intelligence (AI) والأمن السيبراني Cybersecurity:\n\nأكيد، هقولك الفرق بين البرنامجين:\n\n### برنامج **Artificial Intelligence (AI)**:\n- **التركيز**: تعلم الآلة، التعلم العميق، معالجة اللغة الطبيعية، رؤية الكمبيوتر، التعرف على الأنماط، الروبوتات.\n- **مسارات الوظائف**: مهندس تعلم آلة، عالم بيانات، باحث في الذكاء الاصطناعي، مهندس معالجة لغة طبيعية، مهندس رؤية كمبيوتر.\n- **مناسب للطلبة الذين يحبون**: الرياضيات، الخوارزميات، بناء أنظمة ذكية، البحث.\n- **الطلب في السوق**: مرتفع جداً عالمياً، ويزداد بسرعة في مصر والشرق الأوسط.\n- **المهارات الأساسية**: بايثون، TensorFlow/PyTorch، الإحصاء، الجبر الخطي.\n\n### برنامج **Cybersecurity**:\n- **التركيز**: أمان الشبكات، القرصنة الأخلاقية، التشفير، التحقيقات الرقمية، اختبار الاختراق.\n- **مسارات الوظائف**: محلل أمان، مختبر اختراق، محلل SOC، مستشار أمان، محقق جنائي.\n- **مناسب للطلبة الذين يحبون**: حل المشكلات، الألغاز، حماية الأنظمة، الشبكات.\n- **الطلب في السوق**: نقص حاد عالمياً، وطلب مرتفع جداً في البنوك/الحكومة/الشركات.\n- **المهارات الأساسية**: الشبكات، لينكس، أدوات الأمان (Wireshark، Metasploit، Burp Suite).\n\n### نصيحتي:\n- كلكم عندكم خلفية جيدة من المواد المشتركة في المستوى الأول والثاني، فأنتم مؤهلين للاتجاهين.\n- كلاهما مسارات مهنية ممتازة، لكن يعتمد الاختيار على اهتماماتك.\n- لو بتحب الرياضيات والتكنولوجيا، ممكن تفضل **Artificial Intelligence (AI)**.\n- لو بتحب حل الألغاز وحماية الأنظمة، **Cybersecurity** هي الخيار المناسب.\n\nلو عندك اهتمامات معينة أو تفضيلات، خبرني وهنساعدك أكثر!",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "What are the available elective courses for this semester?",
+      "response": "For the Spring-2026 term, the available elective courses are:\n\n1. **Cloud Computing**\n   - Course Code: [Insert Course Code]\n   - Instructor: [Insert Instructor Name]\n   - Time: [Insert Class Time]\n   - Credits: [Insert Credits]\n\n2. **Big Data**\n   - Course Code: [Insert Course Code]\n   - Instructor: [Insert Instructor Name]\n   - Time: [Insert Class Time]\n   - Credits: [Insert Credits]\n\nIf you have any specific interests, I can help you decide which elective might be best for you!",
+      "passed": true,
+      "missing_any": [
+        "no electives"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "ايه المواد الاختيارية المتاحة ليا اسجلها الترم ده؟",
+      "response": "المواد الاختيارية المتاحة لك في الترم الحالي (ربيع 2026) هي:\n\n1. **Cloud Computing**\n   - **الكود:** AI-CC101\n   - **المدرس:** د. أحمد سعيد\n   - **الوقت:** الثلاثاء، 10:00 - 12:00\n   - **الساعات المعتمدة:** 3\n\n2. **Big Data**\n   - **الكود:** AI-BD102\n   - **المدرس:** د. مريم علي\n   - **الوقت:** الخميس، 14:00 - 16:00\n   - **الساعات المعتمدة:** 3\n\nإذا كنت محتاج مساعدة في اختيار مادة معينة، قولي!",
+      "passed": true,
+      "missing_any": [
+        "elective"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "Who is the dean of the faculty?",
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "مين عميد الكلية؟",
+      "response": "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "What is the weather today?",
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "مين احسن لاعب كوره في العالم؟",
+      "response": "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "Can you tell me the tuition fees?",
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "passed": true,
+      "missing_any": [
+        "مش لاقي السؤال"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "فين الكافتيريا؟",
+      "response": "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+      "passed": true,
+      "missing_any": [
+        "couldn't find this specific question"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "What can you help me with?",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "بتساعد في ايه؟",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [
+        "materials",
+        "courses"
+      ],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "new",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    },
+    {
+      "category": "GENERAL",
+      "prompt": "/start",
+      "response": "Hello! Welcome to the Smart Academic Advisor.\n\nI can help you with:\n  • Course information and prerequisites\n  • Academic regulations\n  • Available electives\n  • Study guidance and academic support\n\nHow can I assist you today?",
+      "passed": true,
+      "missing_any": [],
+      "missing_all": [],
+      "note": "",
+      "error": ""
+    }
+  ]
+}
