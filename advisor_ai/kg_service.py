@@ -21,6 +21,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from pydantic import BaseModel, Field
 
+from advisor_ai.language_utils import contains_arabic, should_respond_arabic
+
 load_dotenv()
 
 # Configure logging
@@ -126,7 +128,7 @@ def get_neo4j_config() -> Dict[str, str]:
 # ── Models ──────────────────────────────────────────────────────────
 
 class KGIntent(BaseModel):
-    intent: str = Field(description="One of: prerequisite, reverse_prerequisite, study_path, course_info, category_query, unknown")
+    intent: str = Field(description="One of: prerequisites_for_course, courses_unlocked_by_course, courses_blocked_if_not_completed, prerequisite, reverse_prerequisite, study_path, course_info, category_query, unknown")
     course: str = Field(description="Target course name if specific, else empty")
     category: str = Field(description="Target category name (e.g. 'Math Electives', 'University Requirements') if specific, else empty")
     level: str = Field(description="Target level (1-4) if specific, else empty")
@@ -278,10 +280,11 @@ class KGService:
                 return self._get_courses_in_category(direct_category)
 
             direct_course = self._find_course_node(question)
-            if direct_course and self._looks_like_reverse_prereq_query(question):
-                return self._get_prereqs_reverse(direct_course["code"])
-            if direct_course and self._looks_like_prereq_query(question):
-                return self._get_prereqs_forward(direct_course["code"])
+            prereq_direction = self._classify_prerequisite_direction(question)
+            if direct_course and prereq_direction in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
+                return self._get_prereqs_reverse(question)
+            if direct_course and prereq_direction == "prerequisites_for_course":
+                return self._get_prereqs_forward(question)
 
             return self._query_courses(question)
 
@@ -304,11 +307,13 @@ class KGService:
 
             logger.info(f"Intent: {intent}, Course: {course}, Cat: {category}, Lvl: {level}, Prog: {program}")
 
-            if intent == "prerequisite":
-                return self._get_prereqs_forward(course if course else question)
+            course_query = self._course_query_for_response_language(question, course)
 
-            elif intent == "reverse_prerequisite":
-                return self._get_prereqs_reverse(course if course else question)
+            if intent in {"prerequisite", "prerequisites_for_course"}:
+                return self._get_prereqs_forward(course_query)
+
+            elif intent in {"reverse_prerequisite", "courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
+                return self._get_prereqs_reverse(course_query)
 
             elif intent == "study_path":
                 return self._handle_study_path(question, level or "", program or "")
@@ -323,6 +328,13 @@ class KGService:
             logger.warning(f"LLM KG intent handling failed; using fallback matching: {e}")
 
         return None
+
+    @staticmethod
+    def _course_query_for_response_language(question: str, course: Optional[str]) -> str:
+        """Keep Arabic response-language signal when intent extraction returns only an English course."""
+        if course and should_respond_arabic(question):
+            return f"{question} {course}"
+        return course if course else question
 
     @staticmethod
     def _normalize_program_name(program: Optional[str]) -> str:
@@ -445,11 +457,11 @@ class KGService:
 
     @staticmethod
     def _contains_arabic(text: str) -> bool:
-        return bool(re.search(r"[\u0600-\u06FF]", text or ""))
+        return contains_arabic(text)
 
     def _format_required_hours_answer(self, question: str, category_label: str, hours: int) -> str:
         """Format required category hours in Arabic or English."""
-        if self._contains_arabic(question):
+        if should_respond_arabic(question):
             return f"- عدد الساعات المعتمدة المطلوبة في {category_label} هو {hours} ساعة معتمدة."
         return f"- The required credit hours for {category_label} are {hours} credit hours."
 
@@ -490,28 +502,57 @@ class KGService:
     @staticmethod
     def _looks_like_prereq_query(question: str) -> bool:
         """Detect prerequisite wording for fallback routing."""
-        normalized = KGService._normalize_query(question.lower())
-        return any(
-            phrase in normalized
-            for phrase in (
-                "prerequisite", "prerequisites", "pre req", "before",
-                "need before", "need to take", "required before",
-                "محتاج", "قبل", "لازم اخد", "لازم اعدي", "تتفتح",
-                "متطلبات", "متطلبات ماده", "متطلبات مادة",
-            )
-        )
+        return KGService._classify_prerequisite_direction(question) == "prerequisites_for_course"
 
     @staticmethod
     def _looks_like_reverse_prereq_query(question: str) -> bool:
         """Detect reverse prerequisite wording for fallback routing."""
+        return KGService._classify_prerequisite_direction(question) in {
+            "courses_unlocked_by_course",
+            "courses_blocked_if_not_completed",
+        }
+
+    @staticmethod
+    def _classify_prerequisite_direction(question: str) -> str:
+        """Classify the direction of course prerequisite relationship questions."""
         normalized = KGService._normalize_query(question.lower())
-        return any(
-            phrase in normalized
-            for phrase in (
-                "opens", "open", "unlock", "unlocks", "leads to",
-                "after", "future courses", "بتفتح", "هتفتح", "بتقفل",
-            )
+
+        blocked_markers = (
+            "لو مخدت", "لو ماخدت", "لو مخدتهاش", "لو ماخدتهاش",
+            "لو مسجلتش", "لو مسجلتهاش", "لو ممسجلتش", "لو ممسجلتهاش",
+            "مش هتفتحلي", "مش هتفتح ليا", "مش هتفتح لي", "مش هتفتح",
+            "هتقفل", "بتقفل", "تقفل", "تتقفل",
+            "if i don't take", "if i do not take", "if i dont take",
+            "if i don't complete", "if i fail", "blocked",
         )
+        if any(phrase in normalized for phrase in blocked_markers):
+            return "courses_blocked_if_not_completed"
+
+        prereq_markers = (
+            "prerequisite", "prerequisites", "pre req", "before",
+            "need before", "need to take", "required before",
+            "what unlocks", "what opens",
+            "محتاج", "قبل", "قبلها", "لازم اخد", "لازم اعدي",
+            "لازم اخد ايه قبل", "لازم اخد ايه قبلها",
+            "متطلبات", "متطلبات ماده", "متطلبات مادة",
+            "متطلبات سابقه", "متطلبات سابقة", "المتطلبات السابقه", "المتطلبات السابقة",
+            "تتفتح", "بتتفتح", "تتفتح بايه", "بتتفتح بايه",
+            "الماده اللي بتفتح", "المادة اللي بتفتح",
+            "اللي بتفتحها", "بتفتحها",
+        )
+        if any(phrase in normalized for phrase in prereq_markers):
+            return "prerequisites_for_course"
+
+        unlock_markers = (
+            "opens", "open", "unlock", "unlocks", "leads to",
+            "after", "future courses", "what courses does",
+            "بتفتح", "هتفتح", "بتفتحلي", "هتفتحلي", "بتفتح ايه",
+            "بتفتح مواد", "الماده دي بتفتح", "المادة دي بتفتح",
+        )
+        if any(phrase in normalized for phrase in unlock_markers):
+            return "courses_unlocked_by_course"
+
+        return "unknown"
 
     def _classify_intent(self, question: str, history: Optional[List[Any]] = None) -> dict:
         """Detect intent using LLM (CoT/JSON). Handles follow-ups via history."""
@@ -523,18 +564,22 @@ class KGService:
         system_prompt = (
             "You are an academic advisor AI helper. Resolve intents using the 'Current Question' and context from 'History'.\n\n"
             "Intent Categories:\n"
-            '1. "prerequisite": Asks what is needed BEFORE a course (requirements, how to unlock/open it).\n'
-            '2. "reverse_prerequisite": Asks what a course leads to AFTER (what it opens, what closes if failed).\n'
-            '3. "study_path": Asks for full plans, schedules, or level-based lists.\n'
-            '4. "course_info": General details (credits, description).\n'
-            '5. "category_query": Asks about a specific GROUP of courses (e.g. "Math Electives", "University Requirements", "Basic Science").\n\n'
+            '1. "prerequisites_for_course": Asks what is needed BEFORE a course (requirements, how to unlock/open it).\n'
+            '2. "courses_unlocked_by_course": Asks what a course leads to AFTER (what it opens).\n'
+            '3. "courses_blocked_if_not_completed": Asks what will stay closed/blocked if the student does not take/register/complete a course.\n'
+            '4. "study_path": Asks for full plans, schedules, or level-based lists.\n'
+            '5. "course_info": General details (credits, description).\n'
+            '6. "category_query": Asks about a specific GROUP of courses (e.g. "Math Electives", "University Requirements", "Basic Science").\n\n'
             "CRITICAL RULES for Context & Pronouns:\n"
             "- If the question uses pronouns like 'it', 'this subject', 'the course', 'ها', 'هيه', 'المادة دي' -> YOU MUST extract the course name from the LAST 'Student' or 'Advisor' message in History.\n"
             "- NEVER return 'ها', 'هيه', 'دي', 'it' as the course name. If you see them, replace them with the actual course from history.\n"
             "- If the user says 'And X?' (e.g., 'And Math 2?'), copy the PREVIOUS intent but change the course to X.\n"
             "- If the user asks a short follow-up like 'yes, that's what I need', 'اه ده اللي محتاج اعرفه', or 'قول التفاصيل', copy the previous course and previous intent from History.\n"
-            "- 'بتقفل ايه' (closes what) or 'بتفتح ايه' (opens what) = reverse_prerequisite.\n"
-            "- 'تتفتح بايه' (opened by what) = prerequisite.\n\n"
+            "- 'المادة اللي بتفتحها' or 'لازم آخد ايه قبلها' = prerequisites_for_course.\n"
+            "- 'المادة دي بتفتح ايه' = courses_unlocked_by_course.\n"
+            "- 'لو مخدتهاش / لو مسجلتهاش / مش هتفتحلي ايه' = courses_blocked_if_not_completed.\n"
+            "- 'بتقفل ايه' (closes what if not completed) = courses_blocked_if_not_completed.\n"
+            "- 'تتفتح بايه' (opened by what) = prerequisites_for_course.\n\n"
             "Extraction:\n"
             '- Extract "course" name (translate Arabic names to English, e.g. "خوارزميات"->"Algorithms").\n'
             '- Extract "category" name if the user asks about a group (e.g. "Math Electives") -> English Name.\n'
@@ -545,14 +590,20 @@ class KGService:
         examples = (
             "\nFew-Shot Examples:\n"
             'History: "User: Tell me about CS101." ... "User: What does it open?"\n'
-            '-> {{"intent": "reverse_prerequisite", "course": "CS101"}}\n'
+            '-> {{"intent": "courses_unlocked_by_course", "course": "CS101"}}\n'
+            'Question: "Machine Learning بتفتح مواد ايه؟"\n'
+            '-> {{"intent": "courses_unlocked_by_course", "course": "Machine Learning"}}\n'
+            'Question: "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟"\n'
+            '-> {{"intent": "courses_blocked_if_not_completed", "course": "Machine Learning"}}\n'
+            'Question: "ايه المادة اللي بتفتح Machine Learning؟"\n'
+            '-> {{"intent": "prerequisites_for_course", "course": "Machine Learning"}}\n'
             'Question: "What are the Math Electives?"\n'
             '-> {{"intent": "category_query", "category": "Math & Basic Science (Elective)"}}\n'
             'Question: "ايه هي مواد العلوم الاساسية؟"\n'
             '-> {{"intent": "category_query", "category": "Math & Basic Science"}}\n'
             'History: "User: ايه المطلوب عشان اسجل math 2?" ... "Advisor: Mathematics 2 [MTH103] has no prerequisites."\n'
             'Question: "اه ده اللي محتاج اعرفه"\n'
-            '-> {{"intent": "prerequisite", "course": "Mathematics 2"}}\n'
+            '-> {{"intent": "prerequisites_for_course", "course": "Mathematics 2"}}\n'
         )
 
         prompt = ChatPromptTemplate.from_messages([
@@ -805,8 +856,11 @@ class KGService:
     @traceable(name="KG Prereqs Forward", run_type="retriever")
     def _get_prereqs_forward(self, query: str) -> str:
         """What do I need BEFORE this course?"""
+        respond_arabic = should_respond_arabic(query)
         course = self._find_course_node(query)
         if not course:
+            if respond_arabic:
+                return f"مش لاقي مادة مطابقة لـ '{query}'."
             return f"Could not find a course matching '{query}'."
 
         code, name = course["code"], course["name"]
@@ -820,13 +874,19 @@ class KGService:
             direct = [dict(r) for r in res]
 
             if not direct:
+                if respond_arabic:
+                    return f"المادة [{code}] {name} ملهاش متطلبات مسبقة. تقدر تاخدها مباشرة."
                 return f"The course [{code}] {name} has no prerequisites. You can take it directly!"
 
             wants_full = any(kw in query.lower() for kw in ["all", "full", "chain", "everything", "كل", "بالكامل"])
             
-            lines = [f"**Prerequisites for [{code}] {name}:**"]
+            if respond_arabic:
+                lines = [f"متطلبات [{code}] {name}:"]
+            else:
+                lines = [f"**Prerequisites for [{code}] {name}:**"]
             direct_text = ", ".join(f"{p['name']} [{p['code']}]" for p in direct)
-            lines.append(f"- **Core Requirements:** {direct_text}")
+            label = "المتطلبات الأساسية" if respond_arabic else "**Core Requirements:**"
+            lines.append(f"- {label} {direct_text}")
 
             if wants_full:
                 chain_res = session.run(
@@ -835,19 +895,32 @@ class KGService:
                 )
                 chain = [dict(r) for r in chain_res]
                 if len(chain) > len(direct):
-                    lines.append(f"\n**Full Prerequisite Chain ({len(chain)} total):**")
+                    if respond_arabic:
+                        lines.append(f"\nسلسلة المتطلبات الكاملة ({len(chain)} مادة):")
+                    else:
+                        lines.append(f"\n**Full Prerequisite Chain ({len(chain)} total):**")
                     for p in chain:
-                        lines.append(f"- **Level {p['level']}:** [{p['code']}] {p['name']}")
+                        level_label = "المستوى" if respond_arabic else "**Level"
+                        if respond_arabic:
+                            lines.append(f"- {level_label} {p['level']}: [{p['code']}] {p['name']}")
+                        else:
+                            lines.append(f"- {level_label} {p['level']}:** [{p['code']}] {p['name']}")
             else:
-                lines.append("\n- **Hint:** Ask for the full chain to see all dependencies.")
+                if respond_arabic:
+                    lines.append("\n- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.")
+                else:
+                    lines.append("\n- **Hint:** Ask for the full chain to see all dependencies.")
             
             return "\n".join(lines)
 
     @traceable(name="KG Prereqs Reverse", run_type="retriever")
     def _get_prereqs_reverse(self, query: str) -> str:
         """What does this course OPEN?"""
+        respond_arabic = should_respond_arabic(query)
         course = self._find_course_node(query)
         if not course:
+            if respond_arabic:
+                return f"مش لاقي مادة مطابقة لـ '{query}'."
             return f"Could not find a course matching '{query}'."
 
         code, name = course["code"], course["name"]
@@ -860,11 +933,16 @@ class KGService:
             futures = [dict(r) for r in result]
 
             if not futures:
+                if respond_arabic:
+                    return f"المادة [{code}] {name} مش متطلبة لأي مواد بعدها."
                 return f"The course [{code}] {name} is not a prerequisite for any future courses."
 
-            lines = [f"**[{code}] {name} is a prerequisite for:**"]
+            if respond_arabic:
+                lines = [f"لو خلصت [{code}] {name}، المواد اللي هتفتحلك هي:"]
+            else:
+                lines = [f"**[{code}] {name} is a prerequisite for:**"]
             for f in futures:
-                lines.append(f"- [{f['code']}] {f['name']}")
+                lines.append(f"- {f['name']} [{f['code']}]")
             return "\n".join(lines)
 
     def _handle_study_path(self, question: str, level: str, program: str) -> str:
@@ -914,6 +992,7 @@ class KGService:
     def _query_courses(self, question: str) -> str:
         """Handle course listing queries."""
         try:
+            respond_arabic = should_respond_arabic(question)
             question_lower = question.lower()
             
             # 1. Try specific course
@@ -932,6 +1011,13 @@ class KGService:
             # If specific match and no broad intent, return details
             if (not target_prog and not target_level) and best_match:
                 c = best_match
+                if respond_arabic:
+                    return (
+                        f"معلومات المادة: [{c['code']}] {c['name']}\n"
+                        f"- الساعات المعتمدة: {c.get('credits', '?')}\n"
+                        f"- المستوى: {c.get('level', '?')}\n"
+                        f"- الوصف: مادة أساسية في الخطة الدراسية."
+                    )
                 return (
                     f"**Course Info:** [{c['code']}] {c['name']}\n"
                     f"- **Credits:** {c.get('credits', '?')}\n"
@@ -955,26 +1041,29 @@ class KGService:
                 records = [dict(r) for r in result]
 
             if not records:
+                if respond_arabic:
+                    return "مش لاقي مواد مطابقة لسؤالك."
                 return "No courses found matching your query."
 
             # Simplify output logic (use helper if complex)
-            return self._format_course_list(records, target_prog or "", int(target_level) if target_level else 0)
+            return self._format_course_list(records, target_prog or "", int(target_level) if target_level else 0, respond_arabic=respond_arabic)
 
         except Exception as e:
             logger.error(f"Error querying courses: {e}")
             return f"Error querying courses: {str(e)}"
 
-    def _format_course_list(self, records: List[dict], target_prog: str, target_level: int) -> str:
+    def _format_course_list(self, records: List[dict], target_prog: str, target_level: int, respond_arabic: bool = False) -> str:
         """Format the course list output."""
         if target_level or target_prog:
             # Detailed list
-            lines = ["**Courses:**\n"]
+            lines = ["المواد:\n"] if respond_arabic else ["**Courses:**\n"]
             current_prog = ""
             for r in records:
                 if r["program"] != current_prog:
                     lines.append(f"\n**{r['program']}:**")
                     current_prog = r["program"]
-                lines.append(f"- [{r['code']}] {r['course']} - {r['credits']} credits")
+                credits_label = "ساعة معتمدة" if respond_arabic else "credits"
+                lines.append(f"- [{r['code']}] {r['course']} - {r['credits']} {credits_label}")
             return "\n".join(lines)
         else:
             # Summary
@@ -986,9 +1075,12 @@ class KGService:
                 if lvl not in summary[prog]: summary[prog][lvl] = 0
                 summary[prog][lvl] += 1
             
-            lines = ["**Course Summary:**\n"]
+            lines = ["ملخص المواد:\n"] if respond_arabic else ["**Course Summary:**\n"]
             for prog, levels in summary.items():
                 lines.append(f"**{prog}:**")
                 for lvl in sorted(levels.keys()):
-                    lines.append(f"- **Level {lvl}:** {levels[lvl]} courses")
+                    if respond_arabic:
+                        lines.append(f"- المستوى {lvl}: {levels[lvl]} مواد")
+                    else:
+                        lines.append(f"- **Level {lvl}:** {levels[lvl]} courses")
             return "\n".join(lines)

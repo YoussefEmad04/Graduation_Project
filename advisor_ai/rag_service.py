@@ -14,6 +14,8 @@ from typing import Any, Dict, List
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from advisor_ai.language_utils import contains_arabic, should_respond_arabic, strict_language_instruction
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -320,7 +322,7 @@ Language rules:
 - If the student writes in English, respond only in English.
 - If the student writes in Arabic, including Egyptian Arabic, respond only in Arabic.
 - If the student writes Arabizi, respond in friendly Egyptian Arabic.
-- If the student mixes Arabic and English in one question, understand the mixed phrasing naturally and answer in the dominant language of the student's question. If the question is mostly Arabic with English academic terms, answer in Arabic and preserve official English terms like CGPA, W, I, FA, and course/program names when useful.
+- If the student mixes Arabic and English in one question, respond only in Arabic. Preserve official English terms like CGPA, W, I, FA, and course/program names when useful.
 - Do not mix languages in one response.
 
 Understanding rules:
@@ -691,7 +693,7 @@ class RAGService:
         formal = cls._formalize_for_doc_retrieval(question)
         search_hints = ", ".join(cls._expanded_search_terms(question)[:18])
         language_note = (
-            "This question mixes Arabic and English academic wording; treat the mixed phrasing as one coherent student question."
+            "This question mixes Arabic and English academic wording; answer in Arabic."
             if cls._is_mixed_ar_en_question(question)
             else "This question is written in a single dominant language."
         )
@@ -702,6 +704,7 @@ class RAGService:
         )
         return (
             f"Student question:\n{question}\n\n"
+            f"{strict_language_instruction(question)}\n\n"
             f"Normalized retrieval form:\n{normalized}\n\n"
             f"Formal document-style retrieval form:\n{formal}\n\n"
             f"Search hints:\n{search_hints}\n\n"
@@ -877,11 +880,11 @@ class RAGService:
             return ""
 
         best = ranked[:2]
-        header = "من اللائحة المتاحة عندي محليًا:" if self._contains_arabic(question) else "From the local regulations text I have:"
+        header = "من اللائحة المتاحة عندي محليًا:" if should_respond_arabic(question) else "From the local regulations text I have:"
         lines = [header]
         for chunk in best:
             snippet = self._condense_chunk(chunk["text"])
-            page_label = f"صفحة {chunk['page']}" if self._contains_arabic(question) else f"Page {chunk['page']}"
+            page_label = f"صفحة {chunk['page']}" if should_respond_arabic(question) else f"Page {chunk['page']}"
             lines.append(f"- {page_label}: {snippet}")
         return "\n".join(lines)
 
@@ -966,7 +969,7 @@ class RAGService:
     @staticmethod
     def _contains_arabic(text: str) -> bool:
         """Return True when the text includes Arabic characters."""
-        return bool(re.search(r"[\u0600-\u06FF]", text))
+        return contains_arabic(text)
 
     def _repair_arabic_extraction(self, text: str) -> str:
         """Repair common visual-order Arabic runs for local extraction utilities/tests."""

@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 
 class RouterDecision(BaseModel):
     route: str = Field(description="One of: rag, kg, mental, elective, hybrid")
-    sub_intent: str = Field(default="", description="More specific meaning such as prerequisite, reverse_prerequisite, regulation, study_path, support, major_guidance")
+    sub_intent: str = Field(default="", description="More specific meaning such as prerequisites_for_course, courses_unlocked_by_course, courses_blocked_if_not_completed, prerequisite, reverse_prerequisite, regulation, study_path, support, major_guidance")
     rewritten_question: str = Field(default="", description="A cleaner internal version of the student's question that preserves meaning")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Router confidence from 0 to 1")
     entities: Dict[str, str] = Field(default_factory=dict, description="Resolved entities like course, program, level, policy topic")
@@ -45,14 +45,28 @@ Available routes:
 Rules:
 - Understand English, Arabic, Egyptian Arabic, Arabizi, and mixed Arabic/English questions.
 - Route by meaning, not by exact wording.
-- If the question asks what is needed before a course, use route=kg and sub_intent=prerequisite.
-- If the question asks what a course opens after finishing it, use route=kg and sub_intent=reverse_prerequisite.
+- If the question asks what is needed before a course, use route=kg and sub_intent=prerequisites_for_course.
+- If the question asks for "requirements", "متطلبات", "المتطلبات", or "المطلوب" for a specific course code/name, use route=kg and sub_intent=prerequisites_for_course, not rag.
+- If the phrase means "المادة اللي بتفتحها" or "لازم آخد ايه قبلها", use sub_intent=prerequisites_for_course.
+- If the phrase means "المادة دي بتفتح ايه", use sub_intent=courses_unlocked_by_course.
+- If the phrase means "لو مخدتهاش / لو مسجلتهاش / مش هتفتحلي ايه", use sub_intent=courses_blocked_if_not_completed.
+- If the question asks what a course opens after finishing it, use route=kg and sub_intent=courses_unlocked_by_course.
+- If the question asks for graduation requirements, credit-hour regulations, GPA rules, attendance rules, withdrawal rules, or semester limits, use route=rag.
 - If the question asks about official academic rules or regulations, use route=rag.
 - If the question asks for emotional or motivational help, use route=mental.
 - If the question asks what electives are available this term, use route=elective.
 - If the question is vague but conversation history clarifies it, use the history.
 - Keep rewritten_question faithful to the student's meaning, but make it clearer and more canonical.
 - Use confidence above 0.8 only when the route is clearly supported by the meaning.
+
+Examples:
+- "طيب ايه متطلبات AI301؟" -> route=kg, sub_intent=prerequisites_for_course, rewritten_question="ايه متطلبات AI301؟", entities={{"course":"AI301"}}
+- "What are the requirements for Machine Learning?" -> route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
+- "Machine Learning بتفتح مواد ايه؟" -> route=kg, sub_intent=courses_unlocked_by_course, entities={{"course":"Machine Learning"}}
+- "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟" -> route=kg, sub_intent=courses_blocked_if_not_completed, entities={{"course":"Machine Learning"}}
+- "ايه المادة اللي بتفتح Machine Learning؟" -> route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
+- "What are the graduation requirements?" -> route=rag, sub_intent=regulation
+- "طيب الحد الأقصى للساعات في الترم العادي كام؟" -> route=rag, sub_intent=regulation
 
 Return JSON only.
 """
@@ -101,13 +115,20 @@ class RouterService:
                 ),
             })
             if isinstance(result, dict):
-                return RouterDecision(**result)
+                return self._normalize_decision(RouterDecision(**result))
             if isinstance(result, RouterDecision):
-                return result
+                return self._normalize_decision(result)
             return None
         except Exception as exc:
             logger.error(f"Router classification failed: {exc}")
             return None
+
+    @staticmethod
+    def _normalize_decision(decision: RouterDecision) -> RouterDecision:
+        """Treat omitted confidence on clear structured LLM routes as usable confidence."""
+        if decision.confidence == 0.0 and decision.route in {"rag", "kg", "mental", "elective"}:
+            decision.confidence = 0.8
+        return decision
 
     @staticmethod
     def _format_history(

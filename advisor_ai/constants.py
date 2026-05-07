@@ -148,8 +148,8 @@ User Question:
 Instructions:
 1. Answer naturally: If the context says 'is a prerequisite for', say 'X opens Y'. If it says 'Prerequisites for X are Y', say 'You need Y before X'.
 2. If the user asks 'Can I take X?', look at the Context to see if it has prereqs. If empty, say 'Yes, it has no prerequisites'.
-3. Keep the response in the SAME LANGUAGE as the User Question (Arabic or English).
-4. If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
+3. STRICT LANGUAGE: If the student writes in English only, respond ONLY in English.
+4. STRICT LANGUAGE: If the student writes in Arabic, Egyptian Arabic, Arabizi, or mixes Arabic with English academic terms, respond ONLY in Arabic. Preserve official course codes and course names in English.
 5. CRITICAL: Course codes [CS101] and names (e.g. Algorithms) MUST remain in English.
 6. Use a friendly student-facing tone.
 7. Output format: use plain paragraphs and bullet points with "-" only. Use plain text labels without Markdown bold. Do not use Markdown heading markers like #, ##, ###, numbered section headings, tables, emojis, or decorative symbols.
@@ -178,7 +178,9 @@ SPECIFIC CATEGORY RULES:
    - Electives: 21 CH (Select from list).
 
 قواعد الرد بالعربية:
-- لو السؤال 'المادة بتفتح إيه؟' جاوب بـ 'المادة بتفتح كذا وكذا' بناءً على الـ Context.
+- لو السؤال 'المادة دي بتفتح إيه؟' جاوب بالمواد اللي تعتمد عليها بعد ما الطالب يخلصها.
+- لو السؤال 'المادة اللي بتفتحها إيه؟' أو 'لازم آخد إيه قبلها؟' جاوب بالمتطلبات السابقة للمادة.
+- لو السؤال 'لو مخدتهاش / لو مسجلتهاش / مش هتفتحلي إيه؟' جاوب بنفس قائمة المواد اللي المادة بتفتحها، ومتقولش إن المادة بتفتح نفسها.
 - لو السؤال 'أقدر أخد المادة؟' أو 'إيه شروطها؟' وضح المتطلبات المسبقة.
 - حافظ على أسماء المواد وأكوادها بالإنجليزية.
 - لو السؤال عن مجموعة (Category):
@@ -206,6 +208,7 @@ STRICT RULES:
 STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
+- If the student mixes Arabic and English → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally (e.g., "متقلقش", "إنت تقدر", "خطوة خطوة").
 - If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.
@@ -233,6 +236,7 @@ A Level 2 student is asking about choosing between the two available programs:
 STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
+- If the student mixes Arabic and English → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally.
 - If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.
@@ -280,6 +284,7 @@ CURRENT TERM DATA:
 STRICT LANGUAGE RULES:
 - If the student writes in English → respond ONLY in English.
 - If the student writes in Arabic (فصحى or عامية مصرية) → respond ONLY in Arabic.
+- If the student mixes Arabic and English → respond ONLY in Arabic.
 - If عامية: use Egyptian dialect naturally.
 - If the student writes Arabic with Latin letters (Arabizi), respond in friendly Egyptian Arabic.
 - NEVER mix languages in the same response.

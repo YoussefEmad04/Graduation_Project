@@ -23,6 +23,8 @@ from advisor_ai.kg_service import KGService
 from advisor_ai.mental_service import MentalSupportService
 from advisor_ai.elective_service import ElectiveService
 from advisor_ai.router_service import RouterService
+from advisor_ai.followup_resolver import FollowupResolver
+from advisor_ai.language_utils import contains_arabic, should_respond_arabic, strict_language_instruction
 from advisor_ai.constants import (
     RAG_KEYWORDS, KG_KEYWORDS, ELECTIVE_KEYWORDS, MENTAL_KEYWORDS, 
     MAJOR_KEYWORDS, PATH_KEYWORDS, KG_SYNTHESIS_PROMPT
@@ -70,6 +72,7 @@ class AdvisorGraph:
         self.mental_service = MentalSupportService()
         self.elective_service = ElectiveService()
         self.router_service = RouterService()
+        self.followup_resolver = FollowupResolver()
 
         # LLM for hybrid reasoning
         self.llm = None
@@ -133,7 +136,9 @@ class AdvisorGraph:
         """Classify the question and determine the route."""
         question = state["question"]
         history = state.get("history", [])
+        routing_history = history
         normalized = self._normalize_text(question)
+        router_service = getattr(self, "router_service", None)
 
         if self._is_category_hours_query(normalized):
             logger.info("Question force-routed to kg (category required hours)")
@@ -156,7 +161,73 @@ class AdvisorGraph:
                 "route_entities": {},
             }
 
-        history_route = self._route_from_history_if_followup(normalized, history)
+        followup_resolver = getattr(self, "followup_resolver", None)
+        followup_was_evaluated = False
+        if followup_resolver:
+            followup = followup_resolver.resolve(
+                question,
+                history=history,
+                student_level=state.get("student_level"),
+                student_major=state.get("student_major"),
+            )
+            followup_was_evaluated = followup is not None
+            if followup and followup.confidence >= 0.75:
+                if followup.is_followup:
+                    if followup.needs_clarification and followup.clarification_question:
+                        logger.info("Question resolved as ambiguous contextual follow-up")
+                        return {
+                            "route": "hybrid",
+                            "route_sub_intent": "followup_clarification",
+                            "rewritten_question": question,
+                            "route_confidence": followup.confidence,
+                            "route_reasoning": followup.reasoning,
+                            "route_entities": followup.entities,
+                            "final_answer": followup.clarification_question,
+                        }
+                    if followup.sub_intent in ("", "contextual_followup"):
+                        current_override = self._current_only_semantic_route(
+                            question,
+                            router_service,
+                            state.get("student_level"),
+                            state.get("student_major"),
+                            competing_route=followup.route,
+                        )
+                        if current_override:
+                            return current_override
+                    if self._is_valid_route(followup.route) and followup.rewritten_question:
+                        logger.info(f"Question semantically resolved as {followup.route} follow-up")
+                        return {
+                            "route": followup.route,
+                            "route_sub_intent": followup.sub_intent or "contextual_followup",
+                            "rewritten_question": followup.rewritten_question,
+                            "route_confidence": followup.confidence,
+                            "route_reasoning": followup.reasoning,
+                            "route_entities": followup.entities,
+                        }
+                else:
+                    routing_history = []
+                    if self._is_valid_route(followup.route) and followup.route != "hybrid":
+                        logger.info(f"Question semantically resolved as standalone {followup.route} question")
+                        return {
+                            "route": followup.route,
+                            "route_sub_intent": followup.sub_intent or "standalone_context_switch",
+                            "rewritten_question": followup.rewritten_question or question,
+                            "route_confidence": followup.confidence,
+                            "route_reasoning": followup.reasoning,
+                            "route_entities": followup.entities,
+                        }
+
+        if history and followup_was_evaluated and router_service:
+            current_override = self._current_only_semantic_route(
+                question,
+                router_service,
+                state.get("student_level"),
+                state.get("student_major"),
+            )
+            if current_override:
+                return current_override
+
+        history_route = self._route_from_history_if_followup(normalized, routing_history)
         if history_route:
             logger.info(f"Question force-routed to {history_route} (contextual follow-up)")
             return {
@@ -169,11 +240,10 @@ class AdvisorGraph:
             }
 
         semantic = None
-        router_service = getattr(self, "router_service", None)
         if router_service:
             semantic = router_service.route_question(
                 question,
-                history=history,
+                history=routing_history,
                 student_level=state.get("student_level"),
                 student_major=state.get("student_major"),
             )
@@ -189,7 +259,7 @@ class AdvisorGraph:
                 "route_entities": semantic.entities,
             }
 
-        heuristic_route = self._heuristic_route(question, history)
+        heuristic_route = self._heuristic_route(question, routing_history)
         logger.info(f"Question heuristically routed to: {heuristic_route}")
         return {
             "route": heuristic_route,
@@ -261,6 +331,55 @@ class AdvisorGraph:
     def _is_valid_route(route: str) -> bool:
         """Validate semantic router route values."""
         return route in {"rag", "kg", "mental", "elective", "hybrid"}
+
+    def _current_only_semantic_route(
+        self,
+        question: str,
+        router_service,
+        student_level: Optional[int],
+        student_major: Optional[str],
+        competing_route: Optional[str] = None,
+    ) -> Optional[dict]:
+        """Use the semantic router without history to detect standalone context switches."""
+        if not router_service:
+            return None
+        current_only = router_service.route_question(
+            question,
+            history=[],
+            student_level=student_level,
+            student_major=student_major,
+        )
+        if not (
+            current_only
+            and self._is_valid_route(current_only.route)
+            and current_only.route != "hybrid"
+            and current_only.confidence >= 0.75
+        ):
+            return None
+        if competing_route and current_only.route == competing_route:
+            return None
+        if not self._semantic_decision_has_current_entity(current_only):
+            return None
+
+        logger.info(f"Question semantically routed to standalone current route: {current_only.route}")
+        return {
+            "route": current_only.route,
+            "route_sub_intent": current_only.sub_intent or "standalone_context_switch",
+            "rewritten_question": current_only.rewritten_question or question,
+            "route_confidence": current_only.confidence,
+            "route_reasoning": current_only.reasoning,
+            "route_entities": current_only.entities,
+        }
+
+    @staticmethod
+    def _semantic_decision_has_current_entity(decision) -> bool:
+        """Require the current-only semantic route to resolve a concrete current topic."""
+        entities = decision.entities or {}
+        if decision.route == "kg":
+            return any(entities.get(key) for key in ("course", "category", "program", "level"))
+        if decision.route == "rag":
+            return bool(entities.get("policy_topic") or decision.sub_intent)
+        return bool(entities or decision.sub_intent)
 
     def _route_from_history_if_followup(self, question: str, history: List[BaseMessage]) -> Optional[str]:
         """Route short follow-ups using the last substantive user question."""
@@ -502,7 +621,8 @@ class AdvisorGraph:
         """Query regulations via RAG."""
         base_question = state.get("rewritten_question") or state["question"]
         question = self._contextualize_followup(base_question, state.get("history", []))
-        answer = self.rag_service.query(question)
+        service_question = self._question_with_language_source(question, state["question"])
+        answer = self.rag_service.query(service_question)
         return {"rag_answer": answer}
 
     def _kg_node(self, state: AdvisorState) -> dict:
@@ -513,26 +633,27 @@ class AdvisorGraph:
         student_major = state.get("student_major")
         history = state.get("history", [])
         contextual_question = self._contextualize_followup(rewritten_question, history)
+        service_question = self._question_with_language_source(contextual_question, question)
 
-        if self._is_unsupported_course_metadata_query(contextual_question):
+        if self._is_unsupported_course_metadata_query(service_question):
             return {"kg_answer": self._out_of_scope_answer(question)}
 
         # Check if question is about study path/schedule
-        is_path_query = any(kw in contextual_question.lower() for kw in PATH_KEYWORDS)
+        is_path_query = any(kw in service_question.lower() for kw in PATH_KEYWORDS)
         
         # If specific course mentioned, prioritize specific Q&A over generic list
-        has_specific_course = self._is_course_query(contextual_question)
+        has_specific_course = self._is_course_query(service_question)
 
         if student_level and student_major and is_path_query and not has_specific_course:
             answer = self.kg_service.get_study_path(student_level, student_major)
         else:
-            answer = self.kg_service.query(contextual_question, history=history)
+            answer = self.kg_service.query(service_question, history=history)
 
         should_try_rag_fallback = self._kg_unavailable(answer) or (
             is_path_query and not has_specific_course and self._should_use_scope_fallback(answer)
         )
         if should_try_rag_fallback:
-            rag_fallback = self.rag_service.query(contextual_question)
+            rag_fallback = self.rag_service.query(service_question)
             if not self._rag_not_found(rag_fallback):
                 return {"kg_answer": rag_fallback}
         if self._should_use_scope_fallback(answer):
@@ -540,7 +661,7 @@ class AdvisorGraph:
 
         # Synthesize conversational response
         if answer and self.llm and "Knowledge Graph is currently unavailable" not in answer:
-            prompt_text = KG_SYNTHESIS_PROMPT.format(context=answer, question=contextual_question)
+            prompt_text = KG_SYNTHESIS_PROMPT.format(context=answer, question=service_question)
             try:
                 response = self.llm.invoke([HumanMessage(content=prompt_text)])
                 answer = response.content
@@ -548,6 +669,17 @@ class AdvisorGraph:
                 logger.error(f"Synthesis error: {e}")
 
         return {"kg_answer": answer}
+
+    @staticmethod
+    def _question_with_language_source(resolved_question: str, original_question: str) -> str:
+        """Keep semantic rewrites useful while preserving the original response language."""
+        if should_respond_arabic(original_question) and not should_respond_arabic(resolved_question):
+            return (
+                f"{resolved_question}\n\n"
+                f"Original student question: {original_question}\n"
+                "Response language requirement: answer in Arabic only."
+            )
+        return resolved_question
 
     def _contextualize_followup(self, question: str, history: List[BaseMessage]) -> str:
         """Attach the previous user question when the current message is vague."""
@@ -650,6 +782,9 @@ class AdvisorGraph:
 
     def _hybrid_node(self, state: AdvisorState) -> dict:
         """Combine answers into a final response."""
+        if state.get("final_answer"):
+            return {"final_answer": state["final_answer"]}
+
         answers = {}
         if state.get("rag_answer"): answers["Regulations"] = state["rag_answer"]
         if state.get("kg_answer"): answers["Course Information"] = state["kg_answer"]
@@ -666,6 +801,7 @@ class AdvisorGraph:
         context = "\n\n".join(f"[{k}]:\n{v}" for k, v in answers.items())
         prompt = (
             f"Synthesize a unified answer for the student.\n"
+            f"{strict_language_instruction(state['question'])}\n"
             f"Formatting rules: use plain paragraphs and bullet points with '-' only. "
             f"Use plain text labels like 'Required credits:' without Markdown bold. "
             f"Do not use Markdown heading markers like #, ##, ###, numbered section headings, tables, emojis, or decorative symbols.\n"
@@ -687,7 +823,7 @@ class AdvisorGraph:
 
         prompt = (
             "You are a friendly academic advisor. Answer the student's question helpfully. "
-            "Match the student's language; if they use Arabizi, answer in friendly Egyptian Arabic. "
+            f"{strict_language_instruction(question)} "
             "Be clear when a question needs official regulations or course data. "
             "Use plain paragraphs and bullet points with '-' only. "
             "Use plain text labels like 'Required credits:' without Markdown bold. "
@@ -700,11 +836,11 @@ class AdvisorGraph:
     @staticmethod
     def _contains_arabic(text: str) -> bool:
         """Return True when the input contains Arabic-script characters."""
-        return bool(re.search(r"[\u0600-\u06FF]", text))
+        return contains_arabic(text)
 
     def _out_of_scope_answer(self, question: str) -> str:
         """Return a consistent fallback when the question is outside supported KG/RAG scope."""
-        return OUT_OF_SCOPE_AR if self._contains_arabic(question) else OUT_OF_SCOPE_EN
+        return OUT_OF_SCOPE_AR if should_respond_arabic(question) else OUT_OF_SCOPE_EN
 
     @staticmethod
     def _is_unsupported_course_metadata_query(question: str) -> bool:
