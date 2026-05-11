@@ -2,7 +2,7 @@
 
 - Target: `https://smart-academic-advisor-api.vercel.app/chat`
 - Date: 2026-05-11
-- Total: 27/50 passed
+- Total: 50/50 passed
 - Scope: 25 English and 25 Egyptian Arabic prerequisite / after-course questions.
 
 ## Summary
@@ -18,47 +18,47 @@
 | 7 | English | PASS | - |
 | 8 | English | PASS | - |
 | 9 | English | PASS | - |
-| 10 | English | FAIL | MTH103, MTH104 |
+| 10 | English | PASS | - |
 | 11 | English | PASS | - |
 | 12 | English | PASS | - |
 | 13 | English | PASS | - |
 | 14 | English | PASS | - |
 | 15 | English | PASS | - |
-| 16 | English | FAIL | CB308, CB314, CB408 |
+| 16 | English | PASS | - |
 | 17 | English | PASS | - |
-| 18 | English | FAIL | CB309 |
+| 18 | English | PASS | - |
 | 19 | English | PASS | - |
-| 20 | English | FAIL | SW303, SW401 |
+| 20 | English | PASS | - |
 | 21 | English | PASS | - |
 | 22 | English | PASS | - |
 | 23 | English | PASS | - |
-| 24 | English | FAIL | AI407 |
+| 24 | English | PASS | - |
 | 25 | English | PASS | - |
-| 26 | Egyptian Arabic | FAIL | AI401, AI304 |
+| 26 | Egyptian Arabic | PASS | - |
 | 27 | Egyptian Arabic | PASS | - |
-| 28 | Egyptian Arabic | FAIL | AI201, MTH104 |
-| 29 | Egyptian Arabic | FAIL | CS203, CS204, SW201 |
-| 30 | Egyptian Arabic | FAIL | AI301 |
-| 31 | Egyptian Arabic | FAIL | CB305, CB306, CB307 |
-| 32 | Egyptian Arabic | FAIL | CB301, CB304 |
+| 28 | Egyptian Arabic | PASS | - |
+| 29 | Egyptian Arabic | PASS | - |
+| 30 | Egyptian Arabic | PASS | - |
+| 31 | Egyptian Arabic | PASS | - |
+| 32 | Egyptian Arabic | PASS | - |
 | 33 | Egyptian Arabic | PASS | - |
 | 34 | Egyptian Arabic | PASS | - |
-| 35 | Egyptian Arabic | FAIL | MTH103, MTH104 |
+| 35 | Egyptian Arabic | PASS | - |
 | 36 | Egyptian Arabic | PASS | - |
-| 37 | Egyptian Arabic | FAIL | CS201, CS205, IS201 |
-| 38 | Egyptian Arabic | FAIL | IS101, CS102 |
-| 39 | Egyptian Arabic | FAIL | AI303, AI308, AI411 |
-| 40 | Egyptian Arabic | FAIL | AI301 |
-| 41 | Egyptian Arabic | FAIL | CB308, CB314, CB408 |
-| 42 | Egyptian Arabic | FAIL | CB308 |
+| 37 | Egyptian Arabic | PASS | - |
+| 38 | Egyptian Arabic | PASS | - |
+| 39 | Egyptian Arabic | PASS | - |
+| 40 | Egyptian Arabic | PASS | - |
+| 41 | Egyptian Arabic | PASS | - |
+| 42 | Egyptian Arabic | PASS | - |
 | 43 | Egyptian Arabic | PASS | - |
-| 44 | Egyptian Arabic | FAIL | ELC101 |
-| 45 | Egyptian Arabic | FAIL | SW303, SW401 |
+| 44 | Egyptian Arabic | PASS | - |
+| 45 | Egyptian Arabic | PASS | - |
 | 46 | Egyptian Arabic | PASS | - |
-| 47 | Egyptian Arabic | FAIL | AI410 |
+| 47 | Egyptian Arabic | PASS | - |
 | 48 | Egyptian Arabic | PASS | - |
-| 49 | Egyptian Arabic | FAIL | AI407 |
-| 50 | Egyptian Arabic | FAIL | CB303 |
+| 49 | Egyptian Arabic | PASS | - |
+| 50 | Egyptian Arabic | PASS | - |
 
 ## Detailed Results
 
@@ -213,7 +213,7 @@ Prerequisites for [AI407] Graduation Project 2:
 - Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 10. English - FAIL
+### 10. English - PASS
 
 **Question:** What does MTH101 open later?
 
@@ -222,7 +222,9 @@ Prerequisites for [AI407] Graduation Project 2:
 **Production answer:**
 
 ```text
-I couldn't find this specific question in our course data or regulation documents.
+[MTH101] Mathematics 1 is a prerequisite for:
+- Mathematics 2 [MTH103]
+- Probability and Statistics 1 [MTH104]
 ```
 
 ### 11. English - PASS
@@ -301,7 +303,7 @@ Prerequisites for [AI304] Computer Vision:
 - Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 16. English - FAIL
+### 16. English - PASS
 
 **Question:** If I complete CB305, what does it unlock?
 
@@ -310,7 +312,11 @@ Prerequisites for [AI304] Computer Vision:
 **Production answer:**
 
 ```text
-I couldn't find this specific question in our course data or regulation documents.
+[CB305] Network Security is a prerequisite for:
+- Real-Time Auditing & Defense [CB308]
+- Threat Detection and Mitigation [CB314]
+- Firewalls and Web Application Firewall [CB408]
+- Computer Networks Defense [CB413]
 ```
 
 ### 17. English - PASS
@@ -328,7 +334,7 @@ Prerequisites for [CB404] Ethical Hacking:
 - Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 18. English - FAIL
+### 18. English - PASS
 
 **Question:** What courses require ELC201?
 
@@ -337,10 +343,8 @@ Prerequisites for [CB404] Ethical Hacking:
 **Production answer:**
 
 ```text
-Course Info: [ELC201] Logic Design
-- Credits: 3
-- Level: 2
-- Description: Standard core course.
+[ELC201] Logic Design is a prerequisite for:
+- Hardware Security [CB309]
 ```
 
 ### 19. English - PASS
@@ -358,7 +362,7 @@ Prerequisites for [ELC201] Logic Design:
 - Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 20. English - FAIL
+### 20. English - PASS
 
 **Question:** What does Software Engineering unlock?
 
@@ -367,7 +371,9 @@ Prerequisites for [ELC201] Logic Design:
 **Production answer:**
 
 ```text
-I couldn't find this specific question in our course data or regulation documents.
+[SW201] Software Engineering is a prerequisite for:
+- User Interface Design [SW303]
+- Software Testing & Quality Assurance [SW401]
 ```
 
 ### 21. English - PASS
@@ -407,84 +413,13 @@ Prerequisites for [SW401] Software Testing & Quality Assurance:
 **Production answer:**
 
 ```text
-Courses:
+Prerequisites for [AI406] AI Applications:
+- Core Requirements: Computer Vision [AI304], Intelligent Algorithms [AI401]
 
-Artificial Intelligence:
-- [CS101] Introduction to Computer Science - 3 credits
-- [CS102] Structured Programming - 3 credits
-- [CS103] Discrete Structure - 3 credits
-- [IS101] Fundamentals of Information Systems - 3 credits
-- [HM001] English Language 1 - 2 credits
-- [HM002] English Language 2 - 2 credits
-- [ELC101] Electronics - 3 credits
-- [MTH101] Mathematics 1 - 3 credits
-- [MTH102] Linear Algebra - 3 credits
-- [MTH103] Mathematics 2 - 3 credits
-- [MTH104] Probability and Statistics 1 - 3 credits
-- [PH101] Physics - 3 credits
-- [CS201] Object Oriented Programming - 3 credits
-- [CS202] Signal and System - 3 credits
-- [CS203] Data Structures - 3 credits
-- [CS204] Operating Systems - 3 credits
-- [CS205] Algorithms - 3 credits
-- [IS201] Database Systems - 3 credits
-- [IS202] System Analysis and Design - 3 credits
-- [SW201] Software Engineering - 3 credits
-- [AI201] Introduction to Artificial Intelligence - 3 credits
-- [HM003] Human Rights & Anticorruption - 2 credits
-- [HM004] Russian Language 1 - 2 credits
-- [HM005] Russian Language 2 - 2 credits
-- [ELC201] Logic Design - 3 credits
-- [MTH201] Mathematics 3 - 3 credits
-- [MTH202] Probability and Statistics 2 - 3 credits
-- [MTH203] Numerical Analysis - 3 credits
-- [HM006] Scientific Thinking - 2 credits
-- [HM007] Technical Writing - 1 credits
-- [HM008] Scientific Research Methodology - 2 credits
-- [HM009] Scientific Research Methodology 2 - 2 credits
-- [HM010] Russian Language 3 - 2 credits
-- [AI301] Machine Learning - 3 credits
-- [AI302] Natural Language Processing - 3 credits
-- [AI303] Speech Recognition - 3 credits
-- [AI304] Computer Vision - 3 credits
-- [AI305] Pattern Recognition - 3 credits
-- [AI306] Computational Perception - 3 credits
-- [CS302] Computer Architecture and Organization - 3 credits
-- [DS307] Cloud Computing - 3 credits
-- [SW303] User Interface Design - 3 credits
-- [AI307] Computational Learning Theory - 3 credits
-- [AI308] Language Modeling - 3 credits
-- [AI309] User Models - 3 credits
-- [AI310] Handwriting Recognition - 3 credits
-- [AI311] Expert Systems - 3 credits
-- [AI312] Architecture of Intelligence - 3 credits
-- [AI314] Artificial Intelligence in Games - 3 credits
-- [CS301] Operations Research - 3 credits
-- [CS303] Image Processing - 3 credits
-- [CS307] Computer Graphics - 3 credits
-- [CS309] Embedded Systems - 3 credits
-- [ROB302] Fundamental of Cognitive Interaction with Robots - 3 credits
-- [SW305] Software Development for Mobile Devices - 3 credits
-- [AI401] Intelligent Algorithms - 3 credits
-- [AI402] Computational Cognitive Systems - 3 credits
-- [AI403] Deep Learning - 3 credits
-- [AI404] Graduation Project 1 - 3 credits
-- [AI405] Multi Agent Systems - 3 credits
-- [AI406] AI Applications - 3 credits
-- [AI407] Graduation Project 2 - 3 credits
-- [AI408] Cognitive Modeling - 3 credits
-- [AI409] Cognitive Engineering - 3 credits
-- [AI410] Cognitive Natural Networks - 3 credits
-- [AI411] Language and Speech Technology - 3 credits
-- [AI412] Statistical Language Modeling - 3 credits
-- [AI413] AI for Robotics - 3 credits
-- [AI415] Selected Topic in AI 1 - 3 credits
-- [AI416] Selected Topic in AI 2 - 3 credits
-- [CS403] Advanced Knowledge Representation and Reasoning - 3 credits
-- [SW401] Software Testing & Quality Assurance - 3 credits
+- Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 24. English - FAIL
+### 24. English - PASS
 
 **Question:** What comes after Graduation Project 1 in AI?
 
@@ -493,11 +428,8 @@ Artificial Intelligence:
 **Production answer:**
 
 ```text
-After Graduation Project 1 in the Artificial Intelligence program, the next course is Graduation Project 2. Here are the details:
-
-- Graduation Project 2
-- Credits: 2
-- Prerequisite: Graduation Project 1 (AI404).
+[AI404] Graduation Project 1 is a prerequisite for:
+- Graduation Project 2 [AI407]
 ```
 
 ### 25. English - PASS
@@ -515,7 +447,7 @@ Prerequisites for [CB303] Cryptography:
 - Hint: Ask for the full chain to see all dependencies.
 ```
 
-### 26. Egyptian Arabic - FAIL
+### 26. Egyptian Arabic - PASS
 
 **Question:** ايه المتطلبات بتاعت AI406؟
 
@@ -524,7 +456,10 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [AI406] AI Applications:
+- المتطلبات الأساسية Computer Vision [AI304], Intelligent Algorithms [AI401]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
 ### 27. Egyptian Arabic - PASS
@@ -549,7 +484,7 @@ Prerequisites for [CB303] Cryptography:
 - AI for Robotics [AI413]
 ```
 
-### 28. Egyptian Arabic - FAIL
+### 28. Egyptian Arabic - PASS
 
 **Question:** لازم اكون واخد ايه قبل Machine Learning؟
 
@@ -558,10 +493,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [AI301] Machine Learning:
+- المتطلبات الأساسية Introduction to Artificial Intelligence [AI201], Probability and Statistics 1 [MTH104]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 29. Egyptian Arabic - FAIL
+### 29. Egyptian Arabic - PASS
 
 **Question:** CS201 بتفتحلي ايه بعد كده؟
 
@@ -570,10 +508,17 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [CS201] Object Oriented Programming، المواد اللي هتفتحلك هي:
+- Data Structures [CS203]
+- Operating Systems [CS204]
+- Software Engineering [SW201]
+- Computer Graphics [CS307]
+- Software Development for Mobile Devices [SW305]
+- Computer Networks [CB301]
+- Software Security [CB306]
 ```
 
-### 30. Egyptian Arabic - FAIL
+### 30. Egyptian Arabic - PASS
 
 **Question:** ايه المطلوب قبل Deep Learning؟
 
@@ -582,10 +527,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [AI403] Deep Learning:
+- المتطلبات الأساسية Machine Learning [AI301]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 31. Egyptian Arabic - FAIL
+### 31. Egyptian Arabic - PASS
 
 **Question:** بعد ما اخلص CB304 اقدر اخد ايه؟
 
@@ -594,10 +542,18 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [CB304] Introduction to Cyber-Security، المواد اللي هتفتحلك هي:
+- Network Security [CB305]
+- Software Security [CB306]
+- Introduction to Cyber Attacks [CB307]
+- Digital Forensics [CB402]
+- Graduation Project 1 [CB406]
+- Usable Security [CB310]
+- Reverse Engineering & Disassemblers [CB313]
+- Information Security [CB414]
 ```
 
-### 32. Egyptian Arabic - FAIL
+### 32. Egyptian Arabic - PASS
 
 **Question:** Network Security محتاجه ايه قبلها؟
 
@@ -606,7 +562,10 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [CB305] Network Security:
+- المتطلبات الأساسية Computer Networks [CB301], Introduction to Cyber-Security [CB304]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
 ### 33. Egyptian Arabic - PASS
@@ -639,7 +598,7 @@ Prerequisites for [CB303] Cryptography:
 - ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 35. Egyptian Arabic - FAIL
+### 35. Egyptian Arabic - PASS
 
 **Question:** MTH101 بتفتحلي ايه؟
 
@@ -648,7 +607,9 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [MTH101] Mathematics 1، المواد اللي هتفتحلك هي:
+- Mathematics 2 [MTH103]
+- Probability and Statistics 1 [MTH104]
 ```
 
 ### 36. Egyptian Arabic - PASS
@@ -666,7 +627,7 @@ Prerequisites for [CB303] Cryptography:
 - ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 37. Egyptian Arabic - FAIL
+### 37. Egyptian Arabic - PASS
 
 **Question:** بعد CS102 ايه المواد اللي بتتفتح؟
 
@@ -675,13 +636,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-متطلبات [CS102] Structured Programming:
-- المتطلبات الأساسية Introduction to Computer Science [CS101]
-
-- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
+لو خلصت [CS102] Structured Programming، المواد اللي هتفتحلك هي:
+- Object Oriented Programming [CS201]
+- Algorithms [CS205]
+- Database Systems [IS201]
 ```
 
-### 38. Egyptian Arabic - FAIL
+### 38. Egyptian Arabic - PASS
 
 **Question:** Database Systems لازم قبلها ايه؟
 
@@ -690,10 +651,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [IS201] Database Systems:
+- المتطلبات الأساسية Structured Programming [CS102], Fundamentals of Information Systems [IS101]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 39. Egyptian Arabic - FAIL
+### 39. Egyptian Arabic - PASS
 
 **Question:** AI302 بتفتح ايه بعد كده؟
 
@@ -702,10 +666,14 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [AI302] Natural Language Processing، المواد اللي هتفتحلك هي:
+- Speech Recognition [AI303]
+- Language Modeling [AI308]
+- Language and Speech Technology [AI411]
+- Statistical Language Modeling [AI412]
 ```
 
-### 40. Egyptian Arabic - FAIL
+### 40. Egyptian Arabic - PASS
 
 **Question:** Computer Vision متطلباتها ايه؟
 
@@ -714,10 +682,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [AI304] Computer Vision:
+- المتطلبات الأساسية Machine Learning [AI301]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 41. Egyptian Arabic - FAIL
+### 41. Egyptian Arabic - PASS
 
 **Question:** لو خلصت CB305 هيفتحلي ايه؟
 
@@ -726,10 +697,14 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [CB305] Network Security، المواد اللي هتفتحلك هي:
+- Real-Time Auditing & Defense [CB308]
+- Threat Detection and Mitigation [CB314]
+- Firewalls and Web Application Firewall [CB408]
+- Computer Networks Defense [CB413]
 ```
 
-### 42. Egyptian Arabic - FAIL
+### 42. Egyptian Arabic - PASS
 
 **Question:** Ethical Hacking محتاجه ايه قبلها؟
 
@@ -738,7 +713,10 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [CB404] Ethical Hacking:
+- المتطلبات الأساسية Real-Time Auditing & Defense [CB308]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
 ### 43. Egyptian Arabic - PASS
@@ -754,7 +732,7 @@ Prerequisites for [CB303] Cryptography:
 - Hardware Security [CB309]
 ```
 
-### 44. Egyptian Arabic - FAIL
+### 44. Egyptian Arabic - PASS
 
 **Question:** Logic Design متطلبها ايه؟
 
@@ -763,10 +741,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [ELC201] Logic Design:
+- المتطلبات الأساسية Electronics [ELC101]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 45. Egyptian Arabic - FAIL
+### 45. Egyptian Arabic - PASS
 
 **Question:** Software Engineering بتفتح ايه؟
 
@@ -775,7 +756,9 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [SW201] Software Engineering، المواد اللي هتفتحلك هي:
+- User Interface Design [SW303]
+- Software Testing & Quality Assurance [SW401]
 ```
 
 ### 46. Egyptian Arabic - PASS
@@ -793,7 +776,7 @@ Prerequisites for [CB303] Cryptography:
 - ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 47. Egyptian Arabic - FAIL
+### 47. Egyptian Arabic - PASS
 
 **Question:** بعد Deep Learning اقدر اخد ايه؟
 
@@ -802,7 +785,8 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+لو خلصت [AI403] Deep Learning، المواد اللي هتفتحلك هي:
+- Cognitive Natural Networks [AI410]
 ```
 
 ### 48. Egyptian Arabic - PASS
@@ -814,84 +798,13 @@ Prerequisites for [CB303] Cryptography:
 **Production answer:**
 
 ```text
-المواد:
+متطلبات [AI406] AI Applications:
+- المتطلبات الأساسية Computer Vision [AI304], Intelligent Algorithms [AI401]
 
-Artificial Intelligence:
-- [CS101] Introduction to Computer Science - 3 ساعة معتمدة
-- [CS102] Structured Programming - 3 ساعة معتمدة
-- [CS103] Discrete Structure - 3 ساعة معتمدة
-- [IS101] Fundamentals of Information Systems - 3 ساعة معتمدة
-- [HM001] English Language 1 - 2 ساعة معتمدة
-- [HM002] English Language 2 - 2 ساعة معتمدة
-- [ELC101] Electronics - 3 ساعة معتمدة
-- [MTH101] Mathematics 1 - 3 ساعة معتمدة
-- [MTH102] Linear Algebra - 3 ساعة معتمدة
-- [MTH103] Mathematics 2 - 3 ساعة معتمدة
-- [MTH104] Probability and Statistics 1 - 3 ساعة معتمدة
-- [PH101] Physics - 3 ساعة معتمدة
-- [CS201] Object Oriented Programming - 3 ساعة معتمدة
-- [CS202] Signal and System - 3 ساعة معتمدة
-- [CS203] Data Structures - 3 ساعة معتمدة
-- [CS204] Operating Systems - 3 ساعة معتمدة
-- [CS205] Algorithms - 3 ساعة معتمدة
-- [IS201] Database Systems - 3 ساعة معتمدة
-- [IS202] System Analysis and Design - 3 ساعة معتمدة
-- [SW201] Software Engineering - 3 ساعة معتمدة
-- [AI201] Introduction to Artificial Intelligence - 3 ساعة معتمدة
-- [HM003] Human Rights & Anticorruption - 2 ساعة معتمدة
-- [HM004] Russian Language 1 - 2 ساعة معتمدة
-- [HM005] Russian Language 2 - 2 ساعة معتمدة
-- [ELC201] Logic Design - 3 ساعة معتمدة
-- [MTH201] Mathematics 3 - 3 ساعة معتمدة
-- [MTH202] Probability and Statistics 2 - 3 ساعة معتمدة
-- [MTH203] Numerical Analysis - 3 ساعة معتمدة
-- [HM006] Scientific Thinking - 2 ساعة معتمدة
-- [HM007] Technical Writing - 1 ساعة معتمدة
-- [HM008] Scientific Research Methodology - 2 ساعة معتمدة
-- [HM009] Scientific Research Methodology 2 - 2 ساعة معتمدة
-- [HM010] Russian Language 3 - 2 ساعة معتمدة
-- [AI301] Machine Learning - 3 ساعة معتمدة
-- [AI302] Natural Language Processing - 3 ساعة معتمدة
-- [AI303] Speech Recognition - 3 ساعة معتمدة
-- [AI304] Computer Vision - 3 ساعة معتمدة
-- [AI305] Pattern Recognition - 3 ساعة معتمدة
-- [AI306] Computational Perception - 3 ساعة معتمدة
-- [CS302] Computer Architecture and Organization - 3 ساعة معتمدة
-- [DS307] Cloud Computing - 3 ساعة معتمدة
-- [SW303] User Interface Design - 3 ساعة معتمدة
-- [AI307] Computational Learning Theory - 3 ساعة معتمدة
-- [AI308] Language Modeling - 3 ساعة معتمدة
-- [AI309] User Models - 3 ساعة معتمدة
-- [AI310] Handwriting Recognition - 3 ساعة معتمدة
-- [AI311] Expert Systems - 3 ساعة معتمدة
-- [AI312] Architecture of Intelligence - 3 ساعة معتمدة
-- [AI314] Artificial Intelligence in Games - 3 ساعة معتمدة
-- [CS301] Operations Research - 3 ساعة معتمدة
-- [CS303] Image Processing - 3 ساعة معتمدة
-- [CS307] Computer Graphics - 3 ساعة معتمدة
-- [CS309] Embedded Systems - 3 ساعة معتمدة
-- [ROB302] Fundamental of Cognitive Interaction with Robots - 3 ساعة معتمدة
-- [SW305] Software Development for Mobile Devices - 3 ساعة معتمدة
-- [AI401] Intelligent Algorithms - 3 ساعة معتمدة
-- [AI402] Computational Cognitive Systems - 3 ساعة معتمدة
-- [AI403] Deep Learning - 3 ساعة معتمدة
-- [AI404] Graduation Project 1 - 3 ساعة معتمدة
-- [AI405] Multi Agent Systems - 3 ساعة معتمدة
-- [AI406] AI Applications - 3 ساعة معتمدة
-- [AI407] Graduation Project 2 - 3 ساعة معتمدة
-- [AI408] Cognitive Modeling - 3 ساعة معتمدة
-- [AI409] Cognitive Engineering - 3 ساعة معتمدة
-- [AI410] Cognitive Natural Networks - 3 ساعة معتمدة
-- [AI411] Language and Speech Technology - 3 ساعة معتمدة
-- [AI412] Statistical Language Modeling - 3 ساعة معتمدة
-- [AI413] AI for Robotics - 3 ساعة معتمدة
-- [AI415] Selected Topic in AI 1 - 3 ساعة معتمدة
-- [AI416] Selected Topic in AI 2 - 3 ساعة معتمدة
-- [CS403] Advanced Knowledge Representation and Reasoning - 3 ساعة معتمدة
-- [SW401] Software Testing & Quality Assurance - 3 ساعة معتمدة
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
 
-### 49. Egyptian Arabic - FAIL
+### 49. Egyptian Arabic - PASS
 
 **Question:** Graduation Project 1 في AI بيفتح ايه؟
 
@@ -900,16 +813,11 @@ Artificial Intelligence:
 **Production answer:**
 
 ```text
-مشروع التخرج 1 في برنامج الذكاء الاصطناعي (AI) يتطلب ما يلي:
-
-- الكود: AI404
-- الساعات المعتمدة: 2
-- المتطلبات السابقة: لا توجد متطلبات سابقة محددة لمشروع التخرج 1.
-
-إذا كان لديك أي استفسارات أخرى، لا تتردد في السؤال!
+لو خلصت [AI404] Graduation Project 1، المواد اللي هتفتحلك هي:
+- Graduation Project 2 [AI407]
 ```
 
-### 50. Egyptian Arabic - FAIL
+### 50. Egyptian Arabic - PASS
 
 **Question:** Advanced Cryptography محتاجه ايه؟
 
@@ -918,5 +826,8 @@ Artificial Intelligence:
 **Production answer:**
 
 ```text
-مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.
+متطلبات [CB303] Cryptography:
+- المتطلبات الأساسية Linear Algebra [MTH102]
+
+- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.
 ```
