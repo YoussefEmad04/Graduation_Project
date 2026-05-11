@@ -686,15 +686,6 @@ class AdvisorGraph:
         if self._should_use_scope_fallback(answer):
             return {"kg_answer": self._out_of_scope_answer(question)}
 
-        # Synthesize conversational response
-        if answer and self.llm and "Knowledge Graph is currently unavailable" not in answer:
-            prompt_text = KG_SYNTHESIS_PROMPT.format(context=answer, question=service_question)
-            try:
-                response = self.llm.invoke([HumanMessage(content=prompt_text)])
-                answer = response.content
-            except Exception as e:
-                logger.error(f"Synthesis error: {e}")
-
         return {"kg_answer": answer}
 
     @staticmethod
