@@ -261,6 +261,13 @@ class KGService:
             if category_hours_answer:
                 return category_hours_answer
 
+            direct_course = self._find_course_node(question)
+            prereq_direction = self._classify_prerequisite_direction(question)
+            if direct_course and prereq_direction in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
+                return self._get_prereqs_reverse(question)
+            if direct_course and prereq_direction == "prerequisites_for_course":
+                return self._get_prereqs_forward(question)
+
             # Let the LLM understand ambiguous wording before falling back to
             # direct keyword/fuzzy matching.
             extraction = self._classify_intent(question, history)
@@ -278,13 +285,6 @@ class KGService:
             direct_category = self._direct_category_from_question(question)
             if direct_category:
                 return self._get_courses_in_category(direct_category)
-
-            direct_course = self._find_course_node(question)
-            prereq_direction = self._classify_prerequisite_direction(question)
-            if direct_course and prereq_direction in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
-                return self._get_prereqs_reverse(question)
-            if direct_course and prereq_direction == "prerequisites_for_course":
-                return self._get_prereqs_forward(question)
 
             return self._query_courses(question)
 
@@ -517,6 +517,17 @@ class KGService:
         """Classify the direction of course prerequisite relationship questions."""
         normalized = KGService._normalize_query(question.lower())
 
+        unlock_markers = (
+            "what courses require", "which courses require", "courses require",
+            "what requires", "which requires", "required for",
+            "opens", "open", "unlock", "unlocks", "leads to",
+            "after", "future courses", "what courses does",
+            "بتفتح", "هتفتح", "بتفتحلي", "هتفتحلي", "بتفتح ايه",
+            "بتفتح مواد", "الماده دي بتفتح", "المادة دي بتفتح",
+            "بعد", "بعدها", "بعد كده", "بعد كدا", "اخلص", "خلصت",
+            "يفتحلي", "هيفتحلي", "بتفتحلي ايه",
+        )
+
         blocked_markers = (
             "لو مخدت", "لو ماخدت", "لو مخدتهاش", "لو ماخدتهاش",
             "لو مسجلتش", "لو مسجلتهاش", "لو ممسجلتش", "لو ممسجلتهاش",
@@ -530,25 +541,21 @@ class KGService:
 
         prereq_markers = (
             "prerequisite", "prerequisites", "pre req", "before",
+            "prequesits", "prequesites", "prequisite", "prerequisits", "prerequsite",
             "need before", "need to take", "required before",
             "what unlocks", "what opens",
             "محتاج", "قبل", "قبلها", "لازم اخد", "لازم اعدي",
             "لازم اخد ايه قبل", "لازم اخد ايه قبلها",
-            "متطلبات", "متطلبات ماده", "متطلبات مادة",
+            "متطلب", "متطلبها", "متطلباته", "متطلبات", "متطلبات ماده", "متطلبات مادة",
             "متطلبات سابقه", "متطلبات سابقة", "المتطلبات السابقه", "المتطلبات السابقة",
-            "تتفتح", "بتتفتح", "تتفتح بايه", "بتتفتح بايه",
+            "بري ريكويست", "البري ريكويست", "بري ريك", "بريريك",
+            "تتفتح بايه", "بتتفتح بايه",
             "الماده اللي بتفتح", "المادة اللي بتفتح",
             "اللي بتفتحها", "بتفتحها",
         )
         if any(phrase in normalized for phrase in prereq_markers):
             return "prerequisites_for_course"
 
-        unlock_markers = (
-            "opens", "open", "unlock", "unlocks", "leads to",
-            "after", "future courses", "what courses does",
-            "بتفتح", "هتفتح", "بتفتحلي", "هتفتحلي", "بتفتح ايه",
-            "بتفتح مواد", "الماده دي بتفتح", "المادة دي بتفتح",
-        )
         if any(phrase in normalized for phrase in unlock_markers):
             return "courses_unlocked_by_course"
 
@@ -780,7 +787,7 @@ class KGService:
         for c in courses:
             code = c['code'].lower()
             name = c['name'].lower()
-            if code in clean_query or name in clean_query or name in aliased_query:
+            if code in clean_query or code in aliased_query or name in clean_query or name in aliased_query:
                 return c
 
         # 2. Fuzzy match
@@ -842,7 +849,15 @@ class KGService:
             "madda": "course",
             "prereq": "prerequisite",
             "pre req": "prerequisite",
+            "prequesits": "prerequisite",
+            "prequesites": "prerequisite",
+            "prequisite": "prerequisite",
+            "prerequisits": "prerequisite",
+            "prerequsite": "prerequisite",
             "بريريك": "prerequisite",
+            "بري ريكويست": "prerequisite",
+            "البري ريكويست": "prerequisite",
+            "بري ريك": "prerequisite",
             "سايبر": "cybersecurity",
             "ذكاء": "artificial intelligence",
             "خوارزميات": "algorithms",
