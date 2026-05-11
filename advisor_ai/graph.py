@@ -249,6 +249,21 @@ class AdvisorGraph:
             )
 
         if semantic and self._is_valid_route(semantic.route) and semantic.confidence >= 0.75:
+            prereq_direction = KGService._classify_prerequisite_direction(question)
+            if (
+                semantic.route != "mental"
+                and prereq_direction != "unknown"
+                and self._is_course_query(question)
+            ):
+                logger.info("Question routed to kg (explicit course prerequisite relationship)")
+                return {
+                    "route": "kg",
+                    "route_sub_intent": prereq_direction,
+                    "rewritten_question": question,
+                    "route_confidence": semantic.confidence,
+                    "route_reasoning": "Explicit course prerequisite relationship overrides broad semantic route.",
+                    "route_entities": semantic.entities,
+                }
             logger.info(f"Question semantically routed to: {semantic.route} ({semantic.confidence:.2f})")
             return {
                 "route": semantic.route,
@@ -257,6 +272,18 @@ class AdvisorGraph:
                 "route_confidence": semantic.confidence,
                 "route_reasoning": semantic.reasoning,
                 "route_entities": semantic.entities,
+            }
+
+        prereq_direction = KGService._classify_prerequisite_direction(question)
+        if prereq_direction != "unknown" and self._is_course_query(question):
+            logger.info("Question routed to kg (explicit course prerequisite relationship)")
+            return {
+                "route": "kg",
+                "route_sub_intent": prereq_direction,
+                "rewritten_question": question,
+                "route_confidence": semantic.confidence if semantic else 0.0,
+                "route_reasoning": semantic.reasoning if semantic else "Explicit course prerequisite relationship.",
+                "route_entities": semantic.entities if semantic else {},
             }
 
         heuristic_route = self._heuristic_route(question, routing_history)
