@@ -53,6 +53,17 @@ ARABIC_ORDINALS = {
 PRONOUNS_TO_RESOLVE = {"ها", "هيه", "دي", "it", "this", "unknown", "none"}
 
 COURSE_ALIASES = {
+    "oop": "cs201",
+    "object oriented": "cs201",
+    "object oriented programming": "cs201",
+    "software engineering": "sw201",
+    "testing": "sw401",
+    "software testing": "sw401",
+    "quality assurance": "sw401",
+    "software quality assurance": "sw401",
+    "ui": "sw303",
+    "user interface": "sw303",
+    "user interface design": "sw303",
     "math 1": "mathematics 1",
     "math1": "mathematics 1",
     "math one": "mathematics 1",
@@ -263,6 +274,17 @@ class KGService:
 
             direct_course = self._find_course_node(question)
             prereq_direction = self._classify_prerequisite_direction(question)
+            if not direct_course:
+                followup_answer = self._answer_contextual_course_followup(
+                    question,
+                    history,
+                    prereq_direction,
+                )
+                if followup_answer:
+                    return followup_answer
+
+            if direct_course and self._looks_like_course_info_query(question):
+                return self._get_course_info(question)
             if direct_course and prereq_direction in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
                 return self._get_prereqs_reverse(question)
             if direct_course and prereq_direction == "prerequisites_for_course":
@@ -319,7 +341,7 @@ class KGService:
                 return self._handle_study_path(question, level or "", program or "")
 
             elif intent == "course_info":
-                return self._query_courses(course if course else question)
+                return self._get_course_info(self._course_query_for_response_language(question, course))
 
             elif intent == "category_query" or (intent == "unknown" and category):
                 return self._get_courses_in_category(category if category else question)
@@ -335,6 +357,71 @@ class KGService:
         if course and should_respond_arabic(question):
             return f"{question} {course}"
         return course if course else question
+
+    def _answer_contextual_course_followup(
+        self,
+        question: str,
+        history: Optional[List[Any]],
+        prereq_direction: str,
+    ) -> Optional[str]:
+        """Resolve short Arabic/English follow-ups using the last discussed course."""
+        if not self._looks_like_course_relationship_followup(question):
+            return None
+
+        course = self._last_course_from_history(history)
+        if not course:
+            return "تقصد أنهي مادة؟ اكتب اسم المادة أو كودها زي SW201 أو CS201."
+
+        course_query = self._course_query_for_response_language(question, course["code"])
+        if prereq_direction in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
+            return self._get_prereqs_reverse(course_query)
+        if prereq_direction == "prerequisites_for_course":
+            return self._get_prereqs_forward(course_query)
+        return self._get_course_info(course_query)
+
+    @staticmethod
+    def _looks_like_course_relationship_followup(question: str) -> bool:
+        """Detect short course follow-ups that need the previous course context."""
+        normalized = KGService._normalize_query(question.lower())
+        words = normalized.split()
+        if len(words) > 8:
+            return False
+        markers = (
+            "قبلها", "قبلها بقا", "طيب قبلها", "طب قبلها", "قبلها ايه",
+            "بعدها", "بعدها ايه", "طيب بعدها", "طب بعدها",
+            "بتفتح ايه", "بتفتح مواد ايه", "تفتح ايه", "ايه اللي بعدها",
+            "بعد ما اخلصها", "اخد ايه",
+            "ايه المطلوب", "المطلوب ايه", "متطلباتها ايه", "متطلبها ايه",
+            "متطلباته ايه", "what before", "before it", "what after",
+            "after it", "what does it open", "what does this open",
+        )
+        return any(marker in normalized for marker in markers)
+
+    def _last_course_from_history(self, history: Optional[List[Any]]) -> Optional[dict]:
+        """Prefer the last student-mentioned course, then the main course in advisor replies."""
+        if not history:
+            return None
+
+        human_messages = [m for m in history if isinstance(m, HumanMessage)]
+        for message in reversed(human_messages):
+            course = self._find_course_node(str(message.content))
+            if course:
+                return course
+
+        for message in reversed(history):
+            if isinstance(message, SystemMessage):
+                continue
+            course = self._find_primary_course_in_text(str(message.content))
+            if course:
+                return course
+        return None
+
+    def _find_primary_course_in_text(self, text: str) -> Optional[dict]:
+        """Extract the heading/main course from a formatted KG answer."""
+        code_match = re.search(r"\[([A-Z]{2,4}\d{3})\]", text)
+        if code_match:
+            return self._find_course_node(code_match.group(1))
+        return self._find_course_node(text)
 
     @staticmethod
     def _normalize_program_name(program: Optional[str]) -> str:
@@ -525,6 +612,8 @@ class KGService:
             "بتفتح", "هتفتح", "بيفتح", "بتفتحلي", "هتفتحلي", "بيفتحلي",
             "بتفتح ايه", "بيفتح ايه",
             "بتفتح مواد", "الماده دي بتفتح", "المادة دي بتفتح",
+            "الماده دي تفتح", "المادة دي تفتح", "تفتح ايه",
+            "ايه اللي بعدها", "بعد ما اخلصها اخد ايه",
             "بعد", "بعدها", "بعد كده", "بعد كدا", "اخلص", "خلصت",
             "يفتحلي", "هيفتحلي", "بتفتحلي ايه",
         )
@@ -547,7 +636,9 @@ class KGService:
             "what unlocks", "what opens",
             "محتاج", "قبل", "قبلها", "لازم اخد", "لازم اعدي",
             "لازم اخد ايه قبل", "لازم اخد ايه قبلها",
-            "متطلب", "متطلبها", "متطلباته", "متطلبات", "متطلبات ماده", "متطلبات مادة",
+            "ايه المطلوب", "المطلوب عشان افتحها", "لازم اكون مخلص",
+            "لازم اكون مخلص ايه", "قبلها ايه", "قبلها بقا",
+            "متطلب", "متطلبها", "متطلباتها", "متطلباته", "متطلبات", "متطلبات ماده", "متطلبات مادة",
             "متطلبات سابقه", "متطلبات سابقة", "المتطلبات السابقه", "المتطلبات السابقة",
             "بري ريكويست", "البري ريكويست", "بري ريك", "بريريك",
             "تتفتح بايه", "بتتفتح بايه",
@@ -561,6 +652,18 @@ class KGService:
             return "courses_unlocked_by_course"
 
         return "unknown"
+
+    @staticmethod
+    def _looks_like_course_info_query(question: str) -> bool:
+        """Detect general course detail questions."""
+        normalized = KGService._normalize_query(question.lower())
+        markers = (
+            "course info", "course details", "information about", "credits",
+            "credit hours", "level", "description", "معلومات المادة",
+            "معلومات الماده", "عدد الساعات", "الساعات المعتمدة",
+            "الساعات المعتمده", "المستوى", "وصف المادة", "وصف الماده",
+        )
+        return any(marker in normalized for marker in markers)
 
     def _classify_intent(self, question: str, history: Optional[List[Any]] = None) -> dict:
         """Detect intent using LLM (CoT/JSON). Handles follow-ups via history."""
@@ -891,18 +994,21 @@ class KGService:
 
             if not direct:
                 if respond_arabic:
-                    return f"المادة [{code}] {name} ملهاش متطلبات مسبقة. تقدر تاخدها مباشرة."
+                    return f"مادة {name} [{code}] ملهاش متطلبات سابقة."
                 return f"The course [{code}] {name} has no prerequisites. You can take it directly!"
 
             wants_full = any(kw in query.lower() for kw in ["all", "full", "chain", "everything", "كل", "بالكامل"])
             
             if respond_arabic:
-                lines = [f"متطلبات [{code}] {name}:"]
+                lines = [f"علشان تفتح مادة {name} [{code}]، لازم تكون مخلص:"]
             else:
                 lines = [f"**Prerequisites for [{code}] {name}:**"]
-            direct_text = ", ".join(f"{p['name']} [{p['code']}]" for p in direct)
-            label = "المتطلبات الأساسية" if respond_arabic else "**Core Requirements:**"
-            lines.append(f"- {label} {direct_text}")
+            if respond_arabic:
+                for p in direct:
+                    lines.append(f"- {p['name']} [{p['code']}]")
+            else:
+                direct_text = ", ".join(f"{p['name']} [{p['code']}]" for p in direct)
+                lines.append(f"- **Core Requirements:** {direct_text}")
 
             if wants_full:
                 chain_res = session.run(
@@ -922,9 +1028,7 @@ class KGService:
                         else:
                             lines.append(f"- {level_label} {p['level']}:** [{p['code']}] {p['name']}")
             else:
-                if respond_arabic:
-                    lines.append("\n- ملاحظة: اسأل عن السلسلة الكاملة لو عايز تشوف كل المتطلبات.")
-                else:
+                if not respond_arabic:
                     lines.append("\n- **Hint:** Ask for the full chain to see all dependencies.")
             
             return "\n".join(lines)
@@ -950,11 +1054,11 @@ class KGService:
 
             if not futures:
                 if respond_arabic:
-                    return f"المادة [{code}] {name} مش متطلبة لأي مواد بعدها."
+                    return f"مادة {name} [{code}] مش ظاهرة عندي إنها بتفتح مواد بعدها."
                 return f"The course [{code}] {name} is not a prerequisite for any future courses."
 
             if respond_arabic:
-                lines = [f"لو خلصت [{code}] {name}، المواد اللي هتفتحلك هي:"]
+                lines = [f"لو خلصت {name} [{code}]، المواد اللي هتتفتحلك هي:"]
             else:
                 lines = [f"**[{code}] {name} is a prerequisite for:**"]
             for f in futures:
@@ -969,6 +1073,67 @@ class KGService:
             return self.get_study_path(int(level), "General")
         else:
             return self._query_courses(question)
+
+    @traceable(name="KG Course Info", run_type="retriever")
+    def _get_course_info(self, query: str) -> str:
+        """Return a single course info card with category/type when available."""
+        respond_arabic = should_respond_arabic(query)
+        course = self._find_course_node(query)
+        if not course:
+            if respond_arabic:
+                return f"مش لاقي مادة مطابقة لـ '{query}'."
+            return f"Could not find a course matching '{query}'."
+
+        with self._session() as session:
+            result = session.run(
+                """
+                MATCH (c:Course {code: $code})
+                OPTIONAL MATCH (c)-[:BELONGS_TO]->(cat:Category)
+                RETURN c.code AS code, c.name AS name, c.credit_hours AS credits,
+                       c.level AS level, cat.type AS type, cat.name AS category
+                """,
+                code=course["code"],
+            )
+            record = result.single() if hasattr(result, "single") else next(iter(result), None)
+
+        c = dict(record) if record else course
+        code = c.get("code", course.get("code", "?"))
+        name = c.get("name", course.get("name", "?"))
+        credits = c.get("credits", course.get("credits", "?"))
+        level = c.get("level", course.get("level", "?"))
+        category_type = self._format_category_type(c.get("type") or c.get("category"), respond_arabic)
+
+        if respond_arabic:
+            return (
+                f"معلومات مادة {name} [{code}]:\n"
+                f"- الساعات المعتمدة: {credits}\n"
+                f"- المستوى: {level}\n"
+                f"- النوع: {category_type}\n"
+                f"- الوصف: مادة ضمن الخطة الدراسية."
+            )
+        return (
+            f"**Course Info:** {name} [{code}]\n"
+            f"- **Credits:** {credits}\n"
+            f"- **Level:** {level}\n"
+            f"- **Type:** {category_type}\n"
+            f"- **Description:** Course in the study plan."
+        )
+
+    @staticmethod
+    def _format_category_type(value: Optional[str], respond_arabic: bool) -> str:
+        """Map KG category metadata to a compact user-facing type label."""
+        normalized = (value or "").lower()
+        if respond_arabic:
+            if "elective" in normalized or "اختياري" in normalized:
+                return "اختيارية"
+            if normalized:
+                return "أساسية"
+            return "غير محدد"
+        if "elective" in normalized:
+            return "Elective"
+        if normalized:
+            return "Core"
+        return "Unknown"
 
     @traceable(name="KG Get Study Path", run_type="retriever")
     def get_study_path(self, level: int, major: str) -> str:
@@ -1026,20 +1191,7 @@ class KGService:
 
             # If specific match and no broad intent, return details
             if (not target_prog and not target_level) and best_match:
-                c = best_match
-                if respond_arabic:
-                    return (
-                        f"معلومات المادة: [{c['code']}] {c['name']}\n"
-                        f"- الساعات المعتمدة: {c.get('credits', '?')}\n"
-                        f"- المستوى: {c.get('level', '?')}\n"
-                        f"- الوصف: مادة أساسية في الخطة الدراسية."
-                    )
-                return (
-                    f"**Course Info:** [{c['code']}] {c['name']}\n"
-                    f"- **Credits:** {c.get('credits', '?')}\n"
-                    f"- **Level:** {c.get('level', '?')}\n"
-                    f"- **Description:** Standard core course." # Placeholder description
-                )
+                return self._get_course_info(question)
 
             # Query list
             with self._session() as session:

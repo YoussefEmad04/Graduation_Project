@@ -191,6 +191,11 @@ class _TaggedElectiveService:
 
 class _FakeNeo4jSession:
     courses = [
+        {"code": "CS102", "name": "Programming 2", "credits": 3, "level": 1},
+        {"code": "CS201", "name": "Object Oriented Programming", "credits": 3, "level": 2},
+        {"code": "SW201", "name": "Software Engineering", "credits": 3, "level": 2},
+        {"code": "SW303", "name": "User Interface Design", "credits": 3, "level": 3},
+        {"code": "SW401", "name": "Software Testing & Quality Assurance", "credits": 3, "level": 4},
         {"code": "AI301", "name": "Machine Learning", "credits": 3, "level": 3},
         {"code": "AI201", "name": "Introduction to Artificial Intelligence", "credits": 3, "level": 2},
         {"code": "MTH104", "name": "Probability and Statistics 1", "credits": 3, "level": 1},
@@ -206,12 +211,25 @@ class _FakeNeo4jSession:
         {"code": "AI413", "name": "AI for Robotics", "credits": 3, "level": 4},
     ]
     prereqs = {
+        "CS201": [
+            {"code": "CS102", "name": "Programming 2"},
+        ],
+        "SW201": [
+            {"code": "CS201", "name": "Object Oriented Programming"},
+        ],
         "AI301": [
             {"code": "AI201", "name": "Introduction to Artificial Intelligence"},
             {"code": "MTH104", "name": "Probability and Statistics 1"},
         ],
     }
     unlocked = {
+        "CS201": [
+            {"code": "SW201", "name": "Software Engineering"},
+        ],
+        "SW201": [
+            {"code": "SW303", "name": "User Interface Design"},
+            {"code": "SW401", "name": "Software Testing & Quality Assurance"},
+        ],
         "AI301": [
             {"code": "AI302", "name": "Natural Language Processing"},
             {"code": "AI304", "name": "Computer Vision"},
@@ -833,6 +851,52 @@ class CourseMatchingSmokeTests(unittest.TestCase):
         self.assertIn("Introduction to Artificial Intelligence [AI201]", answer)
         self.assertIn("Probability and Statistics 1 [MTH104]", answer)
         self.assertNotIn("Natural Language Processing [AI302]", answer)
+
+    def test_software_engineering_prerequisite_arabic_english_mix(self):
+        answer = _InMemoryPrereqKG().query("ايه المطلوب قبل software engineering")
+        self.assertIn("علشان تفتح مادة Software Engineering [SW201]", answer)
+        self.assertIn("Object Oriented Programming [CS201]", answer)
+
+    def test_software_engineering_unlocks_after_phrase(self):
+        answer = _InMemoryPrereqKG().query("بتفتح ايه بعد software engineering")
+        self.assertIn("User Interface Design [SW303]", answer)
+        self.assertIn("Software Testing & Quality Assurance [SW401]", answer)
+        self.assertNotIn("Object Oriented Programming [CS201]", answer)
+
+    def test_software_engineering_unlocks_course_first(self):
+        answer = _InMemoryPrereqKG().query("software engineering بتفتح ايه")
+        self.assertIn("لو خلصت Software Engineering [SW201]", answer)
+        self.assertIn("User Interface Design [SW303]", answer)
+        self.assertIn("Software Testing & Quality Assurance [SW401]", answer)
+
+    def test_short_before_followup_uses_last_course_from_history(self):
+        history = [
+            HumanMessage(content="software engineering بتفتح ايه"),
+            AIMessage(content="لو خلصت Software Engineering [SW201]، المواد اللي هتتفتحلك هي:\n- User Interface Design [SW303]\n- Software Testing & Quality Assurance [SW401]"),
+        ]
+        answer = _InMemoryPrereqKG().query("قبلها بقا؟", history=history)
+        self.assertIn("Object Oriented Programming [CS201]", answer)
+
+    def test_oop_prerequisite_alias(self):
+        answer = _InMemoryPrereqKG().query("طيب oop متطلباتها ايه")
+        self.assertIn("Programming 2 [CS102]", answer)
+
+    def test_oop_unlocks_alias(self):
+        answer = _InMemoryPrereqKG().query("oop بتفتح ايه")
+        self.assertIn("Software Engineering [SW201]", answer)
+
+    def test_short_after_followup_uses_last_course_from_history(self):
+        history = [
+            HumanMessage(content="ايه المطلوب قبل software engineering"),
+            AIMessage(content="علشان تفتح مادة Software Engineering [SW201]، لازم تكون مخلص:\n- Object Oriented Programming [CS201]"),
+        ]
+        answer = _InMemoryPrereqKG().query("بعدها ايه؟", history=history)
+        self.assertIn("User Interface Design [SW303]", answer)
+        self.assertIn("Software Testing & Quality Assurance [SW401]", answer)
+
+    def test_vague_course_followup_without_context_asks_for_course(self):
+        answer = _InMemoryPrereqKG().query("قبلها بقا؟", history=[])
+        self.assertEqual(answer, "تقصد أنهي مادة؟ اكتب اسم المادة أو كودها زي SW201 أو CS201.")
 
     def test_category_hours_query_detection(self):
         self.assertTrue(

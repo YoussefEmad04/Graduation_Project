@@ -160,7 +160,6 @@ class AdvisorGraph:
                 "route_reasoning": "Explicit semester withdrawal / freeze policy question.",
                 "route_entities": {},
             }
-
         followup_resolver = getattr(self, "followup_resolver", None)
         followup_was_evaluated = False
         if followup_resolver:
@@ -236,6 +235,16 @@ class AdvisorGraph:
                 "rewritten_question": question,
                 "route_confidence": 1.0,
                 "route_reasoning": "Short follow-up reused the previous conversation topic.",
+                "route_entities": {},
+            }
+        if KGService._looks_like_course_relationship_followup(question):
+            logger.info("Question force-routed to kg (course relationship follow-up)")
+            return {
+                "route": "kg",
+                "route_sub_intent": KGService._classify_prerequisite_direction(question),
+                "rewritten_question": question,
+                "route_confidence": 1.0,
+                "route_reasoning": "Short course relationship follow-up.",
                 "route_entities": {},
             }
 
@@ -330,6 +339,8 @@ class AdvisorGraph:
 
         if history_route:
             return history_route
+        if KGService._looks_like_course_relationship_followup(question):
+            return "kg"
         if self._matches_keywords(normalized, MENTAL_KEYWORDS):
             return "mental"
         if self._is_curriculum_semester_query(normalized):
