@@ -27,10 +27,12 @@ logging.basicConfig(level=logging.INFO)
 class RouterDecision(BaseModel):
     route: str = Field(description="One of: rag, kg, mental, elective, hybrid")
     sub_intent: str = Field(default="", description="More specific meaning such as prerequisites_for_course, courses_unlocked_by_course, courses_blocked_if_not_completed, prerequisite, reverse_prerequisite, regulation, study_path, support, major_guidance")
+    intent: str = Field(default="", description="Semantic intent such as course_prerequisite_query, course_unlock_query, study_plan_query, category_requirement_query, regulation_query, student_record_query, or general_chat")
     rewritten_question: str = Field(default="", description="A cleaner internal version of the student's question that preserves meaning")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Router confidence from 0 to 1")
     entities: Dict[str, str] = Field(default_factory=dict, description="Resolved entities like course, program, level, policy topic")
     reasoning: str = Field(default="", description="Very short rationale for debugging")
+    reasoning_summary: str = Field(default="", description="Short explanation of the semantic decision")
 
 
 ROUTER_SYSTEM_PROMPT = """You route student questions for the Smart Academic Advisor.
@@ -45,6 +47,9 @@ Available routes:
 Rules:
 - Understand English, Arabic, Egyptian Arabic, Arabizi, and mixed Arabic/English questions.
 - Route by meaning, not by exact wording.
+- Return a semantic intent in the "intent" field. Supported intents:
+  course_prerequisite_query, course_unlock_query, study_plan_query,
+  category_requirement_query, regulation_query, student_record_query, general_chat.
 - If the question asks what is needed before a course, use route=kg and sub_intent=prerequisites_for_course.
 - If the question asks for "requirements", "متطلبات", "المتطلبات", or "المطلوب" for a specific course code/name, use route=kg and sub_intent=prerequisites_for_course, not rag.
 - If the phrase means "المادة اللي بتفتحها" or "لازم آخد ايه قبلها", use sub_intent=prerequisites_for_course.
@@ -60,15 +65,17 @@ Rules:
 - Use confidence above 0.8 only when the route is clearly supported by the meaning.
 
 Examples:
-- "طيب ايه متطلبات AI301؟" -> route=kg, sub_intent=prerequisites_for_course, rewritten_question="ايه متطلبات AI301؟", entities={{"course":"AI301"}}
-- "What are the requirements for Machine Learning?" -> route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
-- "Machine Learning بتفتح مواد ايه؟" -> route=kg, sub_intent=courses_unlocked_by_course, entities={{"course":"Machine Learning"}}
-- "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟" -> route=kg, sub_intent=courses_blocked_if_not_completed, entities={{"course":"Machine Learning"}}
-- "ايه المادة اللي بتفتح Machine Learning؟" -> route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
-- "What are the graduation requirements?" -> route=rag, sub_intent=regulation
+- "طيب ايه متطلبات AI301؟" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, rewritten_question="ايه متطلبات AI301؟", entities={{"course":"AI301"}}
+- "What are the requirements for Machine Learning?" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
+- "Machine Learning بتفتح مواد ايه؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_unlocked_by_course, entities={{"course":"Machine Learning"}}
+- "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_blocked_if_not_completed, entities={{"course":"Machine Learning"}}
+- "ايه مواد سنة تالته ذكاء اصطناعي؟" -> intent=study_plan_query, route=kg, sub_intent=study_path, entities={{"level":"3","program":"Artificial Intelligence"}}
+- "ايه متطلبات الجامعة الاجبارية؟" -> intent=category_requirement_query, route=kg, sub_intent=category_query, entities={{"category":"University Requirements","requirement_type":"compulsory"}}
+- "What are the graduation requirements?" -> intent=regulation_query, route=rag, sub_intent=regulation
 - "طيب الحد الأقصى للساعات في الترم العادي كام؟" -> route=rag, sub_intent=regulation
 
-Return JSON only.
+Return strict JSON only with:
+intent, route, sub_intent, entities, confidence, reasoning_summary, rewritten_question.
 """
 
 
@@ -126,9 +133,29 @@ class RouterService:
     @staticmethod
     def _normalize_decision(decision: RouterDecision) -> RouterDecision:
         """Treat omitted confidence on clear structured LLM routes as usable confidence."""
+        if not decision.reasoning and decision.reasoning_summary:
+            decision.reasoning = decision.reasoning_summary
+        if not decision.intent:
+            decision.intent = RouterService._intent_from_route(decision.route, decision.sub_intent)
         if decision.confidence == 0.0 and decision.route in {"rag", "kg", "mental", "elective"}:
             decision.confidence = 0.8
         return decision
+
+    @staticmethod
+    def _intent_from_route(route: str, sub_intent: str) -> str:
+        if route == "kg" and sub_intent in {"prerequisite", "prerequisites_for_course"}:
+            return "course_prerequisite_query"
+        if route == "kg" and sub_intent in {"reverse_prerequisite", "courses_unlocked_by_course", "courses_blocked_if_not_completed"}:
+            return "course_unlock_query"
+        if route == "kg" and sub_intent in {"study_path", "study_plan"}:
+            return "study_plan_query"
+        if route == "kg" and sub_intent in {"category_query", "category_required_hours"}:
+            return "category_requirement_query"
+        if route == "rag":
+            return "regulation_query"
+        if route == "hybrid":
+            return "general_chat"
+        return sub_intent or route or "general_chat"
 
     @staticmethod
     def _format_history(

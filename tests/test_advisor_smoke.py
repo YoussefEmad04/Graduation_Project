@@ -378,147 +378,101 @@ class RoutingSmokeTests(unittest.TestCase):
         call = self.graph.router_service.calls[0]
         self.assertEqual(call["student_level"], 3)
         self.assertEqual(call["student_major"], "AI")
-        self.assertEqual(call["history"], history)
+        self.assertEqual(call["history"], [])
 
-    def test_semantic_followup_resolver_rewrites_before_routing(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=True,
-                needs_clarification=False,
-                route="kg",
-                sub_intent="reverse_prerequisite",
-                rewritten_question="What courses require AI301 as a prerequisite?",
-                confidence=0.92,
-                entities={"course": "AI301"},
-                reasoning="Current message refers to the previous AI301 question.",
-            )
-        )
-        self.graph.router_service = _FakeRouterService()
-        history = [HumanMessage(content="What are the prerequisites for AI301?")]
-        state = {"question": "And what does it open?", "history": history}
-
-        routed = self.graph._router_node(state)
-
-        self.assertEqual(routed["route"], "kg")
-        self.assertEqual(routed["route_sub_intent"], "reverse_prerequisite")
-        self.assertEqual(routed["rewritten_question"], "What courses require AI301 as a prerequisite?")
-        self.assertEqual(len(self.graph.router_service.calls), 0)
-
-    def test_ambiguous_semantic_followup_returns_clarification(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=True,
-                needs_clarification=True,
-                clarification_question="Do you mean the summer credit-load rule or AI301 prerequisites?",
-                route="hybrid",
-                confidence=0.9,
-                reasoning="Two recent topics could match this.",
-            )
-        )
-        history = [
-            HumanMessage(content="What is the maximum credit load for the summer semester?"),
-            HumanMessage(content="What are the prerequisites for AI301?"),
+    def test_semantic_validation_corrects_course_relationship_intents(self):
+        cases = [
+            (
+                "Machine Learning بتفتح ايه؟",
+                "courses_unlocked_by_course",
+                {"course": "Machine Learning"},
+            ),
+            (
+                "what does AI301 unlock?",
+                "courses_unlocked_by_course",
+                {"course": "AI301"},
+            ),
+            (
+                "لو مخدتش AI301 ايه اللي هيتقفل؟",
+                "courses_blocked_if_not_completed",
+                {"course": "AI301"},
+            ),
         ]
-        state = {"question": "What about this?", "history": history}
+        for question, expected_sub_intent, expected_entities in cases:
+            with self.subTest(question=question):
+                self.graph.router_service = _FakeRouterService(
+                    RouterDecision(
+                        route="rag",
+                        sub_intent="regulation",
+                        intent="regulation_query",
+                        rewritten_question=question,
+                        confidence=0.91,
+                        entities={},
+                        reasoning="Wrong broad semantic route.",
+                    )
+                )
+                routed = self.graph._router_node({"question": question, "history": []})
+                self.assertEqual(routed["route"], "kg")
+                self.assertEqual(routed["route_sub_intent"], expected_sub_intent)
+                for key, value in expected_entities.items():
+                    self.assertEqual(routed["route_entities"].get(key), value)
 
-        routed = self.graph._router_node(state)
-        final = self.graph._hybrid_node(routed)
-
-        self.assertEqual(routed["route"], "hybrid")
-        self.assertEqual(routed["route_sub_intent"], "followup_clarification")
-        self.assertEqual(
-            final["final_answer"],
-            "Do you mean the summer credit-load rule or AI301 prerequisites?",
-        )
-
-    def test_semantic_resolver_allows_rag_to_kg_context_switch(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=False,
-                needs_clarification=False,
-                route="kg",
-                sub_intent="prerequisite",
-                rewritten_question="ايه متطلبات AI301؟",
-                confidence=0.91,
-                entities={"course": "AI301"},
-                reasoning="The current message is a standalone course question.",
-            )
-        )
-        self.graph.router_service = _FakeRouterService(
-            RouterDecision(
-                route="rag",
-                sub_intent="regulation",
-                rewritten_question="Wrong old-context route",
-                confidence=0.95,
-                entities={},
-                reasoning="Should not be called.",
-            )
-        )
-        history = [
-            HumanMessage(content="What is the maximum credit load for the regular semester?"),
-            AIMessage(content="The normal load is answered from regulations."),
-            HumanMessage(content="طيب وبالنسبة للترم الصيفي؟"),
-            AIMessage(content="The summer semester has its own limit."),
+    def test_semantic_validation_prefers_level_program_study_plan(self):
+        cases = [
+            ("ايه مواد سنة تالته ذكاء اصطناعي؟", "3", "Artificial Intelligence"),
+            ("مواد level 3 AI", "3", "Artificial Intelligence"),
         ]
-        state = {"question": "طيب ايه متطلبات AI301؟", "history": history}
+        for question, level, program in cases:
+            with self.subTest(question=question):
+                self.graph.router_service = _FakeRouterService(
+                    RouterDecision(
+                        route="kg",
+                        sub_intent="category_query",
+                        intent="category_requirement_query",
+                        rewritten_question=question,
+                        confidence=0.9,
+                        entities={"category": "AI Major Requirements"},
+                        reasoning="Misread a study-plan request as category.",
+                    )
+                )
+                routed = self.graph._router_node({"question": question, "history": []})
+                self.assertEqual(routed["route"], "kg")
+                self.assertEqual(routed["route_sub_intent"], "study_path")
+                self.assertEqual(routed["route_entities"].get("level"), level)
+                self.assertEqual(routed["route_entities"].get("program"), program)
 
-        routed = self.graph._router_node(state)
+    def test_semantic_validation_forces_requirement_type(self):
+        cases = [
+            ("ايه متطلبات الجامعة الاجبارية؟", "compulsory"),
+            ("university compulsory requirements", "compulsory"),
+            ("ايه المواد الاختيارية في الجامعة؟", "elective"),
+        ]
+        for question, requirement_type in cases:
+            with self.subTest(question=question):
+                self.graph.router_service = _FakeRouterService(
+                    RouterDecision(
+                        route="kg",
+                        sub_intent="category_query",
+                        intent="category_requirement_query",
+                        rewritten_question=question,
+                        confidence=0.9,
+                        entities={"category": "University Requirements", "requirement_type": "elective" if requirement_type == "compulsory" else "compulsory"},
+                        reasoning="Category identified, requirement type needs validation.",
+                    )
+                )
+                routed = self.graph._router_node({"question": question, "history": []})
+                self.assertEqual(routed["route"], "kg")
+                self.assertEqual(routed["route_sub_intent"], "category_query")
+                self.assertEqual(routed["route_entities"].get("requirement_type"), requirement_type)
 
-        self.assertEqual(routed["route"], "kg")
-        self.assertEqual(routed["route_sub_intent"], "prerequisite")
-        self.assertEqual(len(self.graph.router_service.calls), 0)
-
-    def test_semantic_resolver_allows_kg_to_rag_context_switch(self):
+    def test_followup_resolver_is_not_used_for_runtime_routing(self):
         self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=False,
-                needs_clarification=False,
-                route="rag",
-                sub_intent="regulation",
-                rewritten_question="طيب الحد الأقصى للساعات في الترم العادي كام؟",
-                confidence=0.9,
-                entities={"policy_topic": "regular_semester_credit_load"},
-                reasoning="The current message is a standalone regulation question.",
-            )
+            FollowupDecision(is_followup=True, route="mental", rewritten_question="wrong", confidence=1.0)
         )
         self.graph.router_service = _FakeRouterService(
             RouterDecision(
                 route="kg",
-                sub_intent="course_info",
-                rewritten_question="Wrong old-context route",
-                confidence=0.95,
-                entities={},
-                reasoning="Should not be called.",
-            )
-        )
-        history = [
-            HumanMessage(content="What are the prerequisites for AI301?"),
-            AIMessage(content="AI301 needs AI201 and MTH104."),
-            HumanMessage(content="And what does it open?"),
-            AIMessage(content="AI301 opens several AI courses."),
-        ]
-        state = {"question": "طيب الحد الأقصى للساعات في الترم العادي كام؟", "history": history}
-
-        routed = self.graph._router_node(state)
-
-        self.assertEqual(routed["route"], "rag")
-        self.assertEqual(routed["route_sub_intent"], "regulation")
-        self.assertEqual(len(self.graph.router_service.calls), 0)
-
-    def test_standalone_resolver_blocks_history_bias_when_router_handles_route(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=False,
-                needs_clarification=False,
-                route="hybrid",
-                confidence=0.86,
-                reasoning="The current question is standalone, but needs normal routing.",
-            )
-        )
-        self.graph.router_service = _FakeRouterService(
-            RouterDecision(
-                route="kg",
-                sub_intent="prerequisite",
+                sub_intent="prerequisites_for_course",
                 rewritten_question="What are the prerequisites for AI301?",
                 confidence=0.9,
                 entities={"course": "AI301"},
@@ -531,22 +485,14 @@ class RoutingSmokeTests(unittest.TestCase):
         routed = self.graph._router_node(state)
 
         self.assertEqual(routed["route"], "kg")
+        self.assertEqual(len(self.graph.followup_resolver.calls), 0)
         self.assertEqual(self.graph.router_service.calls[0]["history"], [])
 
-    def test_current_only_semantic_router_overrides_old_history_after_weak_followup_resolution(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=True,
-                needs_clarification=False,
-                route="",
-                confidence=0.8,
-                reasoning="Detected possible follow-up but could not resolve it safely.",
-            )
-        )
+    def test_semantic_router_ignores_old_history_after_followup_removal(self):
         self.graph.router_service = _FakeRouterService(
             RouterDecision(
                 route="kg",
-                sub_intent="prerequisite",
+                sub_intent="prerequisites_for_course",
                 rewritten_question="ايه متطلبات AI301؟",
                 confidence=0.9,
                 entities={"course": "AI301"},
@@ -559,26 +505,14 @@ class RoutingSmokeTests(unittest.TestCase):
         routed = self.graph._router_node(state)
 
         self.assertEqual(routed["route"], "kg")
-        self.assertEqual(routed["route_sub_intent"], "prerequisite")
+        self.assertEqual(routed["route_sub_intent"], "prerequisites_for_course")
         self.assertEqual(self.graph.router_service.calls[0]["history"], [])
 
-    def test_current_only_semantic_router_can_veto_wrong_followup_route(self):
-        self.graph.followup_resolver = _FakeFollowupResolver(
-            FollowupDecision(
-                is_followup=True,
-                needs_clarification=False,
-                route="rag",
-                sub_intent="contextual_followup",
-                rewritten_question="Question about previous regular-semester policy",
-                confidence=0.82,
-                entities={"policy_topic": "regular_semester_credit_load"},
-                reasoning="Incorrectly treated the current question as old RAG context.",
-            )
-        )
+    def test_current_question_semantics_override_old_history(self):
         self.graph.router_service = _FakeRouterService(
             RouterDecision(
                 route="kg",
-                sub_intent="prerequisite",
+                sub_intent="prerequisites_for_course",
                 rewritten_question="ايه متطلبات AI301؟",
                 confidence=0.86,
                 entities={"course": "AI301"},
@@ -591,7 +525,7 @@ class RoutingSmokeTests(unittest.TestCase):
         routed = self.graph._router_node(state)
 
         self.assertEqual(routed["route"], "kg")
-        self.assertEqual(routed["route_sub_intent"], "prerequisite")
+        self.assertEqual(routed["route_sub_intent"], "prerequisites_for_course")
         self.assertEqual(self.graph.router_service.calls[0]["history"], [])
 
     def test_graduation_credit_question_routes_to_rag(self):
@@ -606,21 +540,21 @@ class RoutingSmokeTests(unittest.TestCase):
         state = {"question": "لو حصل ظرف ومحضرتش امتحان الميد ترم اعمل ايه؟"}
         self.assertEqual(self.graph._router_node(state)["route"], "rag")
 
-    def test_short_followup_reuses_previous_course_route(self):
+    def test_short_followup_no_longer_reuses_previous_course_route(self):
         history = [
             HumanMessage(content="طيب ايه عشان اسجل ماده math 2 ايه المواد الي المفروض اكون خدتها")
         ]
         state = {"question": "اه داه الي محتاج اعرفو", "history": history}
-        self.assertEqual(self.graph._router_node(state)["route"], "kg")
+        self.assertEqual(self.graph._router_node(state)["route"], "hybrid")
 
-    def test_duration_followup_reuses_previous_rag_route(self):
+    def test_duration_followup_no_longer_reuses_previous_rag_route(self):
         history = [
             HumanMessage(content="هو الحد الاقصي للتسجيل في الفصل الصيفي كام ساعه")
         ]
         state = {"question": "طيب هو مدتو كام اسبوع", "history": history}
-        self.assertEqual(self.graph._router_node(state)["route"], "rag")
+        self.assertEqual(self.graph._router_node(state)["route"], "hybrid")
 
-    def test_mental_followup_keeps_previous_mental_route(self):
+    def test_mental_followup_uses_current_question_only(self):
         self.graph.router_service = _FakeRouterService(
             RouterDecision(
                 route="rag",
@@ -639,33 +573,8 @@ class RoutingSmokeTests(unittest.TestCase):
 
         routed = self.graph._router_node(state)
 
-        self.assertEqual(routed["route"], "mental")
-        self.assertEqual(routed["route_sub_intent"], "contextual_followup")
-        self.assertEqual(len(self.graph.router_service.calls), 0)
-
-    def test_contextualizes_vague_duration_followup(self):
-        history = [
-            HumanMessage(content="هو الحد الاقصي للتسجيل في الفصل الصيفي كام ساعه")
-        ]
-        contextualized = self.graph._contextualize_followup("طيب هو مدتو كام اسبوع", history)
-        self.assertEqual("ما مدة الفصل الصيفي كام أسبوع؟", contextualized)
-
-    def test_summer_alternate_followup_reuses_duration_question(self):
-        history = [
-            HumanMessage(content="مدة الفصل الدراسي النظامي كام أسبوع؟")
-        ]
-        state = {"question": "طيب و الصيفي؟", "history": history}
-        self.assertEqual(self.graph._router_node(state)["route"], "rag")
-        contextualized = self.graph._contextualize_followup("طيب و الصيفي؟", history)
-        self.assertEqual("ما مدة الفصل الصيفي كام أسبوع؟", contextualized)
-
-    def test_duration_after_summer_topic_followup_stays_on_summer(self):
-        history = [
-            HumanMessage(content="مدة الفصل الدراسي النظامي كام أسبوع؟"),
-            HumanMessage(content="طيب و الصيفي؟"),
-        ]
-        contextualized = self.graph._contextualize_followup("لا مدتو كام اسبوع؟", history)
-        self.assertEqual("ما مدة الفصل الصيفي كام أسبوع؟", contextualized)
+        self.assertEqual(routed["route"], "rag")
+        self.assertEqual(len(self.graph.router_service.calls), 1)
 
     def test_program_semester_course_list_routes_to_rag(self):
         state = {
@@ -685,15 +594,23 @@ class RoutingSmokeTests(unittest.TestCase):
         prompts = [
             "الدراسة في الكلية ماشية بأي نظام؟",
             "مدة الفصل الدراسي النظامي كام أسبوع؟",
+            "How long is a regular semester?",
+            "Is the summer semester mandatory?",
+            "Max credit hours in the summer semester?",
             "التسجيل في المقررات يستمر لحد إمتى؟",
+            "Until when can a student register for courses?",
+            "Until when can a student withdraw from a course?",
             "إيه شرط التسجيل في مقرر؟",
             "هل رأي المرشد الأكاديمي إلزامي؟",
             "الطالب يقدر ينسحب من مقرر لحد إمتى؟",
             "لو الطالب انسحب في الميعاد، هل يعتبر راسب؟",
             "الدرجة النهائية لأي مقرر من كام؟",
             "أقل درجة للنجاح في أي مقرر كام؟",
+            "ايه الـ minimum للنجاح في أي مقرر؟",
             "شرط النجاح المرتبط بالامتحان النهائي التحريري إيه؟",
+            "What is the minimum required from the final exam to pass?",
             "نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟",
+            "What attendance percentage is required to sit the final exam?",
             "لو الطالب غاب عن الامتحان النهائي بعذر قهري مقبول يحصل إيه؟",
         ]
         for prompt in prompts:
@@ -721,6 +638,13 @@ class RoutingSmokeTests(unittest.TestCase):
             "مقررات النجاح و الرسوب",
             "ازاي المعدل التراقمي بيتحسب",
             "شروط التخرج",
+            "What are the graduation requirements?",
+            "When does a student receive an academic warning?",
+            "What are the conditions for honor graduation?",
+            "الطالب يتفصل من الكلية في أنهي حالات؟",
+            "Max hours for new students in first semester?",
+            "لو رسبت في مقرر وأعدته، الحد الأعلى للدرجة كام؟",
+            "إمتى أقدر أسجل مشروع التخرج؟",
         ]
         for prompt in prompts:
             with self.subTest(prompt=prompt):
@@ -983,6 +907,7 @@ class RagExtractionSmokeTests(unittest.TestCase):
     def test_known_regulation_answers_cover_failed_arabic_variants(self):
         service = RAGService.__new__(RAGService)
         checks = {
+            "كم ساعة معتمدة يجب اجتيازها للتخرج؟": "144",
             "الدراسة في الكلية ماشية بأي نظام؟": "الساعات المعتمدة",
             "مدة الفصل الدراسي النظامي كام أسبوع؟": "17",
             "التسجيل في المقررات يستمر لحد إمتى؟": "الأسبوع الثاني",
@@ -992,10 +917,33 @@ class RagExtractionSmokeTests(unittest.TestCase):
             "لو الطالب انسحب في الميعاد، هل يعتبر راسب؟": "W",
             "الدرجة النهائية لأي مقرر من كام؟": "100",
             "أقل درجة للنجاح في أي مقرر كام؟": "50",
+            "ايه الـ minimum للنجاح في أي مقرر؟": "50",
             "شرط النجاح المرتبط بالامتحان النهائي التحريري إيه؟": "30%",
             "نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟": "75%",
             "لو نسبة غياب الطالب تجاوزت 25% يحصل إيه؟": "25%",
             "لو الطالب غاب عن الامتحان النهائي بعذر قهري مقبول يحصل إيه؟": "غير مكتمل",
+            "الطالب يتفصل من الكلية في أنهي حالات؟": "4 consecutive",
+            "لو رسبت في مقرر وأعدته، الحد الأعلى للدرجة كام؟": "83",
+            "إمتى أقدر أسجل مشروع التخرج؟": "70%",
+        }
+        for question, expected in checks.items():
+            with self.subTest(question=question):
+                self.assertIn(expected, service._known_regulation_answer(question))
+
+    def test_known_regulation_answers_cover_failed_english_variants(self):
+        service = RAGService.__new__(RAGService)
+        checks = {
+            "How long is a regular semester?": "17 weeks",
+            "Is the summer semester mandatory?": "optional",
+            "Max credit hours in the summer semester?": "9 credit hours",
+            "Until when can a student register for courses?": "week 2",
+            "Until when can a student withdraw from a course?": "week 9",
+            "What is the minimum required from the final exam to pass?": "30%",
+            "What attendance percentage is required to sit the final exam?": "75%",
+            "What are the graduation requirements?": "144 credit hours",
+            "When does a student receive an academic warning?": "CGPA is less than 2",
+            "What are the conditions for honor graduation?": "CGPA at least 3",
+            "Max hours for new students in first semester?": "18 credit hours",
         }
         for question, expected in checks.items():
             with self.subTest(question=question):
@@ -1154,17 +1102,31 @@ class MassivePromptRoutingTests(unittest.TestCase):
             with self.subTest(question=question):
                 self.assertTrue(self.graph.run(question).startswith("RAG::"))
 
-    def test_course_followups_keep_kg_context(self):
+    def test_course_followups_do_not_reuse_previous_course_context(self):
         history = [HumanMessage(content="What are the prerequisites for AI301?")]
-        questions = [
-            "Is it a core course?",
-            "And what does it open?",
-            "هي المادة دي اجباري؟",
-            "طيب والمادة دي بتفتح ايه؟",
+        self.assertEqual(
+            self.graph.run("Is it a core course?", history=history),
+            "KG::Is it a core course?",
+        )
+        self.assertEqual(
+            self.graph.run("What does it open?", history=history),
+            "KG::What does it open?",
+        )
+        self.assertEqual(
+            self.graph.run("هي المادة دي اجباري؟", history=history),
+            "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+        )
+
+    def test_unlock_followup_reaches_kg_without_previous_prerequisite_text(self):
+        history = [
+            HumanMessage(content="What are the prerequisites for AI301?"),
+            AIMessage(content="AI301 requires AI201 and MTH104."),
         ]
-        for question in questions:
-            with self.subTest(question=question):
-                self.assertTrue(self.graph.run(question, history=history).startswith("KG::"))
+
+        self.assertEqual(
+            self.graph.run("What does it open?", history=history),
+            "KG::What does it open?",
+        )
 
     def test_rag_followups_keep_rag_context(self):
         history = [HumanMessage(content="What is the maximum credit load for the regular semester?")]
@@ -1464,6 +1426,47 @@ class StudentSessionApiTests(unittest.TestCase):
         self.assertIn("Session memory summary", history[0].content)
         self.assertIn("AI301", history[0].content)
         self.assertIn("Last student question", history[0].content)
+
+    def test_followup_turn_passes_previous_question_and_answer_to_graph(self):
+        session = self.controller.create_session("225241")
+        self.controller._save_message(
+            "225241",
+            session["session_id"],
+            "user",
+            "What are prerequisites for AI301?",
+        )
+        self.controller._save_message(
+            "225241",
+            session["session_id"],
+            "assistant",
+            "AI301 requires AI201 and MTH104.",
+        )
+        graph = _CapturingGraph()
+        self.controller._graph = graph
+
+        response = self.controller.handle_message(
+            "225241",
+            session["session_id"],
+            "What does it open?",
+        )
+
+        self.assertEqual(response, "answer")
+        self.assertEqual(graph.calls[0]["question"], "What does it open?")
+        history = graph.calls[0]["history"]
+        self.assertTrue(
+            any(
+                isinstance(message, HumanMessage)
+                and message.content == "What are prerequisites for AI301?"
+                for message in history
+            )
+        )
+        self.assertTrue(
+            any(
+                isinstance(message, AIMessage)
+                and message.content == "AI301 requires AI201 and MTH104."
+                for message in history
+            )
+        )
 
     def test_sessions_endpoint_returns_json_list(self):
         from advisor_ai import main

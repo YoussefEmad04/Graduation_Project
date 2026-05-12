@@ -96,9 +96,15 @@ CATEGORY_ALIASES = {
     "متطلبات الجامعة": "University Requirements (Compulsory)",
     "university requirements": "University Requirements (Compulsory)",
     "university compulsory requirements": "University Requirements (Compulsory)",
+    "اجباري الجامعة": "University Requirements (Compulsory)",
+    "اجبارية الجامعة": "University Requirements (Compulsory)",
     "university requirements elective": "University Requirements (Elective)",
     "university elective requirements": "University Requirements (Elective)",
     "elective courses university requirements": "University Requirements (Elective)",
+    "المواد الاختياريه في الجامعه": "University Requirements (Elective)",
+    "المواد الاختيارية في الجامعة": "University Requirements (Elective)",
+    "اختياري الجامعة": "University Requirements (Elective)",
+    "اختيارية الجامعة": "University Requirements (Elective)",
     "math electives": "Math & Basic Science (Elective)",
     "مواد العلوم الاساسيه والاختياريه بتاعت الرياضه": "Math & Basic Science (Elective)",
     "مواد العلوم الاساسية والاختيارية بتاعت الرياضة": "Math & Basic Science (Elective)",
@@ -290,13 +296,6 @@ class KGService:
             if direct_course and prereq_direction == "prerequisites_for_course":
                 return self._get_prereqs_forward(question)
 
-            # Let the LLM understand ambiguous wording before falling back to
-            # direct keyword/fuzzy matching.
-            extraction = self._classify_intent(question, history)
-            llm_answer = self._answer_from_intent(question, extraction)
-            if llm_answer:
-                return llm_answer
-
             study_path_request = self._parse_study_path_request(question)
             if study_path_request:
                 return self.get_study_path(
@@ -307,6 +306,13 @@ class KGService:
             direct_category = self._direct_category_from_question(question)
             if direct_category:
                 return self._get_courses_in_category(direct_category)
+
+            # Let the LLM understand ambiguous wording before falling back to
+            # direct keyword/fuzzy matching.
+            extraction = self._classify_intent(question, history)
+            llm_answer = self._answer_from_intent(question, extraction)
+            if llm_answer:
+                return llm_answer
 
             return self._query_courses(question)
 

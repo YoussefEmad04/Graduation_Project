@@ -11,7 +11,7 @@ import os
 import logging
 import re
 import difflib
-from typing import TypedDict, Optional, List, Dict
+from typing import Any, TypedDict, Optional, List, Dict
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -23,7 +23,6 @@ from advisor_ai.kg_service import KGService
 from advisor_ai.mental_service import MentalSupportService
 from advisor_ai.elective_service import ElectiveService
 from advisor_ai.router_service import RouterService
-from advisor_ai.followup_resolver import FollowupResolver
 from advisor_ai.language_utils import contains_arabic, should_respond_arabic, strict_language_instruction
 from advisor_ai.constants import (
     RAG_KEYWORDS, KG_KEYWORDS, ELECTIVE_KEYWORDS, MENTAL_KEYWORDS, 
@@ -72,7 +71,6 @@ class AdvisorGraph:
         self.mental_service = MentalSupportService()
         self.elective_service = ElectiveService()
         self.router_service = RouterService()
-        self.followup_resolver = FollowupResolver()
 
         # LLM for hybrid reasoning
         self.llm = None
@@ -135,11 +133,22 @@ class AdvisorGraph:
     def _router_node(self, state: AdvisorState) -> dict:
         """Classify the question and determine the route."""
         question = state["question"]
-        history = state.get("history", [])
-        routing_history = history
+        routing_history: List[BaseMessage] = []
         normalized = self._normalize_text(question)
+        signals = self._deterministic_routing_signals(question)
         router_service = getattr(self, "router_service", None)
 
+        if self._is_unsupported_course_metadata_query(question):
+            logger.info("Question returned out of scope (unsupported course metadata)")
+            return {
+                "route": "hybrid",
+                "route_sub_intent": "unsupported_course_metadata",
+                "rewritten_question": question,
+                "route_confidence": 1.0,
+                "route_reasoning": "Unsupported course metadata question.",
+                "route_entities": {},
+                "final_answer": self._out_of_scope_answer(question),
+            }
         if self._is_category_hours_query(normalized):
             logger.info("Question force-routed to kg (category required hours)")
             return {
@@ -160,84 +169,23 @@ class AdvisorGraph:
                 "route_reasoning": "Explicit semester withdrawal / freeze policy question.",
                 "route_entities": {},
             }
-        followup_resolver = getattr(self, "followup_resolver", None)
-        followup_was_evaluated = False
-        if followup_resolver:
-            followup = followup_resolver.resolve(
-                question,
-                history=history,
-                student_level=state.get("student_level"),
-                student_major=state.get("student_major"),
+        if (
+            self._is_high_confidence_regulation_query(normalized)
+            and not (
+                signals.get("relationship_direction") != "unknown"
+                and self._has_course_entity_or_signal(question, {}, signals)
             )
-            followup_was_evaluated = followup is not None
-            if followup and followup.confidence >= 0.75:
-                if followup.is_followup:
-                    if followup.needs_clarification and followup.clarification_question:
-                        logger.info("Question resolved as ambiguous contextual follow-up")
-                        return {
-                            "route": "hybrid",
-                            "route_sub_intent": "followup_clarification",
-                            "rewritten_question": question,
-                            "route_confidence": followup.confidence,
-                            "route_reasoning": followup.reasoning,
-                            "route_entities": followup.entities,
-                            "final_answer": followup.clarification_question,
-                        }
-                    if followup.sub_intent in ("", "contextual_followup"):
-                        current_override = self._current_only_semantic_route(
-                            question,
-                            router_service,
-                            state.get("student_level"),
-                            state.get("student_major"),
-                            competing_route=followup.route,
-                        )
-                        if current_override:
-                            return current_override
-                    if self._is_valid_route(followup.route) and followup.rewritten_question:
-                        logger.info(f"Question semantically resolved as {followup.route} follow-up")
-                        return {
-                            "route": followup.route,
-                            "route_sub_intent": followup.sub_intent or "contextual_followup",
-                            "rewritten_question": followup.rewritten_question,
-                            "route_confidence": followup.confidence,
-                            "route_reasoning": followup.reasoning,
-                            "route_entities": followup.entities,
-                        }
-                else:
-                    routing_history = []
-                    if self._is_valid_route(followup.route) and followup.route != "hybrid":
-                        logger.info(f"Question semantically resolved as standalone {followup.route} question")
-                        return {
-                            "route": followup.route,
-                            "route_sub_intent": followup.sub_intent or "standalone_context_switch",
-                            "rewritten_question": followup.rewritten_question or question,
-                            "route_confidence": followup.confidence,
-                            "route_reasoning": followup.reasoning,
-                            "route_entities": followup.entities,
-                        }
-
-        if history and followup_was_evaluated and router_service:
-            current_override = self._current_only_semantic_route(
-                question,
-                router_service,
-                state.get("student_level"),
-                state.get("student_major"),
-            )
-            if current_override:
-                return current_override
-
-        history_route = self._route_from_history_if_followup(normalized, routing_history)
-        if history_route:
-            logger.info(f"Question force-routed to {history_route} (contextual follow-up)")
+        ):
+            logger.info("Question force-routed to rag (high-confidence regulation topic)")
             return {
-                "route": history_route,
-                "route_sub_intent": "contextual_followup",
+                "route": "rag",
+                "route_sub_intent": "regulation",
                 "rewritten_question": question,
                 "route_confidence": 1.0,
-                "route_reasoning": "Short follow-up reused the previous conversation topic.",
+                "route_reasoning": "Explicit regulation topic.",
                 "route_entities": {},
             }
-        if KGService._looks_like_course_relationship_followup(question):
+        if KGService._looks_like_course_relationship_followup(question) and not (signals.get("course_code") or signals.get("course")):
             logger.info("Question force-routed to kg (course relationship follow-up)")
             return {
                 "route": "kg",
@@ -258,17 +206,18 @@ class AdvisorGraph:
             )
 
         if semantic and self._is_valid_route(semantic.route) and semantic.confidence >= 0.75:
-            prereq_direction = KGService._classify_prerequisite_direction(question)
+            semantic = self._validate_semantic_decision(semantic, signals)
+            prereq_direction = signals.get("relationship_direction") or KGService._classify_prerequisite_direction(question)
             if (
                 semantic.route != "mental"
                 and prereq_direction != "unknown"
-                and self._is_course_query(question)
+                and self._has_course_entity_or_signal(question, semantic.entities, signals)
             ):
                 logger.info("Question routed to kg (explicit course prerequisite relationship)")
                 return {
                     "route": "kg",
                     "route_sub_intent": prereq_direction,
-                    "rewritten_question": question,
+                    "rewritten_question": semantic.rewritten_question or question,
                     "route_confidence": semantic.confidence,
                     "route_reasoning": "Explicit course prerequisite relationship overrides broad semantic route.",
                     "route_entities": semantic.entities,
@@ -284,7 +233,7 @@ class AdvisorGraph:
             }
 
         prereq_direction = KGService._classify_prerequisite_direction(question)
-        if prereq_direction != "unknown" and self._is_course_query(question):
+        if prereq_direction != "unknown" and self._has_course_entity_or_signal(question, semantic.entities if semantic else {}, signals):
             logger.info("Question routed to kg (explicit course prerequisite relationship)")
             return {
                 "route": "kg",
@@ -305,6 +254,199 @@ class AdvisorGraph:
             "route_reasoning": semantic.reasoning if semantic else "",
             "route_entities": semantic.entities if semantic else {},
         }
+
+    def _deterministic_routing_signals(self, question: str) -> Dict[str, Any]:
+        """Extract only high-confidence signals used to validate semantic routing."""
+        normalized = self._normalize_text(question)
+        signals: Dict[str, Any] = {"normalized": normalized}
+
+        code_match = re.search(r"\b[A-Z]{2,4}\d{3}\b", question or "", re.IGNORECASE)
+        if code_match:
+            signals["course_code"] = code_match.group(0).upper()
+
+        alias_course = self._exact_course_alias_match(normalized)
+        if alias_course:
+            signals["course"] = alias_course
+
+        level = self._extract_level_signal(normalized)
+        if level:
+            signals["level"] = str(level)
+
+        program = self._extract_program_signal(normalized)
+        if program:
+            signals["program"] = program
+
+        requirement_type = self._extract_requirement_type_signal(normalized)
+        if requirement_type:
+            signals["requirement_type"] = requirement_type
+
+        relationship = KGService._classify_prerequisite_direction(question)
+        if relationship != "unknown":
+            signals["relationship_direction"] = relationship
+
+        if self._looks_like_study_plan_signal(normalized):
+            signals["looks_like_study_plan"] = True
+        if self._looks_like_category_requirement_signal(normalized):
+            signals["looks_like_category_requirement"] = True
+
+        return signals
+
+    def _exact_course_alias_match(self, normalized: str) -> Optional[str]:
+        """Find an exact code/name/known-alias match without fuzzy matching."""
+        expanded = KGService._apply_course_aliases(normalized)
+        for name in getattr(self, "course_names", []) or []:
+            candidate = self._normalize_text(str(name))
+            if len(candidate) > 3 and candidate in expanded:
+                return str(name)
+        alias_tokens = {
+            "machine learning": "Machine Learning",
+            "deep learning": "Deep Learning",
+            "introduction to ai": "Introduction to Artificial Intelligence",
+            "intro ai": "Introduction to Artificial Intelligence",
+        }
+        for alias, course in alias_tokens.items():
+            if alias in expanded:
+                return course
+        return None
+
+    @staticmethod
+    def _extract_level_signal(normalized: str) -> Optional[int]:
+        level_patterns = (
+            (1, ("level 1", "lvl 1", "first year", "سنه اولي", "سنة اولي", "سنه اولى", "سنة اولى", "اولي", "اولى")),
+            (2, ("level 2", "lvl 2", "second year", "سنه تانيه", "سنة تانيه", "تانيه", "تانية")),
+            (3, ("level 3", "lvl 3", "third year", "سنه تالته", "سنة تالته", "سنه ثالثه", "سنة ثالثه", "سنة ثالثة", "تالته", "تالتة", "ثالثه", "ثالثة")),
+            (4, ("level 4", "lvl 4", "fourth year", "سنه رابعه", "سنة رابعه", "رابعه", "رابعة")),
+        )
+        for level, terms in level_patterns:
+            if any(term in normalized for term in terms):
+                return level
+        return None
+
+    @staticmethod
+    def _extract_program_signal(normalized: str) -> Optional[str]:
+        if any(term in normalized for term in ("artificial intelligence", "ai program", "ذكاء اصطناعي", "ذكاء", "ai")):
+            return "Artificial Intelligence"
+        if any(term in normalized for term in ("cybersecurity", "cyber", "سايبر", "امن سيبراني", "الامن السيبراني")):
+            return "Cybersecurity"
+        if any(term in normalized for term in ("data science", "علوم بيانات")):
+            return "Data Science"
+        if any(term in normalized for term in ("software engineering", "برمجيات")):
+            return "Software Engineering"
+        return None
+
+    @staticmethod
+    def _extract_requirement_type_signal(normalized: str) -> Optional[str]:
+        compulsory_terms = ("اجباري", "اجباريه", "اجبارية", "compulsory", "mandatory", "required")
+        elective_terms = ("اختياري", "اختياريه", "اختيارية", "elective", "optional")
+        if any(term in normalized for term in compulsory_terms):
+            return "compulsory"
+        if any(term in normalized for term in elective_terms):
+            return "elective"
+        return None
+
+    @staticmethod
+    def _looks_like_study_plan_signal(normalized: str) -> bool:
+        has_courses = any(term in normalized for term in ("مواد", "المواد", "courses", "subjects", "study plan", "study path", "خطة", "خطه"))
+        has_level = AdvisorGraph._extract_level_signal(normalized) is not None
+        return has_courses and has_level
+
+    @staticmethod
+    def _looks_like_category_requirement_signal(normalized: str) -> bool:
+        has_requirement_group = any(
+            term in normalized
+            for term in (
+                "university requirements", "متطلبات الجامعه", "متطلبات الجامعة",
+                "basic computer science", "math and basic science", "math & basic science",
+                "مواد الجامعة", "المواد الاختياريه في الجامعه", "المواد الاختيارية في الجامعة",
+            )
+        )
+        has_requirement_type = AdvisorGraph._extract_requirement_type_signal(normalized) is not None
+        return has_requirement_group or has_requirement_type
+
+    def _validate_semantic_decision(self, decision, signals: Dict[str, Any]):
+        """Correct high-confidence semantic routing with deterministic signals."""
+        entities = dict(decision.entities or {})
+        normalized = signals.get("normalized", "")
+        has_semester = any(term in normalized for term in ("ترم", "الترم", "semester", "term", "سمستر"))
+
+        if decision.route == "mental":
+            return decision
+
+        if signals.get("course_code"):
+            entities.setdefault("course", signals["course_code"])
+        elif signals.get("course"):
+            entities.setdefault("course", signals["course"])
+        if signals.get("level"):
+            entities["level"] = signals["level"]
+        if signals.get("program"):
+            entities["program"] = signals["program"]
+            entities.setdefault("major", signals["program"])
+        if signals.get("requirement_type"):
+            entities["requirement_type"] = signals["requirement_type"]
+
+        relationship = signals.get("relationship_direction")
+        has_course = bool(entities.get("course") or signals.get("course_code") or signals.get("course"))
+        if relationship == "prerequisites_for_course" and has_course:
+            decision.intent = "course_prerequisite_query"
+            decision.route = "kg"
+            decision.sub_intent = "prerequisites_for_course"
+        elif relationship in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"} and has_course:
+            decision.intent = "course_unlock_query"
+            decision.route = "kg"
+            decision.sub_intent = relationship
+        elif signals.get("looks_like_study_plan") and not has_semester:
+            decision.intent = "study_plan_query"
+            decision.route = "kg"
+            decision.sub_intent = "study_path"
+        elif signals.get("looks_like_category_requirement"):
+            decision.intent = "category_requirement_query"
+            decision.route = "kg"
+            decision.sub_intent = "category_query"
+
+        decision.entities = entities
+        if not decision.reasoning and getattr(decision, "reasoning_summary", ""):
+            decision.reasoning = decision.reasoning_summary
+        return decision
+
+    @staticmethod
+    def _validate_followup_decision(decision, question: str, signals: Dict[str, Any]):
+        """Keep the current follow-up wording in control of course relationship direction."""
+        relationship = signals.get("relationship_direction")
+        if (
+            decision.route != "mental"
+            and relationship in {
+                "prerequisites_for_course",
+                "courses_unlocked_by_course",
+                "courses_blocked_if_not_completed",
+            }
+            and KGService._looks_like_course_relationship_followup(question)
+        ):
+            entities = dict(decision.entities or {})
+            if signals.get("course_code"):
+                entities.setdefault("course", signals["course_code"])
+            elif signals.get("course"):
+                entities.setdefault("course", signals["course"])
+
+            decision.route = "kg"
+            decision.sub_intent = relationship
+            decision.entities = entities
+
+            rewritten_direction = KGService._classify_prerequisite_direction(
+                decision.rewritten_question or ""
+            )
+            if rewritten_direction != relationship:
+                decision.rewritten_question = question
+
+            if not decision.reasoning:
+                decision.reasoning = "Course follow-up direction was validated from the current message."
+        return decision
+
+    def _has_course_entity_or_signal(self, question: str, entities: Optional[Dict[str, str]], signals: Dict[str, Any]) -> bool:
+        if signals.get("course_code") or signals.get("course"):
+            return True
+        if entities and entities.get("course"):
+            return True
+        return self._is_course_query(question)
 
     def _is_category_hours_query(self, question: str) -> bool:
         """Detect explicit category/group required-hour questions for KG."""
@@ -472,6 +614,29 @@ class AdvisorGraph:
     def _is_policy_topic(question: str) -> bool:
         """Detect short regulation topics that are meaningful only in policy/RAG context."""
         return any(topic in question for topic in ("الفصل الصيفي", "الصيفي", "فصل صيفي", "الترم الصيفي"))
+
+    @staticmethod
+    def _is_high_confidence_regulation_query(question: str) -> bool:
+        """Detect specific policy questions that should not be offered to KG."""
+        phrases = (
+            "regular semester", "summer semester", "credit hours does a student need to graduate",
+            "credit hours اللازمة للتخرج", "ساعه معتمده يجب اجتيازها للتخرج",
+            "ساعات معتمده يجب اجتيازها للتخرج", "register for courses",
+            "withdraw from a course", "withdrawal", "الحذف والاضافه", "الحذف والاضافة",
+            "minimum passing grade", "minimum للنجاح", "grade distributed",
+            "theoretical course", "minimum required from the final", "attendance percentage",
+            "academic warning", "honor graduation", "honor degree", "مرتبه الشرف",
+            "مرتبة الشرف", "dismissal conditions", "يتفصل من الكليه", "يتفصل من الكلية",
+            "new students in first semester", "رسبت في مقرر واعدته", "اسجل مشروع التخرج",
+            "الفصل الصيفي اجباري", "summer semester اجباري", "summer semester mandatory",
+        )
+        if any(phrase in question for phrase in phrases):
+            return True
+        if "cgpa" in question and any(term in question for term in ("warning", "انذار", "اعلى من 3", "اقل من 2")):
+            return True
+        if "final" in question and any(term in question for term in ("excuse", "بعذر", "attendance", "غياب")):
+            return True
+        return False
 
     @staticmethod
     def _matches_keywords(question: str, keywords: List[str]) -> bool:
@@ -657,8 +822,7 @@ class AdvisorGraph:
 
     def _rag_node(self, state: AdvisorState) -> dict:
         """Query regulations via RAG."""
-        base_question = state.get("rewritten_question") or state["question"]
-        question = self._contextualize_followup(base_question, state.get("history", []))
+        question = state.get("rewritten_question") or state["question"]
         service_question = self._question_with_language_source(question, state["question"])
         answer = self.rag_service.query(service_question)
         return {"rag_answer": answer}
@@ -669,9 +833,7 @@ class AdvisorGraph:
         rewritten_question = state.get("rewritten_question") or question
         student_level = state.get("student_level")
         student_major = state.get("student_major")
-        history = state.get("history", [])
-        contextual_question = self._contextualize_followup(rewritten_question, history)
-        service_question = self._question_with_language_source(contextual_question, question)
+        service_question = self._question_with_language_source(rewritten_question, question)
 
         if self._is_unsupported_course_metadata_query(service_question):
             return {"kg_answer": self._out_of_scope_answer(question)}
@@ -685,7 +847,7 @@ class AdvisorGraph:
         if student_level and student_major and is_path_query and not has_specific_course:
             answer = self.kg_service.get_study_path(student_level, student_major)
         else:
-            answer = self.kg_service.query(service_question, history=history)
+            answer = self.kg_service.query(service_question, history=None)
 
         should_try_rag_fallback = self._kg_unavailable(answer) or (
             is_path_query and not has_specific_course and self._should_use_scope_fallback(answer)

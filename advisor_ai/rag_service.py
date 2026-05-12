@@ -466,15 +466,22 @@ class RAGService:
 
         rules = [
             (("كم ساعة", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
+            (("كم ساعه", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
+            (("كم ساعه", "للتخرج"), "- شروط التخرج: لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
+            (("ساعه معتمده", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
+            (("ساعه معتمده", "اتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
+            (("ساعه معتمده", "للتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
             (("how many", "graduate"), "- Students must complete 144 credit hours to graduate."),
             (("الدراسة", "نظام"), "- الدراسة في الكلية بنظام الساعات المعتمدة."),
             (("study", "system"), "- The faculty uses the credit-hour system."),
             (("مدة الفصل الدراسي النظامي",), "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."),
             (("الفصل الصيفي", "مدته"), "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات."),
             (("الصيفي", "اختياري"), "- الفصل الصيفي اختياري للطالب."),
+            (("الفصل الصيفي", "اجباري"), "- الفصل الصيفي اختياري للطالب، وليس إجباريًا."),
             (("الحد الاقصى", "الفصل الصيفي"), "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة."),
             (("اقل عدد", "خريف", "ربيع"), "- أقل عدد ساعات للتسجيل في فصل الخريف أو الربيع هو 9 ساعات معتمدة، إلا إذا كانت الساعات المتبقية للتخرج أقل من ذلك."),
             (("cgpa", "اعلى من او يساوي 3"), "- الطالب صاحب CGPA أعلى من أو يساوي 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل."),
+            (("cgpa", "اعلى من 3"), "- الطالب صاحب CGPA أعلى من 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل."),
             (("cgpa", "من 2 الى اقل من 3"), "- الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل 18 ساعة معتمدة."),
             (("cgpa", "من 1 الى اقل من 2"), "- الطالب صاحب CGPA من 1 إلى أقل من 2 يقدر يسجل 15 ساعة معتمدة."),
             (("cgpa", "اقل من 1"), "- الطالب صاحب CGPA أقل من 1 يقدر يسجل 12 ساعة معتمدة."),
@@ -507,16 +514,32 @@ class RAGService:
 
         if "الفصل الدراسي النظامي" in q and ("كام اسبوع" in q or "مدته" in q or "مده" in q):
             return "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."
+        if "regular semester" in q and ("how long" in q or "duration" in q or "weeks" in q):
+            return "- A regular semester lasts 17 weeks including the exam period."
+        if any(term in q for term in ("يتخرج", "اتخرج", "التخرج")) and any(term in q for term in ("كم ساعه", "كام ساعه", "ساعه معتمده", "ساعات معتمده")):
+            return "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."
+        if "credit hours" in q and "graduate" in q:
+            return "- Students must complete 144 credit hours to graduate."
         if ("الفصل الصيفي" in q or "الصيفي" in q) and ("كام اسبوع" in q or "مدته" in q or "مده" in q):
             return "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات."
+        if "summer semester" in q and any(term in q for term in ("mandatory", "required", "اجباري")):
+            return "- The summer semester is optional, not mandatory."
+        if "summer semester" in q and any(term in q for term in ("max", "maximum", "credit hours", "hours")):
+            return "- The maximum load in the summer semester is 9 credit hours."
         if "الدراسه" in q and "نظام" in q:
             return "- الدراسة في الكلية بنظام الساعات المعتمدة."
         if "مده" in q and "الفصل الدراسي النظامي" in q:
             return "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."
+        if "new students" in q and "first semester" in q:
+            return "- New students can register up to 18 credit hours in their first semester."
         if "cgpa" in q and "2" in q and "3" in q and "اقل" in q:
             return "- الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل 18 ساعة معتمدة."
+        if "cgpa" in q and "اعلى من 3" in q:
+            return "- الطالب صاحب CGPA أعلى من 3 يقدر يسجل 21 ساعة معتمدة."
         if ("cgpa" in q or "معدل" in q) and "اقل من 1" in q:
             return "- الطالب صاحب CGPA أقل من 1 يقدر يسجل 12 ساعة معتمدة."
+        if "register for courses" in q or ("register" in q and "courses" in q):
+            return "- Students can register for courses until the end of week 2."
         if "التسجيل في المقررات" in q or "التسجيل في المواد" in q:
             return "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني."
         if "التسجيل" in q and "المقررات" in q:
@@ -533,8 +556,12 @@ class RAGService:
             return "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها."
         if ("ينسحب من مقرر" in q or "انسحب من مقرر" in q) and ("لحد امتي" in q or "لحد امتى" in q or "حتي نهايه" in q):
             return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
+        if "withdraw from a course" in q or ("withdrawal" in q and "course" in q):
+            return "- A student can withdraw from a course until the end of week 9."
         if "ينسحب" in q and "مقرر" in q:
             return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
+        if "withdrawal" in q and any(term in q for term in ("before", "deadline", "when")):
+            return "- Course withdrawal must be completed by the end of week 9."
         if "انسحبت من مقرر" in q and ("في الميعاد" in q or "في المعاد" in q):
             return "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط."
         if "انسحب" in q and "ميعاد" in q:
@@ -545,16 +572,47 @@ class RAGService:
             return "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة."
         if "اقل" in q and "نجاح" in q:
             return "- أقل درجة للنجاح في أي مقرر هي 50 درجة."
+        if "minimum" in q and "نجاح" in q:
+            return "- أقل درجة للنجاح في أي مقرر هي 50 درجة."
+        if "minimum" in q and "pass" in q and "الامتحان النهائي" not in q:
+            return "- The minimum passing grade in any course is 50."
+        if "theoretical course" in q and any(term in q for term in ("grade", "distributed", "distribution")):
+            return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."
+        if "theoretical course" in q and any(term in q for term in ("40%", "20%", "coursework")):
+            return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."
         if ("نسبه الحضور" in q or "احضر كام في الميه" in q) and "الامتحان النهائي" in q:
             return "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات."
+        if "attendance" in q and "الامتحان النهائي" in q:
+            return "- A student needs at least 75% attendance to sit the final exam."
         if "الحضور" in q and "الامتحان النهائي" in q:
             return "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات."
         if "غياب" in q and "25" in q:
             return "- إذا تجاوزت نسبة الغياب 25% يجوز لمجلس الكلية حرمان الطالب من دخول الامتحان النهائي بعد إنذاره كتابيًا."
         if "عذر قهري" in q and "الامتحان النهائي" in q:
             return "- إذا غاب الطالب عن الامتحان النهائي بعذر قهري مقبول يحتسب له تقدير غير مكتمل I بشرط حصوله على 60% على الأقل من درجات الأعمال الفصلية وألا يكون محروماً من الامتحان."
+        if any(term in q for term in ("with an excuse", "بعذر مقبول")) and ("الامتحان النهائي" in q or "final" in q):
+            return "- If a student misses the final exam with an accepted excuse, they receive I (Incomplete), subject to the 60% coursework condition."
         if "الامتحان النهائي التحريري" in q:
             return "- من شروط النجاح أن يحصل الطالب على 30% على الأقل من درجة الامتحان النهائي التحريري."
+        if "minimum required" in q and "الامتحان النهائي" in q:
+            return "- The student must get at least 30% of the written final exam mark to pass."
+        if "graduation requirements" in q or "شروط التخرج" in q:
+            return "- Graduation requires completing 144 credit hours and having a CGPA of at least 2."
+        if "academic warning" in q or "انذار اكاديمي" in q:
+            return "- A student receives an academic warning when their CGPA is less than 2."
+        if "honor graduation" in q or "honor degree" in q or "مرتبه الشرف" in q or "مرتبة الشرف" in q:
+            return "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years."
+        if (
+            "dismissal conditions" in q
+            or "يتفصل من الكليه" in q
+            or "يتفصل من الكلية" in q
+            or ("الفصل من الكلية" in q and "حالات" in q)
+        ):
+            return "- A student is dismissed after 4 consecutive regular-semester academic warnings or 6 separate academic warnings."
+        if ("رسبت في مقرر" in q or "failed a course" in q) and ("اعدته" in q or "retake" in q):
+            return "- If a student fails a course and retakes it, the maximum recorded grade is 83 (B)."
+        if "مشروع التخرج" in q and any(term in q for term in ("اسجل", "تسجيل", "اقدر")):
+            return "- يمكن تسجيل مشروع التخرج بعد اجتياز 70% من الساعات المعتمدة المطلوبة للتخرج."
         if (
             "مواد" in q
             and "الفصل الدراسي الاول" in q
