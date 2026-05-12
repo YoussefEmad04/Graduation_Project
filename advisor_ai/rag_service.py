@@ -556,12 +556,18 @@ class RAGService:
             return "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها."
         if ("ينسحب من مقرر" in q or "انسحب من مقرر" in q) and ("لحد امتي" in q or "لحد امتى" in q or "حتي نهايه" in q):
             return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
+        if "الانسحاب من مقرر" in q:
+            return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
         if "withdraw from a course" in q or ("withdrawal" in q and "course" in q):
             return "- A student can withdraw from a course until the end of week 9."
         if "ينسحب" in q and "مقرر" in q:
             return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
+        if "withdrawal" in q and "قبل" in q:
+            return "- Course withdrawal must be completed by the end of week 9."
         if "withdrawal" in q and any(term in q for term in ("before", "deadline", "when")):
             return "- Course withdrawal must be completed by the end of week 9."
+        if "deadline" in q and any(term in q for term in ("بدون عذر", "without excuse")):
+            return "- If a student withdraws after the deadline without an accepted excuse, the student receives a failing grade for the withdrawn course."
         if "انسحبت من مقرر" in q and ("في الميعاد" in q or "في المعاد" in q):
             return "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط."
         if "انسحب" in q and "ميعاد" in q:
@@ -576,7 +582,7 @@ class RAGService:
             return "- أقل درجة للنجاح في أي مقرر هي 50 درجة."
         if "minimum" in q and "pass" in q and "الامتحان النهائي" not in q:
             return "- The minimum passing grade in any course is 50."
-        if "theoretical course" in q and any(term in q for term in ("grade", "distributed", "distribution")):
+        if "theoretical course" in q and any(term in q for term in ("grade", "distributed", "distribution", "توزيع")):
             return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."
         if "theoretical course" in q and any(term in q for term in ("40%", "20%", "coursework")):
             return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."

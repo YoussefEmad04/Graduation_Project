@@ -623,6 +623,7 @@ class AdvisorGraph:
             "credit hours اللازمة للتخرج", "ساعه معتمده يجب اجتيازها للتخرج",
             "ساعات معتمده يجب اجتيازها للتخرج", "register for courses",
             "withdraw from a course", "withdrawal", "الحذف والاضافه", "الحذف والاضافة",
+            "الانسحاب من مقرر", "انسحاب من مقرر",
             "minimum passing grade", "minimum للنجاح", "grade distributed",
             "theoretical course", "minimum required from the final", "attendance percentage",
             "academic warning", "honor graduation", "honor degree", "مرتبه الشرف",
