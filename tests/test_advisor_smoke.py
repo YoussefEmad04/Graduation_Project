@@ -1216,9 +1216,11 @@ class RagExtractionSmokeTests(unittest.TestCase):
 
     def test_requested_mixed_policy_wording_reaches_retrieval_helpers(self):
         cases = {
+            "الدراسة عندنا ماشية بنظام ايه بالظبط؟": ("نظام الدراسة", "الساعات المعتمدة"),
             "اشيل مادة لحد امتى؟": ("انسحب من مقرر", "الانسحاب من مقرر"),
             "اسحب الترم ينفع؟": ("الانسحاب الكلي من الفصل الدراسي", "الانسحاب الكلي"),
             "غبت عن الفاينال بعذر": ("الامتحان النهائي", "عذر"),
+            "غبت عن الفاينال من غير عذر": ("دون عذر مقبول", "دون عذر"),
             "لو غيابي عدى 25%": ("تجاوزت نسبة الغياب 25%", "25%"),
             "اعمل تظلم ازاي؟": ("التظلمات الطلابية", "التظلم"),
             "what is academic warning?": ("انذار اكاديمي", "إنذار أكاديمي"),
@@ -1328,6 +1330,9 @@ class RagExtractionSmokeTests(unittest.TestCase):
         warning = service._local_regulation_fallback("متى يحصل الطالب على إنذار أكاديمي لو CGPA أقل من 2؟")
         attendance = service._local_regulation_fallback("نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟")
         dismissal = service._local_regulation_fallback("الطالب يتفصل من الكلية في أنهي حالات؟")
+        study_system = service._local_regulation_fallback("الدراسة عندنا ماشية بنظام ايه بالظبط؟")
+        registration_deadline = service._local_regulation_fallback("التسجيل في المواد بيفضل مفتوح لحد امتى؟")
+        final_absence = service._local_regulation_fallback("لو غبت عن الفاينال من غير عذر، هاخد ايه؟")
 
         self.assertIn("144", graduation)
         self.assertIn("الأسبوع التاسع", withdrawal)
@@ -1337,6 +1342,9 @@ class RagExtractionSmokeTests(unittest.TestCase):
         self.assertIn("إنذار", dismissal)
         self.assertIn("أربعة", dismissal)
         self.assertIn("ستة", dismissal)
+        self.assertIn("الساعات المعتمدة", study_system)
+        self.assertIn("الأسبوع الثاني", registration_deadline)
+        self.assertIn("FA", final_absence)
 
 
 class MassivePromptRoutingTests(unittest.TestCase):
