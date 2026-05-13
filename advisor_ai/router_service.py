@@ -31,6 +31,7 @@ class RouterDecision(BaseModel):
     rewritten_question: str = Field(default="", description="A cleaner internal version of the student's question that preserves meaning")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Router confidence from 0 to 1")
     entities: Dict[str, str] = Field(default_factory=dict, description="Resolved entities like course, program, level, policy topic")
+    missing_entities: List[str] = Field(default_factory=list, description="Required entities that are missing from the current question")
     reasoning: str = Field(default="", description="Very short rationale for debugging")
     reasoning_summary: str = Field(default="", description="Short explanation of the semantic decision")
 
@@ -50,6 +51,7 @@ Rules:
 - Return a semantic intent in the "intent" field. Supported intents:
   course_prerequisite_query, course_unlock_query, study_plan_query,
   category_requirement_query, regulation_query, student_record_query, general_chat.
+- If the student asks for their own CGPA, grades, earned hours, completed courses, failed courses, or transcript-specific status, use intent=student_record_query. Use route=hybrid because no student-record service is available.
 - If the question asks what is needed before a course, use route=kg and sub_intent=prerequisites_for_course.
 - If the question asks for "requirements", "متطلبات", "المتطلبات", or "المطلوب" for a specific course code/name, use route=kg and sub_intent=prerequisites_for_course, not rag.
 - If the phrase means "المادة اللي بتفتحها" or "لازم آخد ايه قبلها", use sub_intent=prerequisites_for_course.
@@ -65,17 +67,19 @@ Rules:
 - Use confidence above 0.8 only when the route is clearly supported by the meaning.
 
 Examples:
-- "طيب ايه متطلبات AI301؟" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, rewritten_question="ايه متطلبات AI301؟", entities={{"course":"AI301"}}
-- "What are the requirements for Machine Learning?" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}
-- "Machine Learning بتفتح مواد ايه؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_unlocked_by_course, entities={{"course":"Machine Learning"}}
-- "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_blocked_if_not_completed, entities={{"course":"Machine Learning"}}
-- "ايه مواد سنة تالته ذكاء اصطناعي؟" -> intent=study_plan_query, route=kg, sub_intent=study_path, entities={{"level":"3","program":"Artificial Intelligence"}}
-- "ايه متطلبات الجامعة الاجبارية؟" -> intent=category_requirement_query, route=kg, sub_intent=category_query, entities={{"category":"University Requirements","requirement_type":"compulsory"}}
-- "What are the graduation requirements?" -> intent=regulation_query, route=rag, sub_intent=regulation
-- "طيب الحد الأقصى للساعات في الترم العادي كام؟" -> route=rag, sub_intent=regulation
+- "طيب ايه متطلبات AI301؟" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, rewritten_question="ايه متطلبات AI301؟", entities={{"course":"AI301"}}, missing_entities=[]
+- "What are the requirements for Machine Learning?" -> intent=course_prerequisite_query, route=kg, sub_intent=prerequisites_for_course, entities={{"course":"Machine Learning"}}, missing_entities=[]
+- "Machine Learning بتفتح مواد ايه؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_unlocked_by_course, entities={{"course":"Machine Learning"}}, missing_entities=[]
+- "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟" -> intent=course_unlock_query, route=kg, sub_intent=courses_blocked_if_not_completed, entities={{"course":"Machine Learning"}}, missing_entities=[]
+- "ايه مواد سنة تالته ذكاء اصطناعي؟" -> intent=study_plan_query, route=kg, sub_intent=study_path, entities={{"level":"3","program":"Artificial Intelligence"}}, missing_entities=[]
+- "ايه مواد سنة تالته؟" -> intent=study_plan_query, route=kg, sub_intent=study_path, entities={{"level":"3"}}, missing_entities=["program"]
+- "ايه متطلبات الجامعة الاجبارية؟" -> intent=category_requirement_query, route=kg, sub_intent=category_query, entities={{"category":"University Requirements","requirement_type":"compulsory"}}, missing_entities=[]
+- "What are the graduation requirements?" -> intent=regulation_query, route=rag, sub_intent=regulation, entities={{}}, missing_entities=[]
+- "ايه ال CGPA بتاعي؟" -> intent=student_record_query, route=hybrid, sub_intent=unsupported_student_record, entities={{"record_type":"cgpa"}}, missing_entities=[]
+- "طيب الحد الأقصى للساعات في الترم العادي كام؟" -> intent=regulation_query, route=rag, sub_intent=regulation, entities={{"policy_topic":"credit_load"}}, missing_entities=[]
 
 Return strict JSON only with:
-intent, route, sub_intent, entities, confidence, reasoning_summary, rewritten_question.
+intent, route, sub_intent, entities, missing_entities, confidence, reasoning_summary, rewritten_question.
 """
 
 

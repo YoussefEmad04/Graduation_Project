@@ -52,6 +52,7 @@ class AdvisorState(TypedDict):
     route_confidence: Optional[float]
     route_reasoning: Optional[str]
     route_entities: Optional[Dict[str, str]]
+    route_missing_entities: Optional[List[str]]
     rag_answer: Optional[str]
     kg_answer: Optional[str]
     mental_answer: Optional[str]
@@ -147,53 +148,8 @@ class AdvisorGraph:
                 "route_confidence": 1.0,
                 "route_reasoning": "Unsupported course metadata question.",
                 "route_entities": {},
+                "route_missing_entities": [],
                 "final_answer": self._out_of_scope_answer(question),
-            }
-        if self._is_category_hours_query(normalized):
-            logger.info("Question force-routed to kg (category required hours)")
-            return {
-                "route": "kg",
-                "route_sub_intent": "category_required_hours",
-                "rewritten_question": question,
-                "route_confidence": 1.0,
-                "route_reasoning": "Explicit category required-hours question.",
-                "route_entities": {},
-            }
-        if self._is_semester_withdrawal_question(normalized):
-            logger.info("Question force-routed to rag (semester withdrawal policy)")
-            return {
-                "route": "rag",
-                "route_sub_intent": "regulation",
-                "rewritten_question": question,
-                "route_confidence": 1.0,
-                "route_reasoning": "Explicit semester withdrawal / freeze policy question.",
-                "route_entities": {},
-            }
-        if (
-            self._is_high_confidence_regulation_query(normalized)
-            and not (
-                signals.get("relationship_direction") != "unknown"
-                and self._has_course_entity_or_signal(question, {}, signals)
-            )
-        ):
-            logger.info("Question force-routed to rag (high-confidence regulation topic)")
-            return {
-                "route": "rag",
-                "route_sub_intent": "regulation",
-                "rewritten_question": question,
-                "route_confidence": 1.0,
-                "route_reasoning": "Explicit regulation topic.",
-                "route_entities": {},
-            }
-        if KGService._looks_like_course_relationship_followup(question) and not (signals.get("course_code") or signals.get("course")):
-            logger.info("Question force-routed to kg (course relationship follow-up)")
-            return {
-                "route": "kg",
-                "route_sub_intent": KGService._classify_prerequisite_direction(question),
-                "rewritten_question": question,
-                "route_confidence": 1.0,
-                "route_reasoning": "Short course relationship follow-up.",
-                "route_entities": {},
             }
 
         semantic = None
@@ -207,21 +163,9 @@ class AdvisorGraph:
 
         if semantic and self._is_valid_route(semantic.route) and semantic.confidence >= 0.75:
             semantic = self._validate_semantic_decision(semantic, signals)
-            prereq_direction = signals.get("relationship_direction") or KGService._classify_prerequisite_direction(question)
-            if (
-                semantic.route != "mental"
-                and prereq_direction != "unknown"
-                and self._has_course_entity_or_signal(question, semantic.entities, signals)
-            ):
-                logger.info("Question routed to kg (explicit course prerequisite relationship)")
-                return {
-                    "route": "kg",
-                    "route_sub_intent": prereq_direction,
-                    "rewritten_question": semantic.rewritten_question or question,
-                    "route_confidence": semantic.confidence,
-                    "route_reasoning": "Explicit course prerequisite relationship overrides broad semantic route.",
-                    "route_entities": semantic.entities,
-                }
+            if semantic.intent == "student_record_query":
+                logger.info("Question returned unsupported (student record query)")
+                return self._unsupported_student_record_route(question, semantic)
             logger.info(f"Question semantically routed to: {semantic.route} ({semantic.confidence:.2f})")
             return {
                 "route": semantic.route,
@@ -230,6 +174,62 @@ class AdvisorGraph:
                 "route_confidence": semantic.confidence,
                 "route_reasoning": semantic.reasoning,
                 "route_entities": semantic.entities,
+                "route_missing_entities": semantic.missing_entities,
+            }
+
+        if self._is_student_record_query(normalized):
+            logger.info("Question returned unsupported (student record heuristic)")
+            return self._unsupported_student_record_route(question, semantic)
+
+        if self._is_category_hours_query(normalized):
+            logger.info("Question force-routed to kg (category required hours fallback)")
+            return {
+                "route": "kg",
+                "route_sub_intent": "category_required_hours",
+                "rewritten_question": question,
+                "route_confidence": semantic.confidence if semantic else 1.0,
+                "route_reasoning": semantic.reasoning if semantic else "Explicit category required-hours question.",
+                "route_entities": semantic.entities if semantic else {},
+                "route_missing_entities": semantic.missing_entities if semantic else [],
+            }
+        if self._is_semester_withdrawal_question(normalized):
+            logger.info("Question force-routed to rag (semester withdrawal policy fallback)")
+            return {
+                "route": "rag",
+                "route_sub_intent": "regulation",
+                "rewritten_question": question,
+                "route_confidence": semantic.confidence if semantic else 1.0,
+                "route_reasoning": semantic.reasoning if semantic else "Explicit semester withdrawal / freeze policy question.",
+                "route_entities": semantic.entities if semantic else {},
+                "route_missing_entities": semantic.missing_entities if semantic else [],
+            }
+        if (
+            self._is_high_confidence_regulation_query(normalized)
+            and not (
+                signals.get("relationship_direction") != "unknown"
+                and self._has_course_entity_or_signal(question, {}, signals)
+            )
+        ):
+            logger.info("Question force-routed to rag (high-confidence regulation topic fallback)")
+            return {
+                "route": "rag",
+                "route_sub_intent": "regulation",
+                "rewritten_question": question,
+                "route_confidence": semantic.confidence if semantic else 1.0,
+                "route_reasoning": semantic.reasoning if semantic else "Explicit regulation topic.",
+                "route_entities": semantic.entities if semantic else {},
+                "route_missing_entities": semantic.missing_entities if semantic else [],
+            }
+        if KGService._looks_like_course_relationship_followup(question) and not (signals.get("course_code") or signals.get("course")):
+            logger.info("Question force-routed to kg (course relationship follow-up fallback)")
+            return {
+                "route": "kg",
+                "route_sub_intent": KGService._classify_prerequisite_direction(question),
+                "rewritten_question": question,
+                "route_confidence": semantic.confidence if semantic else 1.0,
+                "route_reasoning": semantic.reasoning if semantic else "Short course relationship follow-up.",
+                "route_entities": semantic.entities if semantic else {},
+                "route_missing_entities": semantic.missing_entities if semantic else [],
             }
 
         prereq_direction = KGService._classify_prerequisite_direction(question)
@@ -242,6 +242,7 @@ class AdvisorGraph:
                 "route_confidence": semantic.confidence if semantic else 0.0,
                 "route_reasoning": semantic.reasoning if semantic else "Explicit course prerequisite relationship.",
                 "route_entities": semantic.entities if semantic else {},
+                "route_missing_entities": semantic.missing_entities if semantic else [],
             }
 
         heuristic_route = self._heuristic_route(question, routing_history)
@@ -253,6 +254,7 @@ class AdvisorGraph:
             "route_confidence": semantic.confidence if semantic else 0.0,
             "route_reasoning": semantic.reasoning if semantic else "",
             "route_entities": semantic.entities if semantic else {},
+            "route_missing_entities": semantic.missing_entities if semantic else [],
         }
 
     def _deterministic_routing_signals(self, question: str) -> Dict[str, Any]:
@@ -364,10 +366,8 @@ class AdvisorGraph:
         return has_requirement_group or has_requirement_type
 
     def _validate_semantic_decision(self, decision, signals: Dict[str, Any]):
-        """Correct high-confidence semantic routing with deterministic signals."""
+        """Enrich high-confidence semantic routing with exact deterministic signals."""
         entities = dict(decision.entities or {})
-        normalized = signals.get("normalized", "")
-        has_semester = any(term in normalized for term in ("ترم", "الترم", "semester", "term", "سمستر"))
 
         if decision.route == "mental":
             return decision
@@ -386,22 +386,14 @@ class AdvisorGraph:
 
         relationship = signals.get("relationship_direction")
         has_course = bool(entities.get("course") or signals.get("course_code") or signals.get("course"))
-        if relationship == "prerequisites_for_course" and has_course:
+        if relationship == "prerequisites_for_course" and has_course and decision.route != "mental":
             decision.intent = "course_prerequisite_query"
             decision.route = "kg"
             decision.sub_intent = "prerequisites_for_course"
-        elif relationship in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"} and has_course:
+        elif relationship in {"courses_unlocked_by_course", "courses_blocked_if_not_completed"} and has_course and decision.route != "mental":
             decision.intent = "course_unlock_query"
             decision.route = "kg"
             decision.sub_intent = relationship
-        elif signals.get("looks_like_study_plan") and not has_semester:
-            decision.intent = "study_plan_query"
-            decision.route = "kg"
-            decision.sub_intent = "study_path"
-        elif signals.get("looks_like_category_requirement"):
-            decision.intent = "category_requirement_query"
-            decision.route = "kg"
-            decision.sub_intent = "category_query"
 
         decision.entities = entities
         if not decision.reasoning and getattr(decision, "reasoning_summary", ""):
@@ -549,6 +541,7 @@ class AdvisorGraph:
             "route_confidence": current_only.confidence,
             "route_reasoning": current_only.reasoning,
             "route_entities": current_only.entities,
+            "route_missing_entities": current_only.missing_entities,
         }
 
     @staticmethod
@@ -1033,6 +1026,58 @@ class AdvisorGraph:
     def _out_of_scope_answer(self, question: str) -> str:
         """Return a consistent fallback when the question is outside supported KG/RAG scope."""
         return OUT_OF_SCOPE_AR if should_respond_arabic(question) else OUT_OF_SCOPE_EN
+
+    def _unsupported_student_record_route(self, question: str, decision=None) -> dict:
+        """Return a safe response for personal record questions without guessing."""
+        return {
+            "route": "hybrid",
+            "route_sub_intent": "unsupported_student_record",
+            "rewritten_question": getattr(decision, "rewritten_question", "") or question,
+            "route_confidence": getattr(decision, "confidence", 1.0) if decision else 1.0,
+            "route_reasoning": getattr(decision, "reasoning", "") or "Student-record data is not available.",
+            "route_entities": getattr(decision, "entities", {}) or {},
+            "route_missing_entities": getattr(decision, "missing_entities", []) or [],
+            "final_answer": self._unsupported_student_record_answer(question),
+        }
+
+    @staticmethod
+    def _unsupported_student_record_answer(question: str) -> str:
+        if should_respond_arabic(question):
+            return (
+                "مش قادر أوصل لبياناتك الشخصية زي CGPA أو الدرجات أو الساعات المجتازة "
+                "أو المواد اللي خلصتها من هنا. أقدر أشرح القواعد العامة من اللائحة، "
+                "لكن مش هقدر أخمن بياناتك."
+            )
+        return (
+            "I can’t access student-specific records such as your CGPA, grades, earned hours, "
+            "or completed courses from here. I can explain the general regulations, but I won’t "
+            "guess your personal data."
+        )
+
+    @staticmethod
+    def _is_student_record_query(question: str) -> bool:
+        """Detect personal transcript/record requests, not general regulation questions."""
+        personal_terms = (
+            "my ", "i ", "me ", "mine", "بتاعي", "بتاعتي", "درجاتي", "معدلي",
+            "ساعاتي", "خلصتها", "اللي خلصتها", "اللي عديتها", "موادي",
+        )
+        record_terms = (
+            "my cgpa", "cgpa بتاعي", "cgpa بتاعتي", "grades", "درجاتي",
+            "الدرجات بتاعتي", "الدرجات بتاعي",
+            "earned hours", "completed hours", "completed courses", "courses completed",
+            "الساعات اللي خلصتها", "الساعات المجتازه", "الساعات المجتازة",
+            "المواد اللي خلصتها", "المواد اللي عديتها", "transcript",
+        )
+        rule_terms = (
+            "calculated", "calculate", "بيتحسب", "حساب", "warning", "انذار",
+            "academic warning", "allowed", "يسجل", "اسجل", "credit load",
+        )
+        has_record = any(term in question for term in record_terms)
+        if not has_record:
+            return False
+        if any(term in question for term in rule_terms):
+            return False
+        return any(term in question for term in personal_terms) or has_record
 
     @staticmethod
     def _is_unsupported_course_metadata_query(question: str) -> bool:

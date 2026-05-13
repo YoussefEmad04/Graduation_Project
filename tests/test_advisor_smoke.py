@@ -388,8 +388,23 @@ class RoutingSmokeTests(unittest.TestCase):
                 {"course": "Machine Learning"},
             ),
             (
+                "لو خدت machine learning بعدها اخد ايه؟",
+                "courses_unlocked_by_course",
+                {"course": "Machine Learning"},
+            ),
+            (
                 "what does AI301 unlock?",
                 "courses_unlocked_by_course",
+                {"course": "AI301"},
+            ),
+            (
+                "AI301 prerequisite",
+                "prerequisites_for_course",
+                {"course": "AI301"},
+            ),
+            (
+                "ايه prerequisite بتاع AI301؟",
+                "prerequisites_for_course",
                 {"course": "AI301"},
             ),
             (
@@ -417,22 +432,26 @@ class RoutingSmokeTests(unittest.TestCase):
                 for key, value in expected_entities.items():
                     self.assertEqual(routed["route_entities"].get(key), value)
 
-    def test_semantic_validation_prefers_level_program_study_plan(self):
+    def test_semantic_validation_fills_level_program_study_plan_entities(self):
         cases = [
             ("ايه مواد سنة تالته ذكاء اصطناعي؟", "3", "Artificial Intelligence"),
             ("مواد level 3 AI", "3", "Artificial Intelligence"),
+            ("ايه مواد سنه تالته AI", "3", "Artificial Intelligence"),
+            ("ايه مواد سنة ثالثة Artificial Intelligence", "3", "Artificial Intelligence"),
+            ("مواد third year ذكاء اصطناعي", "3", "Artificial Intelligence"),
         ]
         for question, level, program in cases:
             with self.subTest(question=question):
                 self.graph.router_service = _FakeRouterService(
                     RouterDecision(
                         route="kg",
-                        sub_intent="category_query",
-                        intent="category_requirement_query",
+                        sub_intent="study_path",
+                        intent="study_plan_query",
                         rewritten_question=question,
                         confidence=0.9,
-                        entities={"category": "AI Major Requirements"},
-                        reasoning="Misread a study-plan request as category.",
+                        entities={},
+                        missing_entities=["level", "program"],
+                        reasoning="Study-plan request.",
                     )
                 )
                 routed = self.graph._router_node({"question": question, "history": []})
@@ -440,6 +459,24 @@ class RoutingSmokeTests(unittest.TestCase):
                 self.assertEqual(routed["route_sub_intent"], "study_path")
                 self.assertEqual(routed["route_entities"].get("level"), level)
                 self.assertEqual(routed["route_entities"].get("program"), program)
+
+    def test_broad_study_plan_signal_does_not_override_high_confidence_semantic_route(self):
+        self.graph.router_service = _FakeRouterService(
+            RouterDecision(
+                route="rag",
+                sub_intent="regulation",
+                intent="regulation_query",
+                rewritten_question="What is the policy for third-year AI course lists?",
+                confidence=0.9,
+                entities={"policy_topic": "study_plan_table"},
+                reasoning="LLM chose regulation table lookup.",
+            )
+        )
+
+        routed = self.graph._router_node({"question": "ايه مواد سنه تالته AI", "history": []})
+
+        self.assertEqual(routed["route"], "rag")
+        self.assertEqual(routed["route_sub_intent"], "regulation")
 
     def test_semantic_validation_forces_requirement_type(self):
         cases = [
@@ -464,6 +501,103 @@ class RoutingSmokeTests(unittest.TestCase):
                 self.assertEqual(routed["route"], "kg")
                 self.assertEqual(routed["route_sub_intent"], "category_query")
                 self.assertEqual(routed["route_entities"].get("requirement_type"), requirement_type)
+
+    def test_broad_category_signal_does_not_override_high_confidence_semantic_route(self):
+        self.graph.router_service = _FakeRouterService(
+            RouterDecision(
+                route="rag",
+                sub_intent="regulation",
+                intent="regulation_query",
+                rewritten_question="What is the official policy for university requirements?",
+                confidence=0.9,
+                entities={"policy_topic": "university_requirements"},
+                reasoning="LLM chose regulation policy.",
+            )
+        )
+
+        routed = self.graph._router_node({"question": "university compulsory requirements", "history": []})
+
+        self.assertEqual(routed["route"], "rag")
+        self.assertEqual(routed["route_sub_intent"], "regulation")
+
+    def test_category_hours_signal_does_not_override_high_confidence_semantic_route(self):
+        self.graph.router_service = _FakeRouterService(
+            RouterDecision(
+                route="mental",
+                sub_intent="support",
+                intent="general_chat",
+                rewritten_question="I need help planning my study load.",
+                confidence=0.9,
+                entities={},
+                reasoning="Support request despite category-hour wording.",
+            )
+        )
+
+        routed = self.graph._router_node(
+            {"question": "How many credit hours for Basic Computer Science is stressing me out?", "history": []}
+        )
+
+        self.assertEqual(routed["route"], "mental")
+        self.assertEqual(routed["route_sub_intent"], "support")
+
+    def test_router_decision_defaults_missing_entities(self):
+        decision = RouterDecision(
+            route="kg",
+            sub_intent="study_path",
+            intent="study_plan_query",
+            confidence=0.9,
+            entities={"level": "3"},
+        )
+
+        self.assertEqual(decision.missing_entities, [])
+
+    def test_semantic_router_missing_entities_are_returned(self):
+        self.graph.router_service = _FakeRouterService(
+            RouterDecision(
+                route="kg",
+                sub_intent="study_path",
+                intent="study_plan_query",
+                rewritten_question="What are the level 3 courses?",
+                confidence=0.9,
+                entities={"level": "3"},
+                missing_entities=["program"],
+                reasoning="Missing program.",
+            )
+        )
+
+        routed = self.graph._router_node({"question": "ايه مواد سنة تالته؟", "history": []})
+
+        self.assertEqual(routed["route"], "kg")
+        self.assertEqual(routed["route_missing_entities"], ["program"])
+
+    def test_student_record_semantic_query_returns_unsupported(self):
+        self.graph.router_service = _FakeRouterService(
+            RouterDecision(
+                route="hybrid",
+                sub_intent="unsupported_student_record",
+                intent="student_record_query",
+                rewritten_question="What is my CGPA?",
+                confidence=0.92,
+                entities={"record_type": "cgpa"},
+                missing_entities=[],
+                reasoning="Student-specific record request.",
+            )
+        )
+
+        routed = self.graph._router_node({"question": "What is my CGPA?", "history": []})
+
+        self.assertEqual(routed["route"], "hybrid")
+        self.assertEqual(routed["route_sub_intent"], "unsupported_student_record")
+        self.assertIn("I can’t access student-specific records", routed["final_answer"])
+
+    def test_student_record_heuristic_query_returns_unsupported_without_llm(self):
+        self.graph.router_service = _FakeRouterService(None)
+
+        routed = self.graph._router_node({"question": "ايه الدرجات بتاعتي؟", "history": []})
+
+        self.assertEqual(routed["route"], "hybrid")
+        self.assertEqual(routed["route_sub_intent"], "unsupported_student_record")
+        self.assertIn("مش قادر أوصل لبياناتك الشخصية", routed["final_answer"])
 
     def test_followup_resolver_is_not_used_for_runtime_routing(self):
         self.graph.followup_resolver = _FakeFollowupResolver(

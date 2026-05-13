@@ -1,0 +1,2502 @@
+{
+  "base_url": "https://smart-academic-advisor-api.vercel.app",
+  "generated_at": "2026-05-12T21:34:10.760593+00:00",
+  "counts": {
+    "FULL": 126,
+    "PARTIAL": 3,
+    "NO_MATCH": 21,
+    "ERROR": 0
+  },
+  "total": 150,
+  "results": [
+    {
+      "index": "1",
+      "part": "A1",
+      "question": "What are the prerequisites for Machine Learning?",
+      "expected": [
+        "AI201",
+        "MTH104"
+      ],
+      "response": "Prerequisites for [AI301] Machine Learning:\n- Core Requirements: Introduction to Artificial Intelligence [AI201], Probability and Statistics 1 [MTH104]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "AI201",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "2",
+      "part": "A1",
+      "question": "What do I need before Deep Learning?",
+      "expected": [
+        "AI301"
+      ],
+      "response": "Prerequisites for [AI403] Deep Learning:\n- Core Requirements: Machine Learning [AI301]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "AI301"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "3",
+      "part": "A1",
+      "question": "What are the prereqs for Network Security?",
+      "expected": [
+        "CB301",
+        "CB304"
+      ],
+      "response": "Prerequisites for [CB305] Network Security:\n- Core Requirements: Computer Networks [CB301], Introduction to Cyber-Security [CB304]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "CB301",
+        "CB304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "4",
+      "part": "A1",
+      "question": "What are the prequesits for AI Applications?",
+      "expected": [
+        "AI401",
+        "AI304"
+      ],
+      "response": "Prerequisites for [AI406] AI Applications:\n- Core Requirements: Computer Vision [AI304], Intelligent Algorithms [AI401]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "AI401",
+        "AI304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "5",
+      "part": "A1",
+      "question": "What do I need before Ethical Hacking?",
+      "expected": [
+        "CB308"
+      ],
+      "response": "Prerequisites for [CB404] Ethical Hacking:\n- Core Requirements: Real-Time Auditing & Defense [CB308]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "CB308"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "6",
+      "part": "A1",
+      "question": "What are the prerequisites for Database Systems?",
+      "expected": [
+        "IS101",
+        "CS102"
+      ],
+      "response": "Prerequisites for [IS201] Database Systems:\n- Core Requirements: Structured Programming [CS102], Fundamentals of Information Systems [IS101]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "IS101",
+        "CS102"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "7",
+      "part": "A1",
+      "question": "What are the prerequisites for Logic Design?",
+      "expected": [
+        "ELC101"
+      ],
+      "response": "Prerequisites for [ELC201] Logic Design:\n- Core Requirements: Electronics [ELC101]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "ELC101"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "8",
+      "part": "A1",
+      "question": "What are the prerequisites for Mathematics 3?",
+      "expected": [
+        "MTH103"
+      ],
+      "response": "Prerequisites for [MTH201] Mathematics 3:\n- Core Requirements: Mathematics 2 [MTH103]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "MTH103"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "9",
+      "part": "A1",
+      "question": "ما هي متطلبات مقرر التعلم الآلي؟",
+      "expected": [
+        "AI201",
+        "MTH104"
+      ],
+      "response": "ملخص المواد:\n\nArtificial Intelligence:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 27 مواد\n- المستوى 4: 17 مواد\nCybersecurity:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 22 مواد\n- المستوى 4: 15 مواد",
+      "present": [],
+      "missing": [
+        "AI201",
+        "MTH104"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "10",
+      "part": "A1",
+      "question": "ما المطلوب قبل تسجيل مقرر أمن الشبكات؟",
+      "expected": [
+        "CB301",
+        "CB304"
+      ],
+      "response": "ملخص المواد:\n\nArtificial Intelligence:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 27 مواد\n- المستوى 4: 17 مواد\nCybersecurity:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 22 مواد\n- المستوى 4: 15 مواد",
+      "present": [],
+      "missing": [
+        "CB301",
+        "CB304"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "11",
+      "part": "A1",
+      "question": "ايه المتطلبات بتاعت AI406؟",
+      "expected": [
+        "AI401",
+        "AI304"
+      ],
+      "response": "علشان تفتح مادة AI Applications [AI406]، لازم تكون مخلص:\n- Computer Vision [AI304]\n- Intelligent Algorithms [AI401]",
+      "present": [
+        "AI401",
+        "AI304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "12",
+      "part": "A1",
+      "question": "لازم اكون واخد ايه قبل Machine Learning؟",
+      "expected": [
+        "AI201",
+        "MTH104"
+      ],
+      "response": "علشان تفتح مادة Machine Learning [AI301]، لازم تكون مخلص:\n- Introduction to Artificial Intelligence [AI201]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "AI201",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "13",
+      "part": "A1",
+      "question": "ايه المطلوب قبل Deep Learning؟",
+      "expected": [
+        "AI301"
+      ],
+      "response": "علشان تفتح مادة Deep Learning [AI403]، لازم تكون مخلص:\n- Machine Learning [AI301]",
+      "present": [
+        "AI301"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "14",
+      "part": "A1",
+      "question": "Network Security محتاجه ايه قبلها؟",
+      "expected": [
+        "CB301",
+        "CB304"
+      ],
+      "response": "علشان تفتح مادة Network Security [CB305]، لازم تكون مخلص:\n- Computer Networks [CB301]\n- Introduction to Cyber-Security [CB304]",
+      "present": [
+        "CB301",
+        "CB304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "15",
+      "part": "A1",
+      "question": "ايه البري ريكويست بتاع AI Applications؟",
+      "expected": [
+        "AI401",
+        "AI304"
+      ],
+      "response": "علشان تفتح مادة AI Applications [AI406]، لازم تكون مخلص:\n- Computer Vision [AI304]\n- Intelligent Algorithms [AI401]",
+      "present": [
+        "AI401",
+        "AI304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "16",
+      "part": "A1",
+      "question": "Logic Design متطلبها ايه؟",
+      "expected": [
+        "ELC101"
+      ],
+      "response": "علشان تفتح مادة Logic Design [ELC201]، لازم تكون مخلص:\n- Electronics [ELC101]",
+      "present": [
+        "ELC101"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "17",
+      "part": "A1",
+      "question": "Software Testing محتاجه انهي مادة قبلها؟",
+      "expected": [
+        "SW201"
+      ],
+      "response": "علشان تفتح مادة Software Testing & Quality Assurance [SW401]، لازم تكون مخلص:\n- Software Engineering [SW201]",
+      "present": [
+        "SW201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "18",
+      "part": "A1",
+      "question": "Algorithms محتاجه ايه قبلها عشان اقدر اسجلها؟",
+      "expected": [
+        "CS102"
+      ],
+      "response": "علشان تفتح مادة Algorithms [CS205]، لازم تكون مخلص:\n- Structured Programming [CS102]",
+      "present": [
+        "CS102"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "19",
+      "part": "A1",
+      "question": "مادة الـ Data Structures تتفتح بإيه؟",
+      "expected": [
+        "CS201"
+      ],
+      "response": "علشان تفتح مادة Data Structures [CS203]، لازم تكون مخلص:\n- Object Oriented Programming [CS201]",
+      "present": [
+        "CS201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "20",
+      "part": "A1",
+      "question": "CS205 محتاجه ايه قبلها؟",
+      "expected": [
+        "CS102"
+      ],
+      "response": "علشان تفتح مادة Algorithms [CS205]، لازم تكون مخلص:\n- Structured Programming [CS102]",
+      "present": [
+        "CS102"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "21",
+      "part": "A1",
+      "question": "ايه الـ prerequisites بتاعت Computer Vision؟",
+      "expected": [
+        "AI301"
+      ],
+      "response": "علشان تفتح مادة Computer Vision [AI304]، لازم تكون مخلص:\n- Machine Learning [AI301]",
+      "present": [
+        "AI301"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "22",
+      "part": "A1",
+      "question": "Ethical Hacking لازم قبلها ايه؟",
+      "expected": [
+        "CB308"
+      ],
+      "response": "علشان تفتح مادة Ethical Hacking [CB404]، لازم تكون مخلص:\n- Real-Time Auditing & Defense [CB308]",
+      "present": [
+        "CB308"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "23",
+      "part": "A1",
+      "question": "مادة الـ Advanced Cryptography بتتفتح بإيه؟",
+      "expected": [
+        "CB303"
+      ],
+      "response": "علشان تفتح مادة Cryptography [CB303]، لازم تكون مخلص:\n- Linear Algebra [MTH102]",
+      "present": [
+        "CB303"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "24",
+      "part": "A1",
+      "question": "CB407 Graduation Project 2 محتاج ايه؟",
+      "expected": [
+        "CB406"
+      ],
+      "response": "علشان تفتح مادة Graduation Project 2 [AI407]، لازم تكون مخلص:\n- Graduation Project 1 [AI404]",
+      "present": [],
+      "missing": [
+        "CB406"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "25",
+      "part": "A2",
+      "question": "After I finish AI301, what courses does it unlock?",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "[AI301] Machine Learning is a prerequisite for:\n- Natural Language Processing [AI302]\n- Computer Vision [AI304]\n- Pattern Recognition [AI305]\n- Intelligent Algorithms [AI401]\n- Deep Learning [AI403]\n- Graduation Project 1 [AI404]\n- Multi Agent Systems [AI405]\n- Computational Learning Theory [AI307]\n- Cognitive Modeling [AI408]\n- AI for Robotics [AI413]",
+      "present": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "26",
+      "part": "A2",
+      "question": "What future courses open after CS201?",
+      "expected": [
+        "CS203",
+        "CS204",
+        "SW201"
+      ],
+      "response": "[CS201] Object Oriented Programming is a prerequisite for:\n- Data Structures [CS203]\n- Operating Systems [CS204]\n- Software Engineering [SW201]\n- Computer Graphics [CS307]\n- Software Development for Mobile Devices [SW305]\n- Computer Networks [CB301]\n- Software Security [CB306]",
+      "present": [
+        "CS203",
+        "CS204",
+        "SW201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "27",
+      "part": "A2",
+      "question": "Which courses does Cryptography unlock?",
+      "expected": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "response": "[CB303] Cryptography is a prerequisite for:\n- Advanced Cryptography [CB403]\n- Blockchain & Cryptocurrencies [CB311]\n- Cryptanalysis [CB410]",
+      "present": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "28",
+      "part": "A2",
+      "question": "What does MTH101 open later?",
+      "expected": [
+        "MTH103",
+        "MTH104"
+      ],
+      "response": "[MTH101] Mathematics 1 is a prerequisite for:\n- Mathematics 2 [MTH103]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "MTH103",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "29",
+      "part": "A2",
+      "question": "What does Software Engineering unlock?",
+      "expected": [
+        "SW303",
+        "SW401"
+      ],
+      "response": "[SW201] Software Engineering is a prerequisite for:\n- User Interface Design [SW303]\n- Software Testing & Quality Assurance [SW401]",
+      "present": [
+        "SW303",
+        "SW401"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "30",
+      "part": "A2",
+      "question": "If I complete CB305, what does it unlock?",
+      "expected": [
+        "CB308",
+        "CB314",
+        "CB408"
+      ],
+      "response": "[CB305] Network Security is a prerequisite for:\n- Real-Time Auditing & Defense [CB308]\n- Threat Detection and Mitigation [CB314]\n- Firewalls and Web Application Firewall [CB408]\n- Computer Networks Defense [CB413]",
+      "present": [
+        "CB308",
+        "CB314",
+        "CB408"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "31",
+      "part": "A2",
+      "question": "What courses require ELC201?",
+      "expected": [
+        "CB309"
+      ],
+      "response": "[ELC201] Logic Design is a prerequisite for:\n- Hardware Security [CB309]",
+      "present": [
+        "CB309"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "32",
+      "part": "A2",
+      "question": "After Deep Learning, what can I take?",
+      "expected": [
+        "AI410"
+      ],
+      "response": "[AI403] Deep Learning is a prerequisite for:\n- Cognitive Natural Networks [AI410]",
+      "present": [
+        "AI410"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "33",
+      "part": "A2",
+      "question": "ما المقررات التي يفتحها مقرر CS101؟",
+      "expected": [
+        "CS102"
+      ],
+      "response": "معلومات مادة Introduction to Computer Science [CS101]:\n- الساعات المعتمدة: 3\n- المستوى: 1\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [],
+      "missing": [
+        "CS102"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "34",
+      "part": "A2",
+      "question": "ما الذي يفتحه مقرر هندسة البرمجيات؟",
+      "expected": [
+        "SW303",
+        "SW401"
+      ],
+      "response": "ملخص المواد:\n\nArtificial Intelligence:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 27 مواد\n- المستوى 4: 17 مواد\nCybersecurity:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 22 مواد\n- المستوى 4: 15 مواد",
+      "present": [],
+      "missing": [
+        "SW303",
+        "SW401"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "35",
+      "part": "A2",
+      "question": "لو خلصت AI301 هتفتحلي مواد ايه؟",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "لو خلصت Machine Learning [AI301]، المواد اللي هتتفتحلك هي:\n- Natural Language Processing [AI302]\n- Computer Vision [AI304]\n- Pattern Recognition [AI305]\n- Intelligent Algorithms [AI401]\n- Deep Learning [AI403]\n- Graduation Project 1 [AI404]\n- Multi Agent Systems [AI405]\n- Computational Learning Theory [AI307]\n- Cognitive Modeling [AI408]\n- AI for Robotics [AI413]",
+      "present": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "36",
+      "part": "A2",
+      "question": "CS201 بتفتحلي ايه بعد كده؟",
+      "expected": [
+        "CS203",
+        "CS204",
+        "SW201"
+      ],
+      "response": "لو خلصت Object Oriented Programming [CS201]، المواد اللي هتتفتحلك هي:\n- Data Structures [CS203]\n- Operating Systems [CS204]\n- Software Engineering [SW201]\n- Computer Graphics [CS307]\n- Software Development for Mobile Devices [SW305]\n- Computer Networks [CB301]\n- Software Security [CB306]",
+      "present": [
+        "CS203",
+        "CS204",
+        "SW201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "37",
+      "part": "A2",
+      "question": "Cryptography بتفتح مواد ايه؟",
+      "expected": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "response": "لو خلصت Cryptography [CB303]، المواد اللي هتتفتحلك هي:\n- Advanced Cryptography [CB403]\n- Blockchain & Cryptocurrencies [CB311]\n- Cryptanalysis [CB410]",
+      "present": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "38",
+      "part": "A2",
+      "question": "MTH101 بتفتحلي ايه؟",
+      "expected": [
+        "MTH103",
+        "MTH104"
+      ],
+      "response": "لو خلصت Mathematics 1 [MTH101]، المواد اللي هتتفتحلك هي:\n- Mathematics 2 [MTH103]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "MTH103",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "39",
+      "part": "A2",
+      "question": "AI302 بتفتح ايه بعد كده؟",
+      "expected": [
+        "AI303",
+        "AI308",
+        "AI411"
+      ],
+      "response": "لو خلصت Natural Language Processing [AI302]، المواد اللي هتتفتحلك هي:\n- Speech Recognition [AI303]\n- Language Modeling [AI308]\n- Language and Speech Technology [AI411]\n- Statistical Language Modeling [AI412]",
+      "present": [
+        "AI303",
+        "AI308",
+        "AI411"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "40",
+      "part": "A2",
+      "question": "لو خلصت CB305 هيفتحلي ايه؟",
+      "expected": [
+        "CB308",
+        "CB314",
+        "CB408"
+      ],
+      "response": "لو خلصت Network Security [CB305]، المواد اللي هتتفتحلك هي:\n- Real-Time Auditing & Defense [CB308]\n- Threat Detection and Mitigation [CB314]\n- Firewalls and Web Application Firewall [CB408]\n- Computer Networks Defense [CB413]",
+      "present": [
+        "CB308",
+        "CB314",
+        "CB408"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "41",
+      "part": "A2",
+      "question": "Software Engineering بتفتح ايه؟",
+      "expected": [
+        "SW303",
+        "SW401"
+      ],
+      "response": "لو خلصت Software Engineering [SW201]، المواد اللي هتتفتحلك هي:\n- User Interface Design [SW303]\n- Software Testing & Quality Assurance [SW401]",
+      "present": [
+        "SW303",
+        "SW401"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "42",
+      "part": "A2",
+      "question": "بعد Deep Learning اقدر اخد ايه؟",
+      "expected": [
+        "AI410"
+      ],
+      "response": "لو خلصت Deep Learning [AI403]، المواد اللي هتتفتحلك هي:\n- Cognitive Natural Networks [AI410]",
+      "present": [
+        "AI410"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "43",
+      "part": "A2",
+      "question": "مادة الـ Machine Learning بتفتح ايه؟",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "لو خلصت Machine Learning [AI301]، المواد اللي هتتفتحلك هي:\n- Natural Language Processing [AI302]\n- Computer Vision [AI304]\n- Pattern Recognition [AI305]\n- Intelligent Algorithms [AI401]\n- Deep Learning [AI403]\n- Graduation Project 1 [AI404]\n- Multi Agent Systems [AI405]\n- Computational Learning Theory [AI307]\n- Cognitive Modeling [AI408]\n- AI for Robotics [AI413]",
+      "present": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "44",
+      "part": "A2",
+      "question": "لو خلصت CB304، ايه الـ courses اللي بتتفتح؟",
+      "expected": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "response": "لو خلصت Introduction to Cyber-Security [CB304]، المواد اللي هتتفتحلك هي:\n- Network Security [CB305]\n- Software Security [CB306]\n- Introduction to Cyber Attacks [CB307]\n- Digital Forensics [CB402]\n- Graduation Project 1 [CB406]\n- Usable Security [CB310]\n- Reverse Engineering & Disassemblers [CB313]\n- Information Security [CB414]",
+      "present": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "45",
+      "part": "A2",
+      "question": "CS102 بتفتح ايه من courses؟",
+      "expected": [
+        "CS201",
+        "CS205",
+        "IS201"
+      ],
+      "response": "لو خلصت Structured Programming [CS102]، المواد اللي هتتفتحلك هي:\n- Object Oriented Programming [CS201]\n- Algorithms [CS205]\n- Database Systems [IS201]",
+      "present": [
+        "CS201",
+        "CS205",
+        "IS201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "46",
+      "part": "A2",
+      "question": "ELC201 بتفتح اي مواد؟",
+      "expected": [
+        "CB309"
+      ],
+      "response": "لو خلصت Logic Design [ELC201]، المواد اللي هتتفتحلك هي:\n- Hardware Security [CB309]",
+      "present": [
+        "CB309"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "47",
+      "part": "A2",
+      "question": "مادة الـ Math 1 بتفتح إيه؟",
+      "expected": [
+        "MTH103",
+        "MTH104"
+      ],
+      "response": "لو خلصت Mathematics 1 [MTH101]، المواد اللي هتتفتحلك هي:\n- Mathematics 2 [MTH103]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "MTH103",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "48",
+      "part": "A2",
+      "question": "لو بسنت خلصت CB303 هيفتحلها ايه؟",
+      "expected": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "response": "لو خلصت Cryptography [CB303]، المواد اللي هتتفتحلك هي:\n- Advanced Cryptography [CB403]\n- Blockchain & Cryptocurrencies [CB311]\n- Cryptanalysis [CB410]",
+      "present": [
+        "CB403",
+        "CB311",
+        "CB410"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "49",
+      "part": "A3",
+      "question": "If I don't take Machine Learning, what courses will be blocked?",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "[AI301] Machine Learning is a prerequisite for:\n- Natural Language Processing [AI302]\n- Computer Vision [AI304]\n- Pattern Recognition [AI305]\n- Intelligent Algorithms [AI401]\n- Deep Learning [AI403]\n- Graduation Project 1 [AI404]\n- Multi Agent Systems [AI405]\n- Computational Learning Theory [AI307]\n- Cognitive Modeling [AI408]\n- AI for Robotics [AI413]",
+      "present": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "50",
+      "part": "A3",
+      "question": "If I don't complete CB304, what stays locked?",
+      "expected": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "response": "[CB304] Introduction to Cyber-Security is a prerequisite for:\n- Network Security [CB305]\n- Software Security [CB306]\n- Introduction to Cyber Attacks [CB307]\n- Digital Forensics [CB402]\n- Graduation Project 1 [CB406]\n- Usable Security [CB310]\n- Reverse Engineering & Disassemblers [CB313]\n- Information Security [CB414]",
+      "present": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "51",
+      "part": "A3",
+      "question": "لو مخدتش Machine Learning ايه المواد اللي هتقفل؟",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "لو خلصت Machine Learning [AI301]، المواد اللي هتتفتحلك هي:\n- Natural Language Processing [AI302]\n- Computer Vision [AI304]\n- Pattern Recognition [AI305]\n- Intelligent Algorithms [AI401]\n- Deep Learning [AI403]\n- Graduation Project 1 [AI404]\n- Multi Agent Systems [AI405]\n- Computational Learning Theory [AI307]\n- Cognitive Modeling [AI408]\n- AI for Robotics [AI413]",
+      "present": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "52",
+      "part": "A3",
+      "question": "لو مسجلتش CB304 مش هتفتحلي ايه؟",
+      "expected": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "response": "لو خلصت Introduction to Cyber-Security [CB304]، المواد اللي هتتفتحلك هي:\n- Network Security [CB305]\n- Software Security [CB306]\n- Introduction to Cyber Attacks [CB307]\n- Digital Forensics [CB402]\n- Graduation Project 1 [CB406]\n- Usable Security [CB310]\n- Reverse Engineering & Disassemblers [CB313]\n- Information Security [CB414]",
+      "present": [
+        "CB305",
+        "CB306",
+        "CB307"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "53",
+      "part": "A3",
+      "question": "لو مخدتش CS102 هيتقفل عليا ايه؟",
+      "expected": [
+        "CS201",
+        "CS205",
+        "IS201"
+      ],
+      "response": "لو خلصت Structured Programming [CS102]، المواد اللي هتتفتحلك هي:\n- Object Oriented Programming [CS201]\n- Algorithms [CS205]\n- Database Systems [IS201]",
+      "present": [
+        "CS201",
+        "CS205",
+        "IS201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "54",
+      "part": "A3",
+      "question": "لو مخدتش مادة الـ Math 1 دي بتقفل ايه؟",
+      "expected": [
+        "MTH103",
+        "MTH104"
+      ],
+      "response": "لو خلصت Mathematics 1 [MTH101]، المواد اللي هتتفتحلك هي:\n- Mathematics 2 [MTH103]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "MTH103",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "55",
+      "part": "A4",
+      "question": "What courses should I take in Level 1?",
+      "expected": [
+        "CS101",
+        "CS102",
+        "MTH101"
+      ],
+      "response": "Recommended courses for General - Level 1:\n\n- Discrete Structure [CS103] - 3 credits\n- Electronics [ELC101] - 3 credits\n- English Language 1 [HM001] - 2 credits\n- English Language 2 [HM002] - 2 credits (Prerequisites: English Language 1)\n- Fundamentals of Information Systems [IS101] - 3 credits\n- Introduction to Computer Science [CS101] - 3 credits\n- Linear Algebra [MTH102] - 3 credits\n- Mathematics 1 [MTH101] - 3 credits\n- Mathematics 2 [MTH103] - 3 credits (Prerequisites: Mathematics 1)\n- Physics [PH101] - 3 credits\n- Probability and Statistics 1 [MTH104] - 3 credits (Prerequisites: Mathematics 1)\n- Structured Programming [CS102] - 3 credits (Prerequisites: Introduction to Computer Science)",
+      "present": [
+        "CS101",
+        "CS102",
+        "MTH101"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "56",
+      "part": "A4",
+      "question": "Show me the Level 3 Cybersecurity study path.",
+      "expected": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "response": "Course Info: Russian Language 3 [HM010]\n- Credits: 2\n- Level: 3\n- Type: Elective\n- Description: Course in the study plan.",
+      "present": [],
+      "missing": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "57",
+      "part": "A4",
+      "question": "What courses are in the fourth year for AI?",
+      "expected": [
+        "AI401",
+        "AI403",
+        "AI404"
+      ],
+      "response": "Recommended courses for General - Level 4:\n\n- AI Applications [AI406] - 3 credits (Prerequisites: Computer Vision, Intelligent Algorithms)\n- AI for Robotics [AI413] - 3 credits (Prerequisites: Machine Learning)\n- Advanced Cryptography [CB403] - 3 credits (Prerequisites: Cryptography)\n- Advanced Knowledge Representation and Reasoning [CS403] - 3 credits (Prerequisites: Introduction to Artificial Intelligence)\n- Cognitive Engineering [AI409] - 3 credits\n- Cognitive Modeling [AI408] - 3 credits (Prerequisites: Machine Learning)\n- Cognitive Natural Networks [AI410] - 3 credits (Prerequisites: Deep Learning)\n- Computational Cognitive Systems [AI402] - 3 credits\n- Computer Networks Defense [CB413] - 3 credits (Prerequisites: Network Security)\n- Cryptanalysis [CB410] - 3 credits (Prerequisites: Cryptography)\n- Cyber Attack Countermeasures [CB401] - 3 credits (Prerequisites: Introduction to Cyber Attacks)\n- Cybercrime Investigator [CB409] - 3 credits\n- Deep Learning [AI403] - 3 credits (Prerequisites: Machine Learning)\n- Digital Forensics [CB402] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Ethical Hacking [CB404] - 3 credits (Prerequisites: Real-Time Auditing & Defense)\n- Firewalls and Web Application Firewall [CB408] - 3 credits (Prerequisites: Network Security)\n- Graduation Project 1 [AI404] - 3 credits (Prerequisites: Machine Learning)\n- Graduation Project 1 [CB406] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Graduation Project 2 [AI407] - 3 credits (Prerequisites: Graduation Project 1)\n- Graduation Project 2 [CB407] - 3 credits (Prerequisites: Graduation Project 1)\n- Information Security [CB414] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Intelligent Algorithms [AI401] - 3 credits (Prerequisites: Algorithms, Machine Learning)\n- Language and Speech Technology [AI411] - 3 credits (Prerequisites: Natural Language Processing)\n- Multi Agent Systems [AI405] - 3 credits (Prerequisites: Machine Learning)\n- Penetration Testing & Vulnerabilities Discovery [CB405] - 3 credits (Prerequisites: Introduction to Cyber Attacks)\n- Selected Topic in AI 1 [AI415] - 3 credits\n- Selected Topic in AI 2 [AI416] - 3 credits\n- Selected Topic in Networks 1 [CB411] - 3 credits\n- Selected Topic in Networks 2 [CB412] - 3 credits\n- Software Testing & Quality Assurance [SW401] - 3 credits (Prerequisites: Software Engineering)\n- Statistical Language Modeling [AI412] - 3 credits (Prerequisites: Natural Language Processing)\n- Theory of Computation [CS402] - 3 credits",
+      "present": [
+        "AI401",
+        "AI403",
+        "AI404"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "58",
+      "part": "A4",
+      "question": "ما هي المقررات المقترحة في المستوى الثالث لبرنامج الأمن السيبراني؟",
+      "expected": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "response": "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+      "present": [],
+      "missing": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "59",
+      "part": "A4",
+      "question": "ايه المواد في الفرقه الاولي؟",
+      "expected": [
+        "CS101",
+        "CS102",
+        "MTH101"
+      ],
+      "response": "Recommended courses for General - Level 1:\n\n- Discrete Structure [CS103] - 3 credits\n- Electronics [ELC101] - 3 credits\n- English Language 1 [HM001] - 2 credits\n- English Language 2 [HM002] - 2 credits (Prerequisites: English Language 1)\n- Fundamentals of Information Systems [IS101] - 3 credits\n- Introduction to Computer Science [CS101] - 3 credits\n- Linear Algebra [MTH102] - 3 credits\n- Mathematics 1 [MTH101] - 3 credits\n- Mathematics 2 [MTH103] - 3 credits (Prerequisites: Mathematics 1)\n- Physics [PH101] - 3 credits\n- Probability and Statistics 1 [MTH104] - 3 credits (Prerequisites: Mathematics 1)\n- Structured Programming [CS102] - 3 credits (Prerequisites: Introduction to Computer Science)",
+      "present": [
+        "CS101",
+        "CS102",
+        "MTH101"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "60",
+      "part": "A4",
+      "question": "عاوز خطة الدراسة للفرقة الأولى عامةً",
+      "expected": [
+        "CS101",
+        "CS102"
+      ],
+      "response": "Recommended courses for General - Level 1:\n\n- Discrete Structure [CS103] - 3 credits\n- Electronics [ELC101] - 3 credits\n- English Language 1 [HM001] - 2 credits\n- English Language 2 [HM002] - 2 credits (Prerequisites: English Language 1)\n- Fundamentals of Information Systems [IS101] - 3 credits\n- Introduction to Computer Science [CS101] - 3 credits\n- Linear Algebra [MTH102] - 3 credits\n- Mathematics 1 [MTH101] - 3 credits\n- Mathematics 2 [MTH103] - 3 credits (Prerequisites: Mathematics 1)\n- Physics [PH101] - 3 credits\n- Probability and Statistics 1 [MTH104] - 3 credits (Prerequisites: Mathematics 1)\n- Structured Programming [CS102] - 3 credits (Prerequisites: Introduction to Computer Science)",
+      "present": [
+        "CS101",
+        "CS102"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "61",
+      "part": "A4",
+      "question": "ايه الـ study plan بتاعت Level 3 في الـ Cybersecurity؟",
+      "expected": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "response": "Recommended courses for General - Level 3:\n\n- Architecture of Intelligence [AI312] - 3 credits\n- Artificial Intelligence in Games [AI314] - 3 credits\n- Blockchain & Cryptocurrencies [CB311] - 3 credits (Prerequisites: Cryptography)\n- Cloud Computing [DS307] - 3 credits\n- Computational Learning Theory [AI307] - 3 credits (Prerequisites: Machine Learning)\n- Computational Perception [AI306] - 3 credits (Prerequisites: Computer Vision)\n- Computer Architecture [CB302] - 3 credits\n- Computer Architecture and Organization [CS302] - 3 credits (Prerequisites: Operating Systems)\n- Computer Graphics [CS307] - 3 credits (Prerequisites: Object Oriented Programming)\n- Computer Networks [CB301] - 3 credits (Prerequisites: Object Oriented Programming)\n- Computer Vision [AI304] - 3 credits (Prerequisites: Machine Learning)\n- Cryptography [CB303] - 3 credits (Prerequisites: Linear Algebra)\n- Cyber Security for Internet of Things [CB312] - 3 credits (Prerequisites: Computer Networks)\n- Data Mining & Big Data Analysis [DS301] - 3 credits\n- Embedded Systems [CS309] - 3 credits\n- Expert Systems [AI311] - 3 credits (Prerequisites: Introduction to Artificial Intelligence)\n- Fundamental of Cognitive Interaction with Robots [ROB302] - 3 credits\n- Handwriting Recognition [AI310] - 3 credits (Prerequisites: Computer Vision)\n- Hardware Security [CB309] - 3 credits (Prerequisites: Logic Design)\n- Image Processing [CS303] - 3 credits (Prerequisites: Signal and System)\n- Internet of Things [IS306] - 3 credits\n- Introduction to Cyber Attacks [CB307] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Introduction to Cyber-Security [CB304] - 3 credits (Prerequisites: Computer Networks)\n- Language Modeling [AI308] - 3 credits (Prerequisites: Natural Language Processing)\n- Machine Learning [AI301] - 3 credits (Prerequisites: Introduction to Artificial Intelligence, Probability and Statistics 1)\n- Natural Language Processing [AI302] - 3 credits (Prerequisites: Machine Learning)\n- Network Security [CB305] - 3 credits (Prerequisites: Computer Networks, Introduction to Cyber-Security)\n- Operations Research [CS301] - 3 credits\n- Operations Research [STA301] - 3 credits\n- Pattern Recognition [AI305] - 3 credits (Prerequisites: Machine Learning)\n- Real-Time Auditing & Defense [CB308] - 3 credits (Prerequisites: Network Security)\n- Reverse Engineering & Disassemblers [CB313] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Russian Language 3 [HM010] - 2 credits (Prerequisites: Russian Language 2)\n- Scientific Research Methodology [HM008] - 2 credits\n- Scientific Research Methodology 2 [HM009] - 2 credits\n- Scientific Thinking [HM006] - 2 credits\n- Software Development for Mobile Devices [SW305] - 3 credits (Prerequisites: Object Oriented Programming)\n- Software Security [CB306] - 3 credits (Prerequisites: Object Oriented Programming, Introduction to Cyber-Security)\n- Speech Recognition [AI303] - 3 credits (Prerequisites: Natural Language Processing)\n- Technical Writing [HM007] - 1 credits\n- Threat Detection and Mitigation [CB314] - 3 credits (Prerequisites: Network Security)\n- Usable Security [CB310] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- User Interface Design [SW303] - 3 credits (Prerequisites: Software Engineering)\n- User Models [AI309] - 3 credits",
+      "present": [
+        "CB301",
+        "CB303",
+        "CB304"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "62",
+      "part": "A4",
+      "question": "عايز اعرف مواد السنه الرابعة في AI",
+      "expected": [
+        "AI401",
+        "AI403",
+        "AI404"
+      ],
+      "response": "Recommended courses for General - Level 4:\n\n- AI Applications [AI406] - 3 credits (Prerequisites: Computer Vision, Intelligent Algorithms)\n- AI for Robotics [AI413] - 3 credits (Prerequisites: Machine Learning)\n- Advanced Cryptography [CB403] - 3 credits (Prerequisites: Cryptography)\n- Advanced Knowledge Representation and Reasoning [CS403] - 3 credits (Prerequisites: Introduction to Artificial Intelligence)\n- Cognitive Engineering [AI409] - 3 credits\n- Cognitive Modeling [AI408] - 3 credits (Prerequisites: Machine Learning)\n- Cognitive Natural Networks [AI410] - 3 credits (Prerequisites: Deep Learning)\n- Computational Cognitive Systems [AI402] - 3 credits\n- Computer Networks Defense [CB413] - 3 credits (Prerequisites: Network Security)\n- Cryptanalysis [CB410] - 3 credits (Prerequisites: Cryptography)\n- Cyber Attack Countermeasures [CB401] - 3 credits (Prerequisites: Introduction to Cyber Attacks)\n- Cybercrime Investigator [CB409] - 3 credits\n- Deep Learning [AI403] - 3 credits (Prerequisites: Machine Learning)\n- Digital Forensics [CB402] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Ethical Hacking [CB404] - 3 credits (Prerequisites: Real-Time Auditing & Defense)\n- Firewalls and Web Application Firewall [CB408] - 3 credits (Prerequisites: Network Security)\n- Graduation Project 1 [AI404] - 3 credits (Prerequisites: Machine Learning)\n- Graduation Project 1 [CB406] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Graduation Project 2 [AI407] - 3 credits (Prerequisites: Graduation Project 1)\n- Graduation Project 2 [CB407] - 3 credits (Prerequisites: Graduation Project 1)\n- Information Security [CB414] - 3 credits (Prerequisites: Introduction to Cyber-Security)\n- Intelligent Algorithms [AI401] - 3 credits (Prerequisites: Algorithms, Machine Learning)\n- Language and Speech Technology [AI411] - 3 credits (Prerequisites: Natural Language Processing)\n- Multi Agent Systems [AI405] - 3 credits (Prerequisites: Machine Learning)\n- Penetration Testing & Vulnerabilities Discovery [CB405] - 3 credits (Prerequisites: Introduction to Cyber Attacks)\n- Selected Topic in AI 1 [AI415] - 3 credits\n- Selected Topic in AI 2 [AI416] - 3 credits\n- Selected Topic in Networks 1 [CB411] - 3 credits\n- Selected Topic in Networks 2 [CB412] - 3 credits\n- Software Testing & Quality Assurance [SW401] - 3 credits (Prerequisites: Software Engineering)\n- Statistical Language Modeling [AI412] - 3 credits (Prerequisites: Natural Language Processing)\n- Theory of Computation [CS402] - 3 credits",
+      "present": [
+        "AI401",
+        "AI403",
+        "AI404"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "63",
+      "part": "A5",
+      "question": "Give me information about CS201.",
+      "expected": [
+        "Object Oriented Programming",
+        "credit hours|ساعات"
+      ],
+      "response": "Course Info: Object Oriented Programming [CS201]\n- Credits: 3\n- Level: 2\n- Type: Core\n- Description: Course in the study plan.",
+      "present": [
+        "Object Oriented Programming"
+      ],
+      "missing": [
+        "credit hours|ساعات"
+      ],
+      "verdict": "PARTIAL",
+      "error": ""
+    },
+    {
+      "index": "64",
+      "part": "A5",
+      "question": "What level is Network Security offered at?",
+      "expected": [
+        "CB305",
+        "Level 3|المستوى 3"
+      ],
+      "response": "Course Info: Network Security [CB305]\n- Credits: 3\n- Level: 3\n- Type: Core\n- Description: Course in the study plan.",
+      "present": [
+        "CB305"
+      ],
+      "missing": [
+        "Level 3|المستوى 3"
+      ],
+      "verdict": "PARTIAL",
+      "error": ""
+    },
+    {
+      "index": "65",
+      "part": "A5",
+      "question": "معلومات عن ماده CS201 ايه؟",
+      "expected": [
+        "Object Oriented Programming"
+      ],
+      "response": "معلومات مادة Object Oriented Programming [CS201]:\n- الساعات المعتمدة: 3\n- المستوى: 2\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [
+        "Object Oriented Programming"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "66",
+      "part": "A5",
+      "question": "كام ساعة معتمدة في مادة AI301?",
+      "expected": [
+        "3"
+      ],
+      "response": "من اللائحة المتاحة عندي محليًا:\n- صفحة 34: عدد ساعات التسجيل في الفصول الدراسية المختلفة: الحد الأدنى للتسجيل في الفصول النظامية خريف وربيع هو 9 ساعات معتمدة، ويجوز التجاوز عن الحد الأدنى إذا كانت الساعات المتبقية للتخرج أقل من ذلك. الحد الأقصى للساعات المسجلة: 18 ساعة للطلاب المستجدين في الفصل الدراسي الأول، و21 ساعة للطلاب الحاصلين على CGPA أعلى من أو يساوي 3...\n- صفحة 33: شروط التخرج: تمنح الدرجة العلمية متى استوفى الطالب متطلبات الحصول عليها بحسب لائحة الكلية. يجب أن يجتاز الطالب بنجاح عدد الساعات المعتمدة المنصوص عليها في اللائحة بمعدل تراكمي مجمع CGPA لا يقل عن 2، وأن يجتاز جميع المقررات بدون ساعات معتمدة المنصوص عليها بلائحة الكلية، وأن يجتاز ما تنص عليه الجامعة كمستلزمات للتخرج. ال...",
+      "present": [
+        "3"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "67",
+      "part": "A5",
+      "question": "كلمني عن مادة الـ ML",
+      "expected": [
+        "Machine Learning",
+        "AI301"
+      ],
+      "response": "معلومات مادة Machine Learning [AI301]:\n- الساعات المعتمدة: 3\n- المستوى: 3\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [
+        "Machine Learning",
+        "AI301"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "68",
+      "part": "A5",
+      "question": "عاوز اعرف معلومات عن مادة \"رياضه 2\"",
+      "expected": [
+        "Mathematics 2",
+        "MTH103"
+      ],
+      "response": "معلومات مادة Mathematics 2 [MTH103]:\n- الساعات المعتمدة: 3\n- المستوى: 1\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [
+        "Mathematics 2",
+        "MTH103"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "69",
+      "part": "A5",
+      "question": "معلومات عن مادة الـ OOP",
+      "expected": [
+        "CS201",
+        "Object Oriented Programming"
+      ],
+      "response": "معلومات مادة Object Oriented Programming [CS201]:\n- الساعات المعتمدة: 3\n- المستوى: 2\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [
+        "CS201",
+        "Object Oriented Programming"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "70",
+      "part": "A6",
+      "question": "List the Basic Computer Science courses.",
+      "expected": [
+        "CS101",
+        "CS102",
+        "MTH101"
+      ],
+      "response": "Category: Basic Computer Science\n- Type: Compulsory\n- Required Hours: 39\n- Available Courses: 13\n- [AI201] Introduction to Artificial Intelligence (3 CH)\n- [CS101] Introduction to Computer Science (3 CH)\n- [CS102] Structured Programming (3 CH)\n- [CS103] Discrete Structure (3 CH)\n- [CS201] Object Oriented Programming (3 CH)\n- [CS202] Signal and System (3 CH)\n- [CS203] Data Structures (3 CH)\n- [CS204] Operating Systems (3 CH)\n- [CS205] Algorithms (3 CH)\n- [IS101] Fundamentals of Information Systems (3 CH)\n- [IS201] Database Systems (3 CH)\n- [IS202] System Analysis and Design (3 CH)\n- [SW201] Software Engineering (3 CH)",
+      "present": [
+        "CS101",
+        "CS102"
+      ],
+      "missing": [
+        "MTH101"
+      ],
+      "verdict": "PARTIAL",
+      "error": ""
+    },
+    {
+      "index": "71",
+      "part": "A6",
+      "question": "What are the AI Major Electives?",
+      "expected": [
+        "AI",
+        "elective|اختيار"
+      ],
+      "response": "Term: Spring-2026\nAvailable Electives (2):\n\n- Cloud Computing\n- Big Data",
+      "present": [
+        "AI",
+        "elective|اختيار"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "72",
+      "part": "A6",
+      "question": "How many credit hours for Basic Computer Science?",
+      "expected": [
+        "39"
+      ],
+      "response": "- The required credit hours for Basic Computer Science are 39 credit hours.",
+      "present": [
+        "39"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "73",
+      "part": "A6",
+      "question": "How many hours for University Requirements (Compulsory)?",
+      "expected": [
+        "10"
+      ],
+      "response": "- The required credit hours for University Requirements (Compulsory) are 10 credit hours.",
+      "present": [
+        "10"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "74",
+      "part": "A6",
+      "question": "How many credit hours for Major Requirements?",
+      "expected": [
+        "48"
+      ],
+      "response": "- The required credit hours for Major Requirements are 48 credit hours.",
+      "present": [
+        "48"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "75",
+      "part": "A6",
+      "question": "What are the Math Electives?",
+      "expected": [
+        "MTH",
+        "elective|اختيار"
+      ],
+      "response": "Category: Math & Basic Science (Elective)\n- Type: Elective\n- Required Hours: 3\n- Available Courses: 3\n- [MTH201] Mathematics 3 (3 CH)\n- [MTH202] Probability and Statistics 2 (3 CH)\n- [MTH203] Numerical Analysis (3 CH)",
+      "present": [
+        "MTH",
+        "elective|اختيار"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "76",
+      "part": "A6",
+      "question": "ما هي متطلبات الجامعة الإجبارية؟",
+      "expected": [
+        "HM001",
+        "HM002"
+      ],
+      "response": "Category: University Requirements (Compulsory)\n- Type: Compulsory\n- Required Hours: 10\n- Available Courses: 5\n- [HM001] English Language 1 (2 CH)\n- [HM002] English Language 2 (2 CH)\n- [HM003] Human Rights & Anticorruption (2 CH)\n- [HM004] Russian Language 1 (2 CH)\n- [HM005] Russian Language 2 (2 CH)",
+      "present": [
+        "HM001",
+        "HM002"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "77",
+      "part": "A6",
+      "question": "كام ساعة معتمدة في علوم الحاسب الاساسيه؟",
+      "expected": [
+        "39"
+      ],
+      "response": "- عدد الساعات المعتمدة المطلوبة في Basic Computer Science هو 39 ساعة معتمدة.",
+      "present": [
+        "39"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "78",
+      "part": "A6",
+      "question": "كام ساعة في متطلبات الجامعه الاجباريه؟",
+      "expected": [
+        "10"
+      ],
+      "response": "- عدد الساعات المعتمدة المطلوبة في University Requirements (Compulsory) هو 10 ساعة معتمدة.",
+      "present": [
+        "10"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "79",
+      "part": "A6",
+      "question": "مواد AI الاختياريه ايه؟",
+      "expected": [
+        "AI",
+        "اختيار|elective"
+      ],
+      "response": "Category: AI Major Electives\n- Type: Elective\n- Required Hours: 21\n- Available Courses: 23\n- [AI307] Computational Learning Theory (3 CH)\n- [AI308] Language Modeling (3 CH)\n- [AI309] User Models (3 CH)\n- [AI310] Handwriting Recognition (3 CH)\n- [AI311] Expert Systems (3 CH)\n- [AI312] Architecture of Intelligence (3 CH)\n- [AI314] Artificial Intelligence in Games (3 CH)\n- [AI408] Cognitive Modeling (3 CH)\n- [AI409] Cognitive Engineering (3 CH)\n- [AI410] Cognitive Natural Networks (3 CH)\n- [AI411] Language and Speech Technology (3 CH)\n- [AI412] Statistical Language Modeling (3 CH)\n- [AI413] AI for Robotics (3 CH)\n- [AI415] Selected Topic in AI 1 (3 CH)\n- [AI416] Selected Topic in AI 2 (3 CH)\n- [CS301] Operations Research (3 CH)\n- [CS303] Image Processing (3 CH)\n- [CS307] Computer Graphics (3 CH)\n- [CS309] Embedded Systems (3 CH)\n- [CS403] Advanced Knowledge Representation and Reasoning (3 CH)\n- [ROB302] Fundamental of Cognitive Interaction with Robots (3 CH)\n- [SW305] Software Development for Mobile Devices (3 CH)\n- [SW401] Software Testing & Quality Assurance (3 CH)",
+      "present": [
+        "AI",
+        "اختيار|elective"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "80",
+      "part": "A6",
+      "question": "ايه هي الـ university requirements الاجبارية؟",
+      "expected": [
+        "HM001",
+        "HM002"
+      ],
+      "response": "مش لاقي المعلومة دي في اللائحة.",
+      "present": [],
+      "missing": [
+        "HM001",
+        "HM002"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "81",
+      "part": "A6",
+      "question": "قوللي مواد الـ Math Electives",
+      "expected": [
+        "MTH",
+        "اختيار|elective"
+      ],
+      "response": "Category: Math & Basic Science (Elective)\n- Type: Elective\n- Required Hours: 3\n- Available Courses: 3\n- [MTH201] Mathematics 3 (3 CH)\n- [MTH202] Probability and Statistics 2 (3 CH)\n- [MTH203] Numerical Analysis (3 CH)",
+      "present": [
+        "MTH",
+        "اختيار|elective"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "A7.1.1",
+      "part": "A7",
+      "question": "What are the prerequisites for Machine Learning?",
+      "expected": [
+        "AI201",
+        "MTH104"
+      ],
+      "response": "Prerequisites for [AI301] Machine Learning:\n- Core Requirements: Introduction to Artificial Intelligence [AI201], Probability and Statistics 1 [MTH104]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "AI201",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "A7.1.2",
+      "part": "A7",
+      "question": "What does it unlock?",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "present": [],
+      "missing": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "A7.2.1",
+      "part": "A7",
+      "question": "ايه متطلبات AI301؟",
+      "expected": [
+        "AI201",
+        "MTH104"
+      ],
+      "response": "علشان تفتح مادة Machine Learning [AI301]، لازم تكون مخلص:\n- Introduction to Artificial Intelligence [AI201]\n- Probability and Statistics 1 [MTH104]",
+      "present": [
+        "AI201",
+        "MTH104"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "A7.2.2",
+      "part": "A7",
+      "question": "طيب بعدها بتفتح ايه؟",
+      "expected": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "response": "تقصد أنهي مادة؟ اكتب اسم المادة أو كودها زي SW201 أو CS201.",
+      "present": [],
+      "missing": [
+        "AI302",
+        "AI304",
+        "AI403"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "A7.3.1",
+      "part": "A7",
+      "question": "ايه هي مادة Data Structures؟",
+      "expected": [
+        "CS203"
+      ],
+      "response": "معلومات مادة Data Structures [CS203]:\n- الساعات المعتمدة: 3\n- المستوى: 2\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [
+        "CS203"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "A7.3.2",
+      "part": "A7",
+      "question": "طيب دي بتفتح ايه؟",
+      "expected": [
+        "CS204"
+      ],
+      "response": "تقصد أنهي مادة؟ اكتب اسم المادة أو كودها زي SW201 أو CS201.",
+      "present": [],
+      "missing": [
+        "CS204"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "A7.4.1",
+      "part": "A7",
+      "question": "ايه المطلوب عشان اسجل Math 2؟",
+      "expected": [
+        "MTH101"
+      ],
+      "response": "علشان تفتح مادة Mathematics 2 [MTH103]، لازم تكون مخلص:\n- Mathematics 1 [MTH101]",
+      "present": [
+        "MTH101"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "A7.4.2",
+      "part": "A7",
+      "question": "اه ده اللي محتاج اعرفه",
+      "expected": [
+        "MTH101"
+      ],
+      "response": "مش لاقي السؤال ده في بيانات المواد أو مستندات اللوايح عندي.",
+      "present": [],
+      "missing": [
+        "MTH101"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "A7.5.1",
+      "part": "A7",
+      "question": "ايه متطلبات CS101؟",
+      "expected": [
+        "no prerequisites|مفيش|لا يوجد"
+      ],
+      "response": "مادة Introduction to Computer Science [CS101] ملهاش متطلبات سابقة.",
+      "present": [],
+      "missing": [
+        "no prerequisites|مفيش|لا يوجد"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "A7.5.2",
+      "part": "A7",
+      "question": "و مادة CS102؟",
+      "expected": [
+        "CS101"
+      ],
+      "response": "معلومات مادة Structured Programming [CS102]:\n- الساعات المعتمدة: 3\n- المستوى: 1\n- النوع: أساسية\n- الوصف: مادة ضمن الخطة الدراسية.",
+      "present": [],
+      "missing": [
+        "CS101"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "82",
+      "part": "B1",
+      "question": "How many credit hours does a student need to graduate?",
+      "expected": [
+        "144"
+      ],
+      "response": "- Students must complete 144 credit hours to graduate.",
+      "present": [
+        "144"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "83",
+      "part": "B1",
+      "question": "How long is a regular semester?",
+      "expected": [
+        "17",
+        "week|اسبوع"
+      ],
+      "response": "- A regular semester lasts 17 weeks including the exam period.",
+      "present": [
+        "17",
+        "week|اسبوع"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "84",
+      "part": "B1",
+      "question": "Is the summer semester mandatory?",
+      "expected": [
+        "optional|اختياري"
+      ],
+      "response": "- The summer semester is optional, not mandatory.",
+      "present": [
+        "optional|اختياري"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "85",
+      "part": "B1",
+      "question": "Max credit hours in the summer semester?",
+      "expected": [
+        "9"
+      ],
+      "response": "- The maximum load in the summer semester is 9 credit hours.",
+      "present": [
+        "9"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "86",
+      "part": "B1",
+      "question": "كم ساعة معتمدة يجب اجتيازها للتخرج؟",
+      "expected": [
+        "144"
+      ],
+      "response": "- شروط التخرج: لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج.",
+      "present": [
+        "144"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "87",
+      "part": "B1",
+      "question": "ما مدة الفصل الدراسي الصيفي؟",
+      "expected": [
+        "8",
+        "اسابيع|weeks"
+      ],
+      "response": "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات.",
+      "present": [
+        "8",
+        "اسابيع|weeks"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "88",
+      "part": "B1",
+      "question": "كام ساعة معتمدة لازم الطالب يجتازها عشان يتخرج؟",
+      "expected": [
+        "144"
+      ],
+      "response": "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج.",
+      "present": [
+        "144"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "89",
+      "part": "B1",
+      "question": "الدراسة في الكلية ماشية بأي نظام؟",
+      "expected": [
+        "الساعات المعتمده|credit hour"
+      ],
+      "response": "- الدراسة في الكلية بنظام الساعات المعتمدة.",
+      "present": [
+        "الساعات المعتمده|credit hour"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "90",
+      "part": "B1",
+      "question": "مدة الفصل الدراسي النظامي كام أسبوع؟",
+      "expected": [
+        "17"
+      ],
+      "response": "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات.",
+      "present": [
+        "17"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "91",
+      "part": "B1",
+      "question": "هل الفصل الصيفي إجباري؟",
+      "expected": [
+        "اختياري|optional"
+      ],
+      "response": "- الفصل الصيفي اختياري للطالب، وليس إجباريًا.",
+      "present": [
+        "اختياري|optional"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "92",
+      "part": "B1",
+      "question": "كام الـ credit hours اللازمة للتخرج؟",
+      "expected": [
+        "144"
+      ],
+      "response": "- عدد الـ credit hours اللازمة للتخرج هو 144 ساعة معتمدة كحد أدنى.",
+      "present": [
+        "144"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "93",
+      "part": "B1",
+      "question": "الـ summer semester إجباري ولا اختياري؟",
+      "expected": [
+        "اختياري|optional"
+      ],
+      "response": "- The summer semester is optional, not mandatory.",
+      "present": [
+        "اختياري|optional"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "94",
+      "part": "B2",
+      "question": "Until when can a student register for courses?",
+      "expected": [
+        "week 2|second week|الاسبوع الثاني"
+      ],
+      "response": "- Students can register for courses until the end of week 2.",
+      "present": [
+        "week 2|second week|الاسبوع الثاني"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "95",
+      "part": "B2",
+      "question": "Until when can a student withdraw from a course?",
+      "expected": [
+        "week 9|ninth week|الاسبوع التاسع"
+      ],
+      "response": "- A student can withdraw from a course until the end of week 9.",
+      "present": [
+        "week 9|ninth week|الاسبوع التاسع"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "96",
+      "part": "B2",
+      "question": "What grade does a student get for timely withdrawal?",
+      "expected": [
+        "W"
+      ],
+      "response": "For a timely withdrawal, a student receives a grade of \"W\" (withdrawal).",
+      "present": [
+        "W"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "97",
+      "part": "B2",
+      "question": "حتى متى يمكن للطالب الانسحاب من مقرر؟",
+      "expected": [
+        "الاسبوع التاسع|نهايه الاسبوع التاسع"
+      ],
+      "response": "ملخص المواد:\n\nArtificial Intelligence:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 27 مواد\n- المستوى 4: 17 مواد\nCybersecurity:\n- المستوى 1: 12 مواد\n- المستوى 2: 16 مواد\n- المستوى 3: 22 مواد\n- المستوى 4: 15 مواد",
+      "present": [],
+      "missing": [
+        "الاسبوع التاسع|نهايه الاسبوع التاسع"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "98",
+      "part": "B2",
+      "question": "التسجيل في المقررات يستمر لحد إمتى؟",
+      "expected": [
+        "الاسبوع الثاني|نهايه الاسبوع الثاني"
+      ],
+      "response": "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني.",
+      "present": [
+        "الاسبوع الثاني|نهايه الاسبوع الثاني"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "99",
+      "part": "B2",
+      "question": "الطالب يقدر ينسحب من مقرر لحد إمتى؟",
+      "expected": [
+        "الاسبوع التاسع|نهايه الاسبوع التاسع"
+      ],
+      "response": "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات.",
+      "present": [
+        "الاسبوع التاسع|نهايه الاسبوع التاسع"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "100",
+      "part": "B2",
+      "question": "لو الطالب انسحب في الميعاد، هل يعتبر راسب؟",
+      "expected": [
+        "لا",
+        "W"
+      ],
+      "response": "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط.",
+      "present": [
+        "لا",
+        "W"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "101",
+      "part": "B2",
+      "question": "الحذف والإضافة بيكونوا لحد إمتى؟",
+      "expected": [
+        "الاسبوع الثالث|نهايه الاسبوع الثالث"
+      ],
+      "response": "- الحذف والإضافة يكونان حتى نهاية الأسبوع الثالث بعد موافقة المرشد الأكاديمي.",
+      "present": [
+        "الاسبوع الثالث|نهايه الاسبوع الثالث"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "102",
+      "part": "B2",
+      "question": "الـ withdrawal لازم يكون قبل إمتى؟",
+      "expected": [
+        "التاسع|week 9|ninth"
+      ],
+      "response": "الانسحاب من مقرر (Withdrawal) لازم يكون قبل نهاية الأسبوع الثاني من الفصل الدراسي. بعد كده، مش هينفع تسحب المقرر إلا في حالات خاصة وبشروط معينة.",
+      "present": [],
+      "missing": [
+        "التاسع|week 9|ninth"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "103",
+      "part": "B2",
+      "question": "لو الطالب انسحب بعد الـ deadline بدون عذر يحصل ايه؟",
+      "expected": [
+        "راسب|fail"
+      ],
+      "response": "لو الطالب انسحب بعد الـ deadline بدون عذر، هيكون فيه تأثير على سجله الأكاديمي. بالتحديد:\n\n- الانسحاب بدون عذر بعد الموعد النهائي يؤدي إلى تسجيل \"W\" (انسحاب) في السجل الأكاديمي.\n- \"W\" تؤثر على الـ CGPA، ولكنها لا تُحسب كرسوب.\n\nلذا، من المهم الالتزام بالمواعيد النهائية لتجنب أي تأثير سلبي على السجل الأكاديمي .",
+      "present": [],
+      "missing": [
+        "راسب|fail"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "104",
+      "part": "B3",
+      "question": "What is the minimum passing grade in any course?",
+      "expected": [
+        "50"
+      ],
+      "response": "- The minimum passing grade in any course is 50.",
+      "present": [
+        "50"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "105",
+      "part": "B3",
+      "question": "How is the grade distributed for a theoretical course?",
+      "expected": [
+        "40%",
+        "20%",
+        "coursework|اعمال"
+      ],
+      "response": "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework.",
+      "present": [
+        "40%",
+        "20%",
+        "coursework|اعمال"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "106",
+      "part": "B3",
+      "question": "What is the minimum required from the final exam to pass?",
+      "expected": [
+        "30%"
+      ],
+      "response": "- The student must get at least 30% of the written final exam mark to pass.",
+      "present": [
+        "30%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "107",
+      "part": "B3",
+      "question": "ما توزيع درجات المقرر النظري؟",
+      "expected": [
+        "40%",
+        "20%",
+        "اعمال|coursework"
+      ],
+      "response": "- توزيع درجات المقرر النظري: 40% للامتحان النهائي، 20% لامتحان منتصف الفصل، 40% للاختبارات الدورية والأعمال الفصلية.",
+      "present": [
+        "40%",
+        "20%",
+        "اعمال|coursework"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "108",
+      "part": "B3",
+      "question": "أقل درجة للنجاح في أي مقرر كام؟",
+      "expected": [
+        "50"
+      ],
+      "response": "- أقل درجة للنجاح في أي مقرر هي 50 درجة.",
+      "present": [
+        "50"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "109",
+      "part": "B3",
+      "question": "توزيع درجات المقرر النظري إيه؟",
+      "expected": [
+        "40%",
+        "20%"
+      ],
+      "response": "- توزيع درجات المقرر النظري: 40% للامتحان النهائي، 20% لامتحان منتصف الفصل، 40% للاختبارات الدورية والأعمال الفصلية.",
+      "present": [
+        "40%",
+        "20%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "110",
+      "part": "B3",
+      "question": "امتحان الميدترم عليه كام في المقرر النظري؟",
+      "expected": [
+        "20%"
+      ],
+      "response": "- امتحان منتصف الفصل في المقرر النظري عليه 20%.",
+      "present": [
+        "20%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "111",
+      "part": "B3",
+      "question": "شرط النجاح في الامتحان النهائي التحريري إيه؟",
+      "expected": [
+        "30%"
+      ],
+      "response": "- من شروط النجاح أن يحصل الطالب على 30% على الأقل من درجة الامتحان النهائي التحريري.",
+      "present": [
+        "30%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "112",
+      "part": "B3",
+      "question": "ايه الـ minimum للنجاح في أي مقرر؟",
+      "expected": [
+        "50"
+      ],
+      "response": "- أقل درجة للنجاح في أي مقرر هي 50 درجة.",
+      "present": [
+        "50"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "113",
+      "part": "B3",
+      "question": "توزيع الدرجات في الـ theoretical course عامل إزاي؟",
+      "expected": [
+        "40%",
+        "20%",
+        "coursework|اعمال"
+      ],
+      "response": "مش لاقي المعلومة دي في اللائحة.",
+      "present": [],
+      "missing": [
+        "40%",
+        "20%",
+        "coursework|اعمال"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "114",
+      "part": "B4",
+      "question": "What attendance percentage is required to sit the final exam?",
+      "expected": [
+        "75%"
+      ],
+      "response": "- A student needs at least 75% attendance to sit the final exam.",
+      "present": [
+        "75%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "115",
+      "part": "B4",
+      "question": "What happens if a student misses the final with an excuse?",
+      "expected": [
+        "I",
+        "Incomplete|غير مكتمل"
+      ],
+      "response": "- If a student misses the final exam with an accepted excuse, they receive I (Incomplete), subject to the 60% coursework condition.",
+      "present": [
+        "I",
+        "Incomplete|غير مكتمل"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "116",
+      "part": "B4",
+      "question": "نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟",
+      "expected": [
+        "75%"
+      ],
+      "response": "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات.",
+      "present": [
+        "75%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "117",
+      "part": "B4",
+      "question": "لو الطالب غاب عن الامتحان النهائي بدون عذر يحصل إيه؟",
+      "expected": [
+        "FA|Abs|راسب"
+      ],
+      "response": "- إذا غاب الطالب عن الامتحان النهائي بدون عذر مقبول يعطى تقدير راسب FA.",
+      "present": [
+        "FA|Abs|راسب"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "118",
+      "part": "B4",
+      "question": "ما معنى تقدير غير مكتمل I؟",
+      "expected": [
+        "عذر|excuse",
+        "60%"
+      ],
+      "response": "- تقدير غير مكتمل I يُمنح لطالب لم يحضر الامتحان النهائي بعذر قهري مقبول مع استيفاء شرط 60% من الأعمال الفصلية.",
+      "present": [
+        "عذر|excuse",
+        "60%"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "119",
+      "part": "B4",
+      "question": "لو الطالب غاب عن الـ final بعذر مقبول يحصل على إيه؟",
+      "expected": [
+        "I",
+        "Incomplete|غير مكتمل"
+      ],
+      "response": "- If a student misses the final exam with an accepted excuse, they receive I (Incomplete), subject to the 60% coursework condition.",
+      "present": [
+        "I",
+        "Incomplete|غير مكتمل"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "120",
+      "part": "B5",
+      "question": "What are the graduation requirements?",
+      "expected": [
+        "144",
+        "CGPA",
+        "2"
+      ],
+      "response": "- Graduation requires completing 144 credit hours and having a CGPA of at least 2.",
+      "present": [
+        "144",
+        "CGPA",
+        "2"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "121",
+      "part": "B5",
+      "question": "When does a student receive an academic warning?",
+      "expected": [
+        "CGPA",
+        "2"
+      ],
+      "response": "- A student receives an academic warning when their CGPA is less than 2.",
+      "present": [
+        "CGPA",
+        "2"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "122",
+      "part": "B5",
+      "question": "What are the conditions for honor graduation?",
+      "expected": [
+        "3",
+        "failure|رسوب",
+        "4"
+      ],
+      "response": "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years.",
+      "present": [
+        "3",
+        "failure|رسوب",
+        "4"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "123",
+      "part": "B5",
+      "question": "ما شروط الحصول على مرتبة الشرف؟",
+      "expected": [
+        "3",
+        "رسوب|fail"
+      ],
+      "response": "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years.",
+      "present": [
+        "3",
+        "رسوب|fail"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "124",
+      "part": "B5",
+      "question": "شروط التخرج الأساسية إيه؟",
+      "expected": [
+        "144",
+        "CGPA",
+        "2"
+      ],
+      "response": "- Graduation requires completing 144 credit hours and having a CGPA of at least 2.",
+      "present": [
+        "144",
+        "CGPA",
+        "2"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "125",
+      "part": "B5",
+      "question": "الطالب بياخد إنذار أكاديمي إمتى؟",
+      "expected": [
+        "CGPA",
+        "2"
+      ],
+      "response": "- A student receives an academic warning when their CGPA is less than 2.",
+      "present": [
+        "CGPA",
+        "2"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "126",
+      "part": "B5",
+      "question": "الطالب يتفصل من الكلية في أنهي حالات؟",
+      "expected": [
+        "4",
+        "6"
+      ],
+      "response": "- A student is dismissed after 4 consecutive regular-semester academic warnings or 6 separate academic warnings.",
+      "present": [
+        "4",
+        "6"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "127",
+      "part": "B5",
+      "question": "شروط مرتبة الشرف إيه؟",
+      "expected": [
+        "3",
+        "4",
+        "رسوب|failure"
+      ],
+      "response": "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years.",
+      "present": [
+        "3",
+        "4",
+        "رسوب|failure"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "128",
+      "part": "B5",
+      "question": "الطالب بياخد الـ academic warning إمتى؟",
+      "expected": [
+        "CGPA",
+        "2"
+      ],
+      "response": "- A student receives an academic warning when their CGPA is less than 2.",
+      "present": [
+        "CGPA",
+        "2"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "129",
+      "part": "B5",
+      "question": "الـ dismissal conditions إيه؟",
+      "expected": [
+        "4",
+        "6"
+      ],
+      "response": "- A student is dismissed after 4 consecutive regular-semester academic warnings or 6 separate academic warnings.",
+      "present": [
+        "4",
+        "6"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "130",
+      "part": "B5",
+      "question": "ايه شروط الـ honor degree؟",
+      "expected": [
+        "3",
+        "failure|رسوب",
+        "4"
+      ],
+      "response": "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years.",
+      "present": [
+        "3",
+        "failure|رسوب",
+        "4"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "131",
+      "part": "C",
+      "question": "What are the prerequisites for XXXX999?",
+      "expected": [
+        "could not find|مش لاقي|not find"
+      ],
+      "response": "Prerequisites for [AI413] AI for Robotics:\n- Core Requirements: Machine Learning [AI301]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [],
+      "missing": [
+        "could not find|مش لاقي|not find"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "132",
+      "part": "C",
+      "question": "مادة Human Rights بتفتح ايه؟",
+      "expected": [
+        "not a prerequisite|ليست متطلب|مش متطلب"
+      ],
+      "response": "مادة Human Rights & Anticorruption [HM003] مش ظاهرة عندي إنها بتفتح مواد بعدها.",
+      "present": [],
+      "missing": [
+        "not a prerequisite|ليست متطلب|مش متطلب"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "133",
+      "part": "C",
+      "question": "Tell me about OOP",
+      "expected": [
+        "CS201",
+        "Object Oriented Programming"
+      ],
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "present": [],
+      "missing": [
+        "CS201",
+        "Object Oriented Programming"
+      ],
+      "verdict": "NO_MATCH",
+      "error": ""
+    },
+    {
+      "index": "134",
+      "part": "C",
+      "question": "prerequisites for software testing",
+      "expected": [
+        "SW201"
+      ],
+      "response": "Prerequisites for [SW401] Software Testing & Quality Assurance:\n- Core Requirements: Software Engineering [SW201]\n\n- Hint: Ask for the full chain to see all dependencies.",
+      "present": [
+        "SW201"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "135",
+      "part": "C",
+      "question": "قبلها ايه؟",
+      "expected": [
+        "تقصد|which course|انهي ماده"
+      ],
+      "response": "تقصد أنهي مادة؟ اكتب اسم المادة أو كودها زي SW201 أو CS201.",
+      "present": [
+        "تقصد|which course|انهي ماده"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "136",
+      "part": "C",
+      "question": "What is the weather today?",
+      "expected": [
+        "academic|course|regulation|مش لاقي|couldn't find|advisor"
+      ],
+      "response": "I couldn't find this specific question in our course data or regulation documents.",
+      "present": [
+        "academic|course|regulation|مش لاقي|couldn't find|advisor"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "137",
+      "part": "C",
+      "question": "الطالب صاحب CGPA أعلى من 3 يسجل كام ساعة؟",
+      "expected": [
+        "21"
+      ],
+      "response": "- الطالب صاحب CGPA أعلى من 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل.",
+      "present": [
+        "21"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "138",
+      "part": "C",
+      "question": "Max hours for new students in first semester?",
+      "expected": [
+        "18"
+      ],
+      "response": "- New students can register up to 18 credit hours in their first semester.",
+      "present": [
+        "18"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "139",
+      "part": "C",
+      "question": "لو رسبت في مقرر وأعدته، الحد الأعلى للدرجة كام؟",
+      "expected": [
+        "83",
+        "B"
+      ],
+      "response": "- If a student fails a course and retakes it, the maximum recorded grade is 83 (B).",
+      "present": [
+        "83",
+        "B"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    },
+    {
+      "index": "140",
+      "part": "C",
+      "question": "إمتى أقدر أسجل مشروع التخرج؟",
+      "expected": [
+        "70%|70"
+      ],
+      "response": "- يمكن تسجيل مشروع التخرج بعد اجتياز 70% من الساعات المعتمدة المطلوبة للتخرج.",
+      "present": [
+        "70%|70"
+      ],
+      "missing": [],
+      "verdict": "FULL",
+      "error": ""
+    }
+  ]
+}
