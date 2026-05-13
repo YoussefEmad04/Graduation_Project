@@ -1225,7 +1225,7 @@ class RagExtractionSmokeTests(unittest.TestCase):
             "اعمل تظلم ازاي؟": ("التظلمات الطلابية", "التظلم"),
             "what is academic warning?": ("انذار اكاديمي", "إنذار أكاديمي"),
             "appeal deadline": ("التظلمات الطلابية", "التظلم"),
-            "transfer requirements": ("transfer", "60"),
+            "transfer requirements": ("شروط التحويل", "60"),
         }
         for question, (normalized_term, formal_term) in cases.items():
             with self.subTest(question=question):
