@@ -1036,73 +1036,92 @@ class RagExtractionSmokeTests(unittest.TestCase):
         self.assertIn("أربعة فصول دراسية متتالية", joined)
         self.assertIn("ستة فصول منفصلة", joined)
 
+    def test_split_markdown_pages_includes_intro_and_plain_page_headings(self):
+        raw = (
+            "# Academic Regulations Clean Source\n\n"
+            "### شروط التحويل\n\n"
+            "- يجوز تحويل الطلاب إلى الكلية.\n\n"
+            "## Page 31\n\n"
+            "### عدد الساعات اللازمة للتخرج\n\n"
+            "- 144 ساعة معتمدة.\n\n"
+            "---\n"
+            "## Page 32\n\n"
+            "### المدة القصوى للدراسة\n\n"
+            "- ثماني سنوات دراسية.\n"
+        )
+
+        chunks = RAGService._split_markdown_pages(raw)
+
+        self.assertEqual(chunks[0][0], 0)
+        self.assertIn("شروط التحويل", chunks[0][1])
+        self.assertEqual(chunks[1][0], 31)
+        self.assertIn("144 ساعة معتمدة", chunks[1][1])
+        self.assertEqual(chunks[2][0], 32)
+        self.assertIn("ثماني سنوات", chunks[2][1])
+
     def test_keyword_expansion_covers_exam_absence_terms(self):
         terms = set(RAGService._expanded_search_terms("غاب عن الفاينال بعذر مقبول"))
         self.assertIn("غياب", terms)
         self.assertIn("النهايي", terms)
         self.assertIn("مقبول", terms)
 
-    def test_known_regulation_answers_cover_failed_arabic_variants(self):
+    def test_known_regulation_answers_cover_stable_arabic_facts(self):
         service = RAGService.__new__(RAGService)
         checks = {
             "كم ساعة معتمدة يجب اجتيازها للتخرج؟": "144",
-            "الدراسة في الكلية ماشية بأي نظام؟": "الساعات المعتمدة",
+            "كام ساعة عشان اتخرج؟": "144",
+            "لو انا عايز اتخرج محتاج اخلص كام ساعة؟": "144",
+            "كام ساعة معتمدة عشان التخرج؟": "144",
             "مدة الفصل الدراسي النظامي كام أسبوع؟": "17",
-            "التسجيل في المقررات يستمر لحد إمتى؟": "الأسبوع الثاني",
-            "إيه شرط التسجيل في مقرر؟": "اجتياز متطلباته السابقة",
-            "هل رأي المرشد الأكاديمي إلزامي؟": "استشاري",
-            "الطالب يقدر ينسحب من مقرر لحد إمتى؟": "الأسبوع التاسع",
-            "حتى متى يمكن للطالب الانسحاب من مقرر؟": "الأسبوع التاسع",
-            "الـ withdrawal لازم يكون قبل إمتى؟": "week 9",
-            "لو الطالب انسحب بعد الـ deadline بدون عذر يحصل ايه؟": "failing grade",
-            "لو الطالب انسحب في الميعاد، هل يعتبر راسب؟": "W",
-            "الدرجة النهائية لأي مقرر من كام؟": "100",
+            "الترم العادي كام أسبوع؟": "17",
+            "الفصل الصيفي مدته كام أسبوع؟": "8",
+            "الحد الأقصى للتسجيل في الفصل الصيفي كام ساعة؟": "9",
             "أقل درجة للنجاح في أي مقرر كام؟": "50",
-            "ايه الـ minimum للنجاح في أي مقرر؟": "50",
-            "توزيع الدرجات في الـ theoretical course عامل إزاي؟": "40%",
-            "شرط النجاح المرتبط بالامتحان النهائي التحريري إيه؟": "30%",
             "نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟": "75%",
             "لو نسبة غياب الطالب تجاوزت 25% يحصل إيه؟": "25%",
-            "لو الطالب غاب عن الامتحان النهائي بعذر قهري مقبول يحصل إيه؟": "غير مكتمل",
-            "الطالب يتفصل من الكلية في أنهي حالات؟": "4 consecutive",
-            "لو رسبت في مقرر وأعدته، الحد الأعلى للدرجة كام؟": "83",
-            "إمتى أقدر أسجل مشروع التخرج؟": "70%",
+            "متى يحصل الطالب على إنذار أكاديمي لو CGPA أقل من 2؟": "CGPA أقل من 2",
         }
         for question, expected in checks.items():
             with self.subTest(question=question):
                 self.assertIn(expected, service._known_regulation_answer(question))
 
-    def test_known_regulation_answers_cover_failed_english_variants(self):
+    def test_known_regulation_answers_cover_stable_english_facts(self):
         service = RAGService.__new__(RAGService)
         checks = {
-            "How long is a regular semester?": "17 weeks",
-            "Is the summer semester mandatory?": "optional",
+            "How many credit hours to graduate?": "144 credit hours",
+            "Graduation credit hours": "144 credit hours",
+            "Regular semester duration": "17 weeks",
+            "Regular semester how many weeks?": "17 weeks",
+            "Summer semester duration": "8 weeks",
             "Max credit hours in the summer semester?": "9 credit hours",
-            "Until when can a student register for courses?": "week 2",
-            "Until when can a student withdraw from a course?": "week 9",
-            "What is the minimum required from the final exam to pass?": "30%",
+            "What is the minimum passing grade?": "50%",
             "What attendance percentage is required to sit the final exam?": "75%",
-            "What are the graduation requirements?": "144 credit hours",
+            "What is the absence limit?": "25%",
             "When does a student receive an academic warning?": "CGPA is less than 2",
-            "What are the conditions for honor graduation?": "CGPA at least 3",
-            "Max hours for new students in first semester?": "18 credit hours",
         }
         for question, expected in checks.items():
             with self.subTest(question=question):
                 self.assertIn(expected, service._known_regulation_answer(question))
 
-    def test_known_regulation_answer_covers_semester_withdrawal_rules(self):
+    def test_known_regulation_answer_skips_long_policy_topics(self):
         service = RAGService.__new__(RAGService)
-        answer = service._known_regulation_answer("ما شروط الانسحاب من الفصل الدراسي أو إيقاف القيد؟")
-        self.assertIn("قبل الامتحان بشهر", answer)
-        self.assertIn("4 فصول", answer)
-        self.assertIn("6 فصول", answer)
-
-    def test_known_regulation_answer_covers_loose_semester_withdrawal_phrase(self):
-        service = RAGService.__new__(RAGService)
-        answer = service._known_regulation_answer("ينفع اسيب الترم؟")
-        self.assertIn("قبل الامتحان بشهر", answer)
-        self.assertIn("4 فصول", answer)
+        long_policy_questions = [
+            "قسم شؤون الخريجين بيقدم إيه خدمات للخريجين؟",
+            "إيه شروط التحويل لكلية الذكاء الاصطناعي؟",
+            "إيه شروط القبول في كلية الذكاء الاصطناعي؟",
+            "إيه مواصفات خريج كلية الذكاء الاصطناعي؟",
+            "ما شروط الانسحاب من الفصل الدراسي أو إيقاف القيد؟",
+            "ينفع اسيب الترم؟",
+            "ما معنى تقدير غير مكتمل I؟",
+            "لو الطالب غاب عن الامتحان النهائي بعذر قهري مقبول يحصل إيه؟",
+            "ما شروط مرتبة الشرف؟",
+            "الطالب يتفصل من الكلية في أنهي حالات؟",
+            "لو عايز أعمل تظلم على نتيجة مادة، عندي مهلة قد ايه؟",
+            "إيه مواد الترم الاول سنة تالتة ذكاء اصطناعي؟",
+        ]
+        for question in long_policy_questions:
+            with self.subTest(question=question):
+                self.assertEqual("", service._known_regulation_answer(question))
 
     def test_egyptian_arabic_normalization_rewrites_colloquial_phrasing(self):
         normalized = RAGService._normalize_egyptian_question(
@@ -1149,12 +1168,121 @@ class RagExtractionSmokeTests(unittest.TestCase):
         self.assertIn("معنى رموز التقديرات", grades)
         self.assertIn("80% من الساعات اللازمة للتخرج", final_chance)
 
+    def test_policy_wording_normalizes_without_hardcoded_answers(self):
+        cases = {
+            "عايز اتخرج واخلص كام ساعة": "شروط التخرج",
+            "اسحب مادة": "انسحب من مقرر",
+            "drop a course": "انسحب من مقرر",
+            "اسيب الترم": "الانسحاب الكلي من الفصل الدراسي",
+            "stop enrollment": "ايقاف القيد",
+            "I grade": "تقدير غير مكتمل",
+            "missed final exam": "تغيب عن الامتحان النهائي",
+            "حضور الفاينال": "نسبه الحضور لدخول الامتحان النهائي",
+            "academic warning": "انذار اكاديمي",
+            "honor graduation": "مرتبة الشرف",
+            "dismissal": "الفصل من الكلية",
+            "appeal": "التظلمات الطلابية",
+            "admission requirements": "شروط القبول",
+            "transfer policy": "شروط التحويل",
+            "graduate affairs": "شؤون الخريجين",
+        }
+        service = RAGService.__new__(RAGService)
+        stable_fact_questions = {"عايز اتخرج واخلص كام ساعة", "حضور الفاينال", "academic warning"}
+        for question, expected in cases.items():
+            with self.subTest(question=question):
+                self.assertIn(expected, RAGService._normalize_egyptian_question(question))
+                if question not in stable_fact_questions:
+                    self.assertEqual("", service._known_regulation_answer(question))
+
+    def test_policy_wording_formalizes_for_retrieval(self):
+        cases = {
+            "graduation requirements": "شروط التخرج",
+            "withdraw from a course": "الانسحاب من مقرر",
+            "semester withdrawal": "الانسحاب الكلي",
+            "incomplete": "غير مكتمل I",
+            "FA after missed final exam": "FA وAbs وI",
+            "attendance requirement": "المواظبة على الحضور",
+            "CGPA less than 2 academic warning": "إنذار أكاديمي",
+            "honor graduation": "مرتبة الشرف",
+            "dismissal": "الفصل من الكلية",
+            "grievance": "التظلم",
+            "admission requirements": "شروط القبول",
+            "transfer policy": "شروط التحويل",
+            "graduate affairs": "شؤون الخريجين",
+        }
+        for question, expected in cases.items():
+            with self.subTest(question=question):
+                self.assertIn(expected, RAGService._formalize_for_doc_retrieval(question))
+
+    def test_requested_mixed_policy_wording_reaches_retrieval_helpers(self):
+        cases = {
+            "اشيل مادة لحد امتى؟": ("انسحب من مقرر", "الانسحاب من مقرر"),
+            "اسحب الترم ينفع؟": ("الانسحاب الكلي من الفصل الدراسي", "الانسحاب الكلي"),
+            "غبت عن الفاينال بعذر": ("الامتحان النهائي", "عذر"),
+            "لو غيابي عدى 25%": ("تجاوزت نسبة الغياب 25%", "25%"),
+            "اعمل تظلم ازاي؟": ("التظلمات الطلابية", "التظلم"),
+            "what is academic warning?": ("انذار اكاديمي", "إنذار أكاديمي"),
+            "appeal deadline": ("التظلمات الطلابية", "التظلم"),
+            "transfer requirements": ("transfer", "60"),
+        }
+        for question, (normalized_term, formal_term) in cases.items():
+            with self.subTest(question=question):
+                normalized = RAGService._normalize_egyptian_question(question)
+                formal = RAGService._formalize_for_doc_retrieval(question)
+                terms = set(RAGService._expanded_search_terms(question))
+
+                self.assertIn(normalized_term, normalized)
+                self.assertTrue(
+                    formal_term in formal
+                    or RAGService._normalize_for_search(formal_term) in terms
+                )
+
+    def test_policy_wording_expands_search_terms(self):
+        terms = set(RAGService._expanded_search_terms(
+            "appeal transfer policy I grade Abs Con CGPA less than 2"
+        ))
+
+        for expected in (
+            "التظلمات", "التحويل", "معادله", "غير مكتمل", "abs",
+            "con", "cgpa", "المعدل التراكمي", "انذار", "اكاديمي",
+        ):
+            with self.subTest(expected=expected):
+                self.assertIn(expected, terms)
+
 
     def test_weak_generic_hosted_answer_triggers_local_fallback(self):
         self.assertTrue(
             RAGService._should_try_local_fallback(
                 "لو عايز أعمل تظلم على نتيجة مادة، عندي مهلة قد ايه؟",
                 "بالنسبة لتظلم على نتيجة مادة، عادةً المهلة بتكون محددة من قبل الجامعة. يفضل تتأكد من القسم الأكاديمي.",
+            )
+        )
+
+    def test_explicit_not_found_hosted_answer_triggers_local_fallback(self):
+        self.assertTrue(
+            RAGService._should_try_local_fallback(
+                "إيه شروط التحويل لكلية الذكاء الاصطناعي؟",
+                "مش لاقي المعلومة دي في اللائحة.",
+            )
+        )
+        self.assertTrue(
+            RAGService._should_try_local_fallback(
+                "What are the admission requirements?",
+                "I couldn't find this specific regulation in the document.",
+            )
+        )
+
+    def test_specific_regulation_answer_missing_required_details_triggers_local_fallback(self):
+        self.assertTrue(
+            RAGService._should_try_local_fallback(
+                "مدة الفصل الدراسي النظامي كام أسبوع؟",
+                "مدة الفصل الدراسي النظامي موضحة في اللائحة.",
+            )
+        )
+        self.assertTrue(
+            RAGService._should_try_local_fallback(
+                "When does a student receive an academic warning?",
+                "A student may receive an academic warning under the regulation.",
             )
         )
 
@@ -1165,6 +1293,50 @@ class RagExtractionSmokeTests(unittest.TestCase):
                 "إذا كان لديك عذر قهري مقبول وحصلت على تقدير غير مكتمل (I)، يجب عليك أداء الامتحان النهائي خلال حد أقصى أسبوع من بداية الفصل الدراسي التالي.",
             )
         )
+
+    def test_good_hosted_answer_with_required_details_does_not_trigger_local_fallback(self):
+        self.assertFalse(
+            RAGService._should_try_local_fallback(
+                "مدة الفصل الدراسي النظامي كام أسبوع؟",
+                "مدة الفصل الدراسي النظامي 17 أسبوعا متضمنة فترة الامتحانات.",
+            )
+        )
+        self.assertFalse(
+            RAGService._should_try_local_fallback(
+                "When does a student receive an academic warning?",
+                "A student receives an academic warning when CGPA is less than 2.",
+            )
+        )
+
+    def test_local_fallback_retrieves_clean_intro_admin_sections(self):
+        service = RAGService.__new__(RAGService)
+
+        transfer = service._local_regulation_fallback("إيه شروط التحويل لكلية الذكاء الاصطناعي؟")
+        admission = service._local_regulation_fallback("What are the admission requirements?")
+        graduate_affairs = service._local_regulation_fallback("خدمات شؤون الخريجين")
+
+        self.assertIn("المقدمة", transfer)
+        self.assertIn("التحويل", transfer)
+        self.assertIn("شروط القبول", admission)
+        self.assertIn("إصدار شهادات التخرج", graduate_affairs)
+
+    def test_local_fallback_retrieves_clean_page_regulation_sections(self):
+        service = RAGService.__new__(RAGService)
+
+        graduation = service._local_regulation_fallback("كم ساعة معتمدة للتخرج؟")
+        withdrawal = service._local_regulation_fallback("اسحب مادة لحد امتى؟")
+        warning = service._local_regulation_fallback("متى يحصل الطالب على إنذار أكاديمي لو CGPA أقل من 2؟")
+        attendance = service._local_regulation_fallback("نسبة الحضور المطلوبة لدخول الامتحان النهائي كام؟")
+        dismissal = service._local_regulation_fallback("الطالب يتفصل من الكلية في أنهي حالات؟")
+
+        self.assertIn("144", graduation)
+        self.assertIn("الأسبوع التاسع", withdrawal)
+        self.assertIn("CGPA", warning)
+        self.assertIn("2", warning)
+        self.assertIn("75", attendance)
+        self.assertIn("إنذار", dismissal)
+        self.assertIn("أربعة", dismissal)
+        self.assertIn("ستة", dismissal)
 
 
 class MassivePromptRoutingTests(unittest.TestCase):
@@ -1742,19 +1914,21 @@ class StudentSessionApiTests(unittest.TestCase):
         self.assertTrue(status["openai_configured"])
         self.assertFalse(status["vector_store_configured"])
 
-    def test_rag_service_answers_known_administrative_topics_without_openai(self):
+    def test_rag_service_sends_administrative_topics_to_file_search(self):
         with patch.dict("os.environ", {}, clear=True):
             service = RAGService()
 
-            graduates = service.query("قسم شؤون الخريجين بيقدم إيه خدمات للخريجين؟")
-            transfer = service.query("إيه شروط التحويل لكلية الذكاء الاصطناعي؟")
-            admission = service.query("إيه شروط القبول في كلية الذكاء الاصطناعي؟")
-            graduate_specs = service.query("إيه مواصفات خريج كلية الذكاء الاصطناعي؟")
+            graduates = service._known_regulation_answer("قسم شؤون الخريجين بيقدم إيه خدمات للخريجين؟")
+            transfer = service._known_regulation_answer("إيه شروط التحويل لكلية الذكاء الاصطناعي؟")
+            admission = service._known_regulation_answer("إيه شروط القبول في كلية الذكاء الاصطناعي؟")
+            graduate_specs = service._known_regulation_answer("إيه مواصفات خريج كلية الذكاء الاصطناعي؟")
+            response = service.query("إيه شروط التحويل لكلية الذكاء الاصطناعي؟")
 
-        self.assertIn("إصدار شهادات التخرج", graduates)
-        self.assertIn("CGPA", transfer)
-        self.assertIn("Pre-mathematic", admission)
-        self.assertIn("تلبية متطلبات أصحاب العمل", graduate_specs)
+        self.assertEqual("", graduates)
+        self.assertEqual("", transfer)
+        self.assertEqual("", admission)
+        self.assertEqual("", graduate_specs)
+        self.assertIn("OPENAI_API_KEY is not configured", response)
 
     def test_rag_service_uses_openai_file_search(self):
         with patch.dict(
@@ -1796,9 +1970,9 @@ class StudentSessionApiTests(unittest.TestCase):
             )
 
             service = RAGService()
-            answer = service.query("كم ساعة للتخرج؟")
+            answer = service.query("إيه شروط التحويل لكلية الذكاء الاصطناعي؟")
 
-        self.assertIn("شروط التخرج", answer)
+        self.assertIn("التحويل", answer)
 
     def test_rag_service_falls_back_to_local_text_on_openai_error(self):
         with patch.dict(

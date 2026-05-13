@@ -341,10 +341,21 @@ Answer rules:
 - Be precise with numbers, percentages, weeks, credit hours, and course codes.
 - For study-plan tables, preserve course codes exactly. If a prerequisite is shown only as a code, return the code only.
 - Do not dump full program course catalogs from RAG. If the retrieved content contains long course lists for Software Engineering, Artificial Intelligence, Cybersecurity, or Data Science, omit those lists and give only a concise summary of the requirement, semester, credit hours, or category the student asked about.
-- If the retrieved content does not contain the answer, say:
-  - English: "I couldn't find this specific regulation in the document."
-  - Arabic: "مش لاقي المعلومة دي في اللائحة."
-- Format answers with concise bullet points.
+
+Arabic answer format:
+- Start with a short direct answer.
+- Then write concise bullets from the regulation.
+- Clearly highlight important numbers and official symbols, including credit hours, weeks, percentages, CGPA, deadlines, W, I, FA, Abs, and Withdrawal.
+- Do not mix Arabic and English except for official terms such as CGPA, W, I, FA, Abs, Withdrawal, course codes, and program names.
+- Do not write a long answer unless the student asks for details.
+- If the retrieved content does not contain the answer, say only: "مش لاقي المعلومة دي في اللائحة."
+
+English answer format:
+- Start with a direct short answer.
+- Then write concise bullets from the regulation.
+- Clearly include numbers, weeks, percentages, CGPA thresholds, deadlines, or grade symbols.
+- Do not write a long answer unless the student asks for details.
+- If the retrieved content does not contain the answer, say only: "I couldn't find this specific regulation in the document."
 """
 
 
@@ -418,227 +429,59 @@ class RAGService:
             return f"Error querying regulations: {str(e)}"
 
     def _known_regulation_answer(self, question: str) -> str:
-        """Return deterministic answers for high-confidence regulation facts from the extracted PDF."""
+        """Return deterministic answers only for exact, stable numeric regulation facts."""
         q = self._normalize_egyptian_question(question)
 
-        if "خريجين" in q and ("شؤون" in q or "شئون" in q or "قسم" in q or "خدمات" in q):
-            return (
-                "**خدمات قسم شؤون الخريجين**\n\n"
-                "- إعداد المستندات اللازمة لاعتماد الخريجين وفقًا لما يحدده مجلس الجامعات الخاصة والأهلية.\n"
-                "- إصدار شهادات التخرج.\n"
-                "- إصدار شهادات بالمحتوى العلمي والتقديرات للخريجين.\n"
-                "- التواصل مع الخريجين تمهيدًا لإنشاء رابطة الخريجين."
-            )
-        if "تحويل" in q and ("الكليه" in q or "كلية" in q or "ذكاء" in q or "artificial intelligence" in q):
-            return (
-                "**شروط التحويل لكلية الذكاء الاصطناعي**\n\n"
-                "- **التحويل من كلية أو معهد مناظر:** يجوز تحويل الطلاب إلى الكلية من كليات جامعية أو معاهد مماثلة بشرط الحصول على الحد الأدنى لمجموع الدرجات المقرر للالتحاق بالكلية.\n"
-                "- **قواعد التحويل:** يجب ألا يتعارض التحويل مع قواعد المجلس الأعلى للجامعات ومجلس الجامعات الخاصة والأهلية.\n"
-                "- **معادلة المقررات:** عند قبول التحويل من كلية مناظرة، يتم عمل مقاصة لمعادلة المقررات التي درسها الطالب مع مقررات القسم المحول إليه.\n"
-                "- **اعتماد المقاصة:** يشترط اعتماد عميد الكلية ورئيس الجامعة للمقاصة.\n"
-                "- **التحويل داخل الكلية:** يجوز التحويل من تخصص لآخر داخل الكلية بشرط توافر شروط القبول بالتخصص الجديد.\n"
-                "- **المعدل المطلوب:** يشترط ألا يقل CGPA الطالب عن 2 من 4.\n"
-                "- **نقل المقررات:** يشترط ألا تقل النسبة المئوية لأي مقرر يتم نقله للطالب عن 60%."
-            )
-        if "قبول" in q and ("الكليه" in q or "كلية" in q or "ذكاء" in q or "artificial intelligence" in q):
-            return (
-                "**شروط القبول بكلية الذكاء الاصطناعي**\n\n"
-                "- **المؤهلات المقبولة:** تقبل الكلية الطلاب الحاصلين على الثانوية العامة الشعبة العلمية رياضيات أو علوم.\n"
-                "- **الشهادات المعادلة:** تقبل الكلية ما يعادل الثانوية العامة من الشهادات المعتمدة، طبقًا لشروط التنسيق بالمجلس الأعلى للجامعات أو مجلس الجامعات الخاصة والأهلية.\n"
-                "- **طلاب علمي علوم:** يجب اجتياز مقرر Pre-mathematic الخاص بطلاب علمي رياضة في الثانوية العامة قبل التخرج.\n"
-                "- **القبول كمستمع:** يمكن قبول الطلاب كمستمعين في مقرر ما دون الحصول على درجة جامعية، طبقًا للقواعد التي تحددها الكلية."
-            )
-        if "مواصفات" in q and ("خريج" in q or "الخريج" in q):
-            return (
-                "**مواصفات خريج كلية الذكاء الاصطناعي**\n\n"
-                "- **المعرفة وحل المشكلات:** تطبيق معارف الرياضيات والعلوم ومفاهيم الحوسبة في حل المشاكل الحاسوبية.\n"
-                "- **تحليل المشكلات:** تحديد وصياغة وحل المشكلات الحاسوبية.\n"
-                "- **المعرفة المعاصرة:** إظهار المعرفة بالموضوعات المعاصرة للحوسبة.\n"
-                "- **الأدوات الحديثة:** استغلال التقنيات والمهارات وأدوات الحوسبة الحديثة اللازمة للممارسات العملية الحوسبية.\n"
-                "- **تصميم النظم:** تصميم مكونات وعمليات ونظم الحوسبة لتلبية الاحتياجات المطلوبة ضمن القيود الواقعية، مع مراعاة التأثير السلبي لحلول الحوسبة على المجتمع والبيئة.\n"
-                "- **التجارب والبيانات:** تصميم وإجراء التجارب وتحليل وتفسير مدلولات البيانات.\n"
-                "- **العمل الجماعي:** العمل بكفاءة ضمن فرق متعددة التخصصات.\n"
-                "- **المسؤولية المهنية:** إظهار المسؤوليات المهنية والاهتمامات الأخلاقية والمجتمعية والثقافية.\n"
-                "- **إدارة المشروعات:** إدارة مشاريع الحوسبة الخاضعة للقيود الاقتصادية والبيئية والاجتماعية.\n"
-                "- **التعلم الذاتي:** إدراك الحاجة إلى أهمية التعلم الذاتي مدى الحياة.\n"
-                "- **سوق العمل:** تلبية متطلبات أصحاب العمل المحتملين."
-            )
-
-        rules = [
-            (("كم ساعة", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("كم ساعه", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("كم ساعه", "للتخرج"), "- شروط التخرج: لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("ساعه معتمده", "يتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("ساعه معتمده", "اتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("ساعه معتمده", "للتخرج"), "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."),
-            (("how many", "graduate"), "- Students must complete 144 credit hours to graduate."),
-            (("الدراسة", "نظام"), "- الدراسة في الكلية بنظام الساعات المعتمدة."),
-            (("study", "system"), "- The faculty uses the credit-hour system."),
-            (("مدة الفصل الدراسي النظامي",), "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."),
-            (("الفصل الصيفي", "مدته"), "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات."),
-            (("الصيفي", "اختياري"), "- الفصل الصيفي اختياري للطالب."),
-            (("الفصل الصيفي", "اجباري"), "- الفصل الصيفي اختياري للطالب، وليس إجباريًا."),
-            (("الحد الاقصى", "الفصل الصيفي"), "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة."),
-            (("اقل عدد", "خريف", "ربيع"), "- أقل عدد ساعات للتسجيل في فصل الخريف أو الربيع هو 9 ساعات معتمدة، إلا إذا كانت الساعات المتبقية للتخرج أقل من ذلك."),
-            (("cgpa", "اعلى من او يساوي 3"), "- الطالب صاحب CGPA أعلى من أو يساوي 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل."),
-            (("cgpa", "اعلى من 3"), "- الطالب صاحب CGPA أعلى من 3 يقدر يسجل 21 ساعة معتمدة، وكذلك الطالب الذي سيتخرج في نفس الفصل."),
-            (("cgpa", "من 2 الى اقل من 3"), "- الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل 18 ساعة معتمدة."),
-            (("cgpa", "من 1 الى اقل من 2"), "- الطالب صاحب CGPA من 1 إلى أقل من 2 يقدر يسجل 15 ساعة معتمدة."),
-            (("cgpa", "اقل من 1"), "- الطالب صاحب CGPA أقل من 1 يقدر يسجل 12 ساعة معتمدة."),
-            (("التسجيل", "المقررات"), "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني."),
-            (("الحذف", "الاضافه"), "- الحذف والإضافة يكونان حتى نهاية الأسبوع الثالث بعد موافقة المرشد الأكاديمي."),
-            (("شرط", "التسجيل", "مقرر"), "- يسمح للطالب بالتسجيل في أي مقرر بعد اجتياز متطلباته السابقة."),
-            (("راي", "المرشد", "الزامي"), "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها."),
-            (("ينسحب", "مقرر"), "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."),
-            (("انسحب في الميعاد",), "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط."),
-            (("انسحب بعد", "عذر قهري"), "- لو الطالب انسحب بعد الفترة المحددة دون عذر قهري مقبول، يحتسب له تقدير راسب في المقررات التي انسحب منها."),
-            (("الدرجة النهائية",), "- الدرجة النهائية لأي مقرر هي 100 درجة."),
-            (("اقل", "نجاح"), "- أقل درجة للنجاح في أي مقرر هي 50 درجة."),
-            (("توزيع درجات المقرر النظري",), "- توزيع درجات المقرر النظري: 40% للامتحان النهائي، 20% لامتحان منتصف الفصل، 40% للاختبارات الدورية والأعمال الفصلية."),
-            (("الميدترم",), "- امتحان منتصف الفصل في المقرر النظري عليه 20%."),
-            (("الامتحان النهائي التحريري",), "- من شروط النجاح أن يحصل الطالب على 30% على الأقل من درجة الامتحان النهائي التحريري."),
-            (("تطبيقات عمليه",), "- توزيع درجات المقرر الذي يحتوي على تطبيقات عملية: 40% نهائي، 20% منتصف الفصل، 20% اختبارات دورية وأعمال فصلية، 20% تطبيقات عملية."),
-            (("زمن امتحان نهايه الفصل",), "- زمن امتحان نهاية الفصل لأي مقرر هو ساعتان."),
-            (("الحضور", "الامتحان النهائي"), "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات."),
-            (("غياب", "25"), "- إذا تجاوزت نسبة الغياب 25% يجوز لمجلس الكلية حرمان الطالب من دخول الامتحان النهائي بعد إنذاره كتابيًا."),
-            (("غاب", "الامتحان النهائي", "بدون عذر"), "- إذا غاب الطالب عن الامتحان النهائي بدون عذر مقبول يعطى تقدير راسب FA."),
-            (("غاب", "الامتحان النهائي", "عذر قهري"), "- إذا غاب الطالب عن الامتحان النهائي بعذر قهري مقبول يحتسب له تقدير غير مكتمل I بشرط حصوله على 60% على الأقل من درجات الأعمال الفصلية وألا يكون محروماً من الامتحان."),
-            (("معني", "غير مكتمل"), "- تقدير غير مكتمل I يُمنح لطالب لم يحضر الامتحان النهائي بعذر قهري مقبول مع استيفاء شرط 60% من الأعمال الفصلية."),
-            (("ايقاف", "القيد"), "- يجوز للطالب إيقاف قيده أو الانسحاب الكلي من الفصل الدراسي وفقًا لضوابط الكلية والجامعة.\n- يجب تقديم طلب إيقاف القيد قبل الامتحان بشهر على الأقل.\n- الطالب الذي لا يحضر للتسجيل خلال فترة التسجيل والحذف والإضافة في الفصول النظامية يعتبر منسحبًا من الفصل الدراسي.\n- لا يجوز أن يتجاوز عدد الفصول النظامية التي ينسحب منها الطالب 4 فصول متتالية أو 6 فصول منفصلة."),
-            (("الانسحاب", "الفصل الدراسي"), "- يجوز للطالب إيقاف قيده أو الانسحاب الكلي من الفصل الدراسي وفقًا لضوابط الكلية والجامعة.\n- يجب تقديم طلب إيقاف القيد قبل الامتحان بشهر على الأقل.\n- الطالب الذي لا يحضر للتسجيل خلال فترة التسجيل والحذف والإضافة في الفصول النظامية يعتبر منسحبًا من الفصل الدراسي.\n- لا يجوز أن يتجاوز عدد الفصول النظامية التي ينسحب منها الطالب 4 فصول متتالية أو 6 فصول منفصلة."),
-        ]
-
-        for needles, answer in rules:
-            if all(self._normalize_egyptian_question(needle) in q for needle in needles):
-                return answer
-
-        if "الفصل الدراسي النظامي" in q and ("كام اسبوع" in q or "مدته" in q or "مده" in q):
-            return "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."
-        if "regular semester" in q and ("how long" in q or "duration" in q or "weeks" in q):
-            return "- A regular semester lasts 17 weeks including the exam period."
-        if any(term in q for term in ("يتخرج", "اتخرج", "التخرج")) and any(term in q for term in ("كم ساعه", "كام ساعه", "ساعه معتمده", "ساعات معتمده")):
-            return "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."
-        if "credit hours" in q and "graduate" in q:
+        graduation_terms = ("يتخرج", "اتخرج", "للتخرج", "التخرج", "graduate")
+        hour_terms = (
+            "كم ساعه", "كام ساعه", "ساعه معتمده", "ساعات معتمده",
+            "credit hours", "عدد الساعات اللازمة",
+        )
+        if any(term in q for term in graduation_terms) and any(term in q for term in hour_terms):
+            if should_respond_arabic(question):
+                return "- لازم الطالب يجتاز 144 ساعة معتمدة عشان يتخرج."
             return "- Students must complete 144 credit hours to graduate."
-        if ("الفصل الصيفي" in q or "الصيفي" in q) and ("كام اسبوع" in q or "مدته" in q or "مده" in q):
+        if "graduation credit hours" in q:
+            return "- Students must complete 144 credit hours to graduate."
+
+        if "الفصل الدراسي النظامي" in q and any(term in q for term in ("كام اسبوع", "كم اسبوع", "مدته", "مده")):
+            return "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."
+        if "regular semester" in q and any(term in q for term in ("how long", "duration", "weeks", "how many")):
+            return "- A regular semester lasts 17 weeks including the exam period."
+
+        if ("الفصل الصيفي" in q or "الصيفي" in q) and any(term in q for term in ("كام اسبوع", "كم اسبوع", "مدته", "مده")):
             return "- الفصل الصيفي مدته 8 أسابيع متضمنة فترة الامتحانات."
-        if "summer semester" in q and any(term in q for term in ("mandatory", "required", "اجباري")):
-            return "- The summer semester is optional, not mandatory."
+        if "summer semester" in q and any(term in q for term in ("how long", "duration", "weeks", "how many")):
+            return "- The summer semester lasts 8 weeks including the exam period."
+
+        if ("الفصل الصيفي" in q or "الصيفي" in q) and any(term in q for term in ("الحد الاقصي", "الحد الاقصى", "كام ساعه", "كم ساعه", "تسجيل", "اسجل")):
+            return "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة."
         if "summer semester" in q and any(term in q for term in ("max", "maximum", "credit hours", "hours")):
             return "- The maximum load in the summer semester is 9 credit hours."
-        if "الدراسه" in q and "نظام" in q:
-            return "- الدراسة في الكلية بنظام الساعات المعتمدة."
-        if "مده" in q and "الفصل الدراسي النظامي" in q:
-            return "- مدة الفصل الدراسي النظامي 17 أسبوعًا متضمنة فترة الامتحانات."
-        if "new students" in q and "first semester" in q:
-            return "- New students can register up to 18 credit hours in their first semester."
-        if "cgpa" in q and "2" in q and "3" in q and "اقل" in q:
-            return "- الطالب صاحب CGPA من 2 إلى أقل من 3 يقدر يسجل 18 ساعة معتمدة."
-        if "cgpa" in q and "اعلى من 3" in q:
-            return "- الطالب صاحب CGPA أعلى من 3 يقدر يسجل 21 ساعة معتمدة."
-        if ("cgpa" in q or "معدل" in q) and "اقل من 1" in q:
-            return "- الطالب صاحب CGPA أقل من 1 يقدر يسجل 12 ساعة معتمدة."
-        if "register for courses" in q or ("register" in q and "courses" in q):
-            return "- Students can register for courses until the end of week 2."
-        if "التسجيل في المقررات" in q or "التسجيل في المواد" in q:
-            return "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني."
-        if "التسجيل" in q and "المقررات" in q:
-            return "- التسجيل في المقررات يستمر حتى نهاية الأسبوع الثاني."
-        if "التسجيل" in q and "اجتياز متطلباته" in q:
-            return "- يسمح للطالب بالتسجيل في أي مقرر بعد اجتياز متطلباته السابقة."
-        if "شرط" in q and "التسجيل" in q and "مقرر" in q:
-            return "- يسمح للطالب بالتسجيل في أي مقرر بعد اجتياز متطلباته السابقة."
-        if ("ايقاف القيد" in q or "ايقاف قيد" in q or "الانسحاب الكلي من الفصل الدراسي" in q or "الانسحاب من الفصل الدراسي" in q) and any(term in q for term in ("شروط", "لحد", "امتي", "امتى", "موعد", "ينفع")):
-            return "- يجوز للطالب إيقاف قيده أو الانسحاب الكلي من الفصل الدراسي وفقًا لضوابط الكلية والجامعة.\n- يجب تقديم طلب إيقاف القيد قبل الامتحان بشهر على الأقل.\n- الطالب الذي لا يحضر للتسجيل خلال فترة التسجيل والحذف والإضافة في الفصول النظامية يعتبر منسحبًا من الفصل الدراسي.\n- لا يجوز أن يتجاوز عدد الفصول النظامية التي ينسحب منها الطالب 4 فصول متتالية أو 6 فصول منفصلة."
-        if "المرشد الاكاديمي" in q and ("استشاري" in q or "الزامي" in q or "لازم" in q):
-            return "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها."
-        if "المرشد" in q and "الزامي" in q:
-            return "- رأي المرشد الأكاديمي استشاري، والطالب مسؤول عن المقررات التي يسجلها."
-        if ("ينسحب من مقرر" in q or "انسحب من مقرر" in q) and ("لحد امتي" in q or "لحد امتى" in q or "حتي نهايه" in q):
-            return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
-        if "الانسحاب من مقرر" in q:
-            return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
-        if "withdraw from a course" in q or ("withdrawal" in q and "course" in q):
-            return "- A student can withdraw from a course until the end of week 9."
-        if "ينسحب" in q and "مقرر" in q:
-            return "- الطالب يقدر ينسحب من مقرر حتى نهاية الأسبوع التاسع بعد موافقة المرشد الأكاديمي ومراعاة الحد الأدنى للساعات."
-        if "withdrawal" in q and "قبل" in q:
-            return "- Course withdrawal must be completed by the end of week 9."
-        if "withdrawal" in q and any(term in q for term in ("before", "deadline", "when")):
-            return "- Course withdrawal must be completed by the end of week 9."
-        if "deadline" in q and any(term in q for term in ("بدون عذر", "without excuse")):
-            return "- If a student withdraws after the deadline without an accepted excuse, the student receives a failing grade for the withdrawn course."
-        if "انسحبت من مقرر" in q and ("في الميعاد" in q or "في المعاد" in q):
-            return "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط."
-        if "انسحب" in q and "ميعاد" in q:
-            return "- لو الطالب انسحب في الميعاد المحدد لا يعتبر راسبًا، ويُحتسب له تقدير منسحب W فقط."
-        if "الدرجه النهائيه" in q:
-            return "- الدرجة النهائية لأي مقرر هي 100 درجة."
-        if "الفصل الصيفي" in q and "كام ساعه" in q:
-            return "- الحد الأقصى للتسجيل في الفصل الصيفي هو 9 ساعات معتمدة."
-        if "اقل" in q and "نجاح" in q:
+
+        if any(term in q for term in ("اقل درجه للنجاح", "اقل درجة للنجاح", "النهايه الصغري للنجاح", "النهاية الصغري للنجاح")):
             return "- أقل درجة للنجاح في أي مقرر هي 50 درجة."
-        if "minimum" in q and "نجاح" in q:
-            return "- أقل درجة للنجاح في أي مقرر هي 50 درجة."
-        if "minimum" in q and "pass" in q and "الامتحان النهائي" not in q:
-            return "- The minimum passing grade in any course is 50."
-        if "theoretical course" in q and any(term in q for term in ("grade", "distributed", "distribution", "توزيع")):
-            return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."
-        if "theoretical course" in q and any(term in q for term in ("40%", "20%", "coursework")):
-            return "- Theoretical course grades are distributed as 40% final exam, 20% midterm, and 40% coursework."
-        if ("نسبه الحضور" in q or "احضر كام في الميه" in q) and "الامتحان النهائي" in q:
+        if any(term in q for term in ("minimum passing grade", "minimum pass grade", "minimum grade to pass")):
+            return "- The minimum passing grade in any course is 50%."
+
+        if ("نسبه الحضور" in q or "نسبة الحضور" in q or "الحضور" in q) and "الامتحان النهائي" in q:
             return "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات."
         if "attendance" in q and "الامتحان النهائي" in q:
             return "- A student needs at least 75% attendance to sit the final exam."
-        if "الحضور" in q and "الامتحان النهائي" in q:
-            return "- نسبة الحضور المطلوبة لدخول الامتحان النهائي لا تقل عن 75% من المحاضرات والتطبيقات."
-        if "غياب" in q and "25" in q:
-            return "- إذا تجاوزت نسبة الغياب 25% يجوز لمجلس الكلية حرمان الطالب من دخول الامتحان النهائي بعد إنذاره كتابيًا."
-        if "عذر قهري" in q and "الامتحان النهائي" in q:
-            return "- إذا غاب الطالب عن الامتحان النهائي بعذر قهري مقبول يحتسب له تقدير غير مكتمل I بشرط حصوله على 60% على الأقل من درجات الأعمال الفصلية وألا يكون محروماً من الامتحان."
-        if any(term in q for term in ("with an excuse", "بعذر مقبول")) and ("الامتحان النهائي" in q or "final" in q):
-            return "- If a student misses the final exam with an accepted excuse, they receive I (Incomplete), subject to the 60% coursework condition."
-        if "الامتحان النهائي التحريري" in q:
-            return "- من شروط النجاح أن يحصل الطالب على 30% على الأقل من درجة الامتحان النهائي التحريري."
-        if "minimum required" in q and "الامتحان النهائي" in q:
-            return "- The student must get at least 30% of the written final exam mark to pass."
-        if "graduation requirements" in q or "شروط التخرج" in q:
-            return "- Graduation requires completing 144 credit hours and having a CGPA of at least 2."
-        if "academic warning" in q or "انذار اكاديمي" in q:
-            return "- A student receives an academic warning when their CGPA is less than 2."
-        if "honor graduation" in q or "honor degree" in q or "مرتبه الشرف" in q or "مرتبة الشرف" in q:
-            return "- Honor graduation requires CGPA at least 3, no failures or deprivation in any course, and finishing within 4 academic years."
-        if (
-            "dismissal conditions" in q
-            or "يتفصل من الكليه" in q
-            or "يتفصل من الكلية" in q
-            or ("الفصل من الكلية" in q and "حالات" in q)
-        ):
-            return "- A student is dismissed after 4 consecutive regular-semester academic warnings or 6 separate academic warnings."
-        if ("رسبت في مقرر" in q or "failed a course" in q) and ("اعدته" in q or "retake" in q):
-            return "- If a student fails a course and retakes it, the maximum recorded grade is 83 (B)."
-        if "مشروع التخرج" in q and any(term in q for term in ("اسجل", "تسجيل", "اقدر")):
-            return "- يمكن تسجيل مشروع التخرج بعد اجتياز 70% من الساعات المعتمدة المطلوبة للتخرج."
-        if (
-            "مواد" in q
-            and "الفصل الدراسي الاول" in q
-            and ("level 3" in q or "3" in q or "سنه تالته" in q or "سنة تالته" in q or "سنه ثالثه" in q or "سنة ثالثة" in q)
-            and ("artificial intelligence" in q or "ذكاء اصطناعي" in q)
-        ):
-            return (
-                "- مواد الفصل الدراسي الأول لسنة تالتة ذكاء اصطناعي هي:\n"
-                "- DS307 Cloud Computing\n"
-                "- CS302 Computer Architecture and Organization\n"
-                "- AI301 Machine Learning\n"
-                "- SW303 User Interface Design\n"
-                "- Major Elective 1\n"
-                "- Major Elective 2"
-            )
+        if "attendance" in q and "final" in q:
+            return "- A student needs at least 75% attendance to sit the final exam."
 
-        if "summer semester" in q and "how many weeks" in q:
-            return "- The summer semester lasts 8 weeks including the exam period."
-        if "regular semester" in q and "how many weeks" in q:
-            return "- A regular semester lasts 17 weeks including the exam period."
+        if "غياب" in q and "25" in q:
+            return "- حد الغياب هو 25%؛ إذا تجاوز الطالب هذه النسبة قد يحرم من دخول الامتحان النهائي."
+        if "absence" in q and any(term in q for term in ("limit", "maximum", "25")):
+            return "- The absence limit is 25%."
+
+        if "academic warning" in q or "انذار اكاديمي" in q:
+            if should_respond_arabic(question):
+                return "- يحصل الطالب على إنذار أكاديمي إذا كان CGPA أقل من 2."
+            return "- A student receives an academic warning when their CGPA is less than 2."
+        if "انذار" in q and ("cgpa" in q or "معدل" in q) and "2" in q:
+            return "- يحصل الطالب على إنذار أكاديمي إذا كان CGPA أقل من 2."
         return ""
 
     @staticmethod
@@ -654,6 +497,23 @@ class RAGService:
             "final exam": "الامتحان النهائي",
             "summer semester": "summer semester",
             "regular semester": "regular semester",
+            "graduation requirements": "شروط التخرج",
+            "withdraw from a course": "انسحب من مقرر",
+            "drop a course": "انسحب من مقرر",
+            "semester withdrawal": "الانسحاب الكلي من الفصل الدراسي",
+            "stop enrollment": "ايقاف القيد",
+            "incomplete grade": "تقدير غير مكتمل",
+            "i grade": "تقدير غير مكتمل i",
+            "missed final exam": "تغيب عن الامتحان النهائي",
+            "attendance requirement": "نسبه الحضور",
+            "academic warning": "انذار اكاديمي",
+            "honor graduation": "مرتبة الشرف",
+            "dismissal": "الفصل من الكلية",
+            "grievance": "التظلمات الطلابية",
+            "appeal": "التظلمات الطلابية",
+            "admission requirements": "شروط القبول",
+            "transfer policy": "شروط التحويل",
+            "graduate affairs": "شؤون الخريجين",
         }
         for old, new in replacements.items():
             q = q.replace(old, new)
@@ -672,8 +532,16 @@ class RAGService:
             "الميدترم": "امتحان منتصف الفصل",
             "ميدترم": "امتحان منتصف الفصل",
             "ميد ترم": "امتحان منتصف الفصل",
+            "عايز اتخرج": "شروط التخرج",
+            "عاوز اتخرج": "شروط التخرج",
+            "اخلص كام ساعة": "عدد الساعات اللازمة للتخرج",
+            "اخلص كام ساعه": "عدد الساعات اللازمة للتخرج",
             "اشيل ماده": "انسحب من مقرر",
             "اسحب ماده": "انسحب من مقرر",
+            "اشيل مادة": "انسحب من مقرر",
+            "اسحب مادة": "انسحب من مقرر",
+            "اسقط ماده": "انسحب من مقرر",
+            "اسقط مادة": "انسحب من مقرر",
             "شيلت الماده": "انسحبت من مقرر",
             "شلت الماده": "انسحبت من مقرر",
             "شيلت ماده": "انسحبت من مقرر",
@@ -684,6 +552,7 @@ class RAGService:
             "ادخل الامتحان": "ادخل الامتحان النهائي",
             "احضر الفاينال": "ادخل الامتحان النهائي",
             "احضر الامتحان النهائي": "ادخل الامتحان النهائي",
+            "حضور الامتحان النهائي": "نسبه الحضور لدخول الامتحان النهائي",
             "احضر كام في الميه": "نسبه الحضور",
             "التسجيل في المواد": "التسجيل في المقررات",
             "عايز اسجل ماده": "شرط التسجيل في مقرر",
@@ -697,6 +566,16 @@ class RAGService:
             "انسحب من الفصل الدراسي": "الانسحاب الكلي من الفصل الدراسي",
             "انسحب من الفصل": "الانسحاب الكلي من الفصل الدراسي",
             "اسحب الفصل": "الانسحاب الكلي من الفصل الدراسي",
+            "اسحب الترم": "الانسحاب الكلي من الفصل الدراسي",
+            "وقف القيد": "ايقاف القيد",
+            "تجميد القيد": "ايقاف القيد",
+            "غبت عن الفاينال": "تغيب عن الامتحان النهائي",
+            "غبت في الفاينال": "تغيب عن الامتحان النهائي",
+            "محضرتش الفاينال": "تغيب عن الامتحان النهائي",
+            "missed الامتحان النهائي": "تغيب عن الامتحان النهائي",
+            "حضور الفاينال": "نسبه الحضور لدخول الامتحان النهائي",
+            "غيابي عدى 25": "تجاوزت نسبة الغياب 25%",
+            "غيابي عدي 25": "تجاوزت نسبة الغياب 25%",
             "سنه تالته": "level 3",
             "سنة تالته": "level 3",
             "سنه ثالثه": "level 3",
@@ -707,6 +586,7 @@ class RAGService:
             "هتفصل": "الفصل من الكلية",
             "تفصل": "الفصل من الكلية",
             "اترفد": "الفصل من الكلية",
+            "اترفض": "الفصل من الكلية",
             "يفصلوني": "الفصل من الكلية",
             "الفصل من الدراسه": "الفصل من الكلية",
             "فصل من الكليه": "الفصل من الكلية",
@@ -719,6 +599,11 @@ class RAGService:
             "تظلم": "التظلمات الطلابية",
             "اتظلم": "التظلمات الطلابية",
             "اعمل تظلم": "التظلمات الطلابية",
+            "شروط القبول": "شروط القبول",
+            "شروط التحويل": "شروط التحويل",
+            "شؤون الخريجين": "شؤون الخريجين",
+            "شئون الخريجين": "شؤون الخريجين",
+            "مرتبه الشرف": "مرتبة الشرف",
             "نتيجه": "نتيجة",
             "يعني ايه": "معنى",
             "يعنى ايه": "معنى",
@@ -789,8 +674,18 @@ class RAGService:
         """Rewrite colloquial student wording into formal regulation-style Arabic for retrieval only."""
         q = cls._normalize_egyptian_question(question)
 
+        if "شروط التخرج" in q or "عدد الساعات اللازمة للتخرج" in q:
+            return "ما شروط التخرج والحصول على درجة البكالوريوس وعدد الساعات المعتمدة المطلوبة؟"
         if ("انسحب من مقرر" in q or "ينسحب من مقرر" in q) and ("لحد امتي" in q or "لحد امتى" in q):
             return "حتى متى يحق للطالب الانسحاب من مقرر بعد موافقة المرشد الأكاديمي؟"
+        if "انسحب من مقرر" in q or "ينسحب من مقرر" in q:
+            return "ما قواعد الانسحاب من مقرر وتقدير W والموعد المحدد للانسحاب؟"
+        if "الانسحاب الكلي من الفصل الدراسي" in q or "ايقاف القيد" in q:
+            return "ما قواعد إيقاف القيد والانسحاب الكلي من الفصل الدراسي؟"
+        if "تقدير غير مكتمل" in q or "غير مكتمل" in q or "incomplete" in q:
+            return "ما قواعد تقدير غير مكتمل I عند عدم حضور الامتحان النهائي؟"
+        if ("تغيب" in q or "غاب" in q or "غياب" in q or "fa" in q or "abs" in q) and "الامتحان النهائي" in q:
+            return "ما قواعد الغياب عن الامتحان النهائي بعذر أو بدون عذر وتقديرات FA وAbs وI؟"
         if "شرط التسجيل في مقرر" in q or ("التسجيل" in q and "مقرر" in q):
             return "ما شرط التسجيل في مقرر من حيث اجتياز المتطلبات السابقة؟"
         if "التسجيل في المقررات" in q and ("لحد امتي" in q or "لحد امتى" in q):
@@ -805,6 +700,8 @@ class RAGService:
             return "ما نسبة الحضور المطلوبة لدخول الامتحان النهائي؟"
         if "غياب" in q and "25" in q:
             return "ماذا يحدث إذا تجاوزت نسبة غياب الطالب 25%؟"
+        if "نسبه الحضور" in q or "نسبة الحضور" in q or "attendance" in q:
+            return "ما قواعد المواظبة على الحضور ونسبة الحضور المطلوبة لدخول الامتحان النهائي؟"
         if "عذر قهري" in q and "الامتحان النهائي" in q:
             return "ماذا يحدث إذا تغيب الطالب عن الامتحان النهائي بعذر قهري مقبول؟"
         if ("بدون عذر" in q or "من غير عذر" in q) and "الامتحان النهائي" in q:
@@ -813,14 +710,22 @@ class RAGService:
             return "ما حالات الفصل من الكلية ومتى يفصل الطالب من الدراسة؟"
         if "فرصه اضافيه ونهائيه" in q or ("80" in q and ("الفصل من الكليه" in q or "فرصه" in q or "الساعات" in q)):
             return "متى يجوز منح الطالب المعرض للفصل فرصة إضافية ونهائية إذا كان قد اجتاز 80% من الساعات اللازمة للتخرج؟"
+        if "انذار اكاديمي" in q or ("cgpa" in q and "اقل من 2" in q):
+            return "متى يحصل الطالب على إنذار أكاديمي إذا كان CGPA أقل من 2؟"
+        if "مرتبة الشرف" in q:
+            return "ما شروط الحصول على مرتبة الشرف عند التخرج؟"
         if any(phrase in q for phrase in ("التظلمات الطلابيه", "التظلمات الطلابية")) and any(term in q for term in ("مهله", "موعد", "قد ايه", "امتي", "امتى", "اسبوع")):
             return "ما موعد التظلم من نتيجة الامتحان وكيف يتم إبلاغ الطالب بنتيجة التظلم؟"
         if any(phrase in q for phrase in ("التظلمات الطلابيه", "التظلمات الطلابية")) or ("نتيجه" in q and any(term in q for term in ("مهله", "موعد", "قد ايه", "امتي", "امتى"))):
             return "ما موعد التظلم من نتيجة الامتحان وكيف يتم إبلاغ الطالب بنتيجة التظلم؟"
         if "مقررات النجاح والرسوب" in q:
             return "ما تقديرات مقررات النجاح والرسوب بدون ساعات معتمدة مثل AU وP وF وW وAbs وI؟"
-        if "شروط التخرج" in q:
-            return "ما شروط التخرج والحصول على درجة البكالوريوس في اللائحة؟"
+        if "شروط القبول" in q:
+            return "ما شروط القبول بكلية الذكاء الاصطناعي؟"
+        if "شروط التحويل" in q:
+            return "ما شروط التحويل لكلية الذكاء الاصطناعي ومعادلة المقررات؟"
+        if "شؤون الخريجين" in q:
+            return "ما خدمات قسم شؤون الخريجين؟"
         if "نظام تقديرات الكليه" in q and "المواد" in q:
             return "ما الفرق بين جدول تقديرات ونقاط المقررات ذات الساعات المعتمدة والتقدير العام ومقررات النجاح والرسوب بدون ساعات معتمدة؟"
         if "المعدل التراكمي" in q and any(term in q for term in ("بيتحسب", "ازاي", "كيف")):
@@ -860,6 +765,12 @@ class RAGService:
             "retrieval_k": RETRIEVE_K,
             "source_file": REGULATIONS_SOURCE,
             "source_exists": os.path.exists(REGULATIONS_SOURCE),
+            "selected_source_file": REGULATIONS_SOURCE,
+            "selected_source_exists": os.path.exists(REGULATIONS_SOURCE),
+            "clean_source_file": CLEAN_REGULATIONS_SOURCE,
+            "clean_source_exists": os.path.exists(CLEAN_REGULATIONS_SOURCE),
+            "extracted_source_file": EXTRACTED_REGULATIONS_SOURCE,
+            "extracted_source_exists": os.path.exists(EXTRACTED_REGULATIONS_SOURCE),
             "last_error": self.last_error,
         }
 
@@ -901,43 +812,72 @@ class RAGService:
         if cls._is_not_found_answer(answer):
             return True
 
+        if not (answer or "").strip():
+            return True
+
         normalized_answer = cls._normalize_for_search(answer or "")
         if not normalized_answer:
             return True
 
         weak_answer_markers = (
-            "عادة", "غالبا", "قد تختلف", "قد يختلف", "يفضل تتاكد", "يفضل تتأكد",
-            "تتاكد", "تتأكد", "راجع الكليه", "راجع الكلية", "راجع الجامعه", "راجع الجامعة",
-            "depends on the university", "depends on your university",
-            "check with your faculty", "check with the academic department",
+            "عاده", "غالبا", "قد تختلف", "قد يختلف", "يفضل تتاكد",
+            "تتاكد", "راجع الكليه", "راجع الجامعه",
+            "depends", "check with your faculty", "check with the academic department",
             "check the official website", "usually", "it is recommended to check",
         )
         if any(marker in normalized_answer for marker in weak_answer_markers):
             return True
 
-        normalized_question = cls._normalize_for_search(cls._normalize_egyptian_question(question))
-        topic_terms = cls._expanded_search_terms(question)
-        matched_terms = [
-            term for term in topic_terms
-            if len(term) >= 4 and term in normalized_answer
-        ]
-        has_digits = bool(re.search(r"\d", answer or ""))
-        has_grade_symbol = bool(re.search(r"\b(?:A\+|A-|B\+|B-|C\+|C-|D\+|D-|F|W|I|Abs|Con|CGPA|FA)\b", answer or "", re.IGNORECASE))
-
-        asks_for_specific_rule = any(
-            marker in normalized_question
-            for marker in (
-                "الفصل من الكليه", "التظلمات الطلابيه", "التقدير العام",
-                "cgpa", "معنى", "نظام التقديرات", "80", "انذار", "اكاديمي",
-            )
-        )
-        if asks_for_specific_rule and len(matched_terms) < 2 and not has_digits and not has_grade_symbol:
+        required_markers = cls._required_detail_markers(question)
+        if required_markers and not any(marker in normalized_answer for marker in required_markers):
             return True
 
         return False
 
+    @classmethod
+    def _required_detail_markers(cls, question: str) -> List[str]:
+        """Return key numeric/symbolic details expected for specific regulation questions."""
+        normalized = cls._normalize_for_search(cls._normalize_egyptian_question(question))
+        markers: List[str] = []
+
+        if any(term in normalized for term in ("تخرج", "graduate")) and any(term in normalized for term in ("ساع", "credit hours", "عدد الساعات")):
+            markers.extend(("144",))
+        if "الفصل الدراسي النظامي" in normalized or "regular semester" in normalized:
+            markers.extend(("17",))
+        if "الفصل الصيفي" in normalized or "summer semester" in normalized:
+            if any(term in normalized for term in ("ساع", "credit", "max", "maximum", "تسجيل", "اسجل")):
+                markers.extend(("9",))
+            if any(term in normalized for term in ("اسبوع", "weeks", "duration", "مده", "مدته")):
+                markers.extend(("8",))
+        if any(term in normalized for term in ("اقل درجه للنجاح", "minimum passing", "minimum grade to pass")):
+            markers.extend(("50",))
+        if "حضور" in normalized or "attendance" in normalized:
+            markers.extend(("75",))
+        if "غياب" in normalized or "absence" in normalized:
+            markers.extend(("25", "fa", "abs", "i"))
+        if "انذار" in normalized or "academic warning" in normalized:
+            markers.extend(("cgpa", "2"))
+        if "انسحب من مقرر" in normalized or "withdraw from a course" in normalized:
+            markers.extend(("9", "التاسع", "w"))
+        if "الانسحاب الكلي" in normalized or "ايقاف القيد" in normalized or "semester withdrawal" in normalized:
+            markers.extend(("شهر", "4", "6"))
+        if "غير مكتمل" in normalized or "incomplete" in normalized:
+            markers.extend(("i", "60"))
+        if "شروط التحويل" in normalized or "transfer" in normalized:
+            markers.extend(("التحويل", "مقاصه", "cgpa", "2", "60"))
+        if "مرتبه الشرف" in normalized or "مرتبة الشرف" in normalized or "honor" in normalized:
+            markers.extend(("3", "4", "8"))
+        if "الفصل من الكليه" in normalized or "dismissal" in normalized:
+            markers.extend(("4", "6", "80"))
+        if "التظلمات" in normalized or "appeal" in normalized or "grievance" in normalized:
+            markers.extend(("اسبوع", "week"))
+
+        symbol_markers = re.findall(r"\b(?:a\+|a-|b\+|b-|c\+|c-|d\+|d-|f|w|i|abs|con|cgpa|fa)\b", normalized)
+        markers.extend(symbol_markers)
+        return sorted(set(cls._normalize_for_search(marker) for marker in markers if marker))
+
     def _local_regulation_fallback(self, question: str) -> str:
-        """Search the extracted regulations text locally when hosted file_search misses."""
+        """Search the selected regulations text locally when hosted file_search misses."""
         chunks = self._local_regulation_chunks()
         ranked = self._rank_local_chunks(question, chunks)
         if not ranked:
@@ -947,15 +887,18 @@ class RAGService:
         header = "من اللائحة المتاحة عندي محليًا:" if should_respond_arabic(question) else "From the local regulations text I have:"
         lines = [header]
         for chunk in best:
-            snippet = self._condense_chunk(chunk["text"])
-            page_label = f"صفحة {chunk['page']}" if should_respond_arabic(question) else f"Page {chunk['page']}"
+            snippet = self._condense_chunk(chunk["text"], question)
+            if chunk["page"] == 0:
+                page_label = "المقدمة" if should_respond_arabic(question) else "Intro"
+            else:
+                page_label = f"صفحة {chunk['page']}" if should_respond_arabic(question) else f"Page {chunk['page']}"
             lines.append(f"- {page_label}: {snippet}")
         return "\n".join(lines)
 
     @classmethod
     @lru_cache(maxsize=1)
     def _local_regulation_chunks(cls) -> tuple:
-        """Load cleaned page chunks from the extracted regulations markdown."""
+        """Load searchable chunks from the selected regulations markdown."""
         chunks = []
 
         for excerpt in REGULATIONS_CLEAN_EXCERPTS:
@@ -969,8 +912,10 @@ class RAGService:
             with open(REGULATIONS_SOURCE, "r", encoding="utf-8") as handle:
                 raw = handle.read()
             for page, text in cls._split_markdown_pages(raw):
-                repaired = cls.__new__(cls)._repair_arabic_extraction(text)
-                combined = repaired.strip()
+                if REGULATIONS_SOURCE == CLEAN_REGULATIONS_SOURCE:
+                    combined = text.strip()
+                else:
+                    combined = cls.__new__(cls)._repair_arabic_extraction(text).strip()
                 if combined:
                     chunks.append({
                         "page": page,
@@ -982,15 +927,23 @@ class RAGService:
 
     @classmethod
     def _split_markdown_pages(cls, raw_text: str) -> List[tuple]:
-        """Split the extracted markdown file into page-numbered chunks."""
-        parts = re.split(r"\n---\n## Page (\d+)\n", raw_text)
-        if len(parts) < 3:
-            return []
+        """Split regulations markdown into an intro chunk and page chunks."""
+        raw_text = raw_text or ""
+        page_heading = re.compile(r"(?m)^(?:---\s*\n)?## Page (\d+)\s*$")
+        matches = list(page_heading.finditer(raw_text))
+        if not matches:
+            text = raw_text.strip()
+            return [(0, text)] if text else []
 
         chunks = []
-        for index in range(1, len(parts), 2):
-            page = int(parts[index])
-            text = parts[index + 1].strip()
+        intro = raw_text[:matches[0].start()].strip()
+        if intro:
+            chunks.append((0, intro))
+
+        for index, match in enumerate(matches):
+            page = int(match.group(1))
+            next_start = matches[index + 1].start() if index + 1 < len(matches) else len(raw_text)
+            text = raw_text[match.end():next_start].strip()
             if text:
                 chunks.append((page, text))
         return chunks
@@ -999,7 +952,9 @@ class RAGService:
     def _rank_local_chunks(cls, question: str, chunks: tuple) -> List[Dict[str, Any]]:
         """Score local regulation chunks against the student question."""
         terms = cls._expanded_search_terms(question)
-        normalized_question = cls._normalize_for_search(question)
+        normalized_question = cls._normalize_for_search(
+            f"{question} {cls._normalize_egyptian_question(question)} {cls._formalize_for_doc_retrieval(question)}"
+        )
         scored = []
 
         for chunk in chunks:
@@ -1008,13 +963,25 @@ class RAGService:
             for term in terms:
                 if term and term in normalized_text:
                     score += 4 if len(term) > 6 else 2
+            for marker in cls._required_detail_markers(question):
+                if marker and marker in normalized_text:
+                    score += 6
+            for phrase in (
+                cls._normalize_for_search(cls._formalize_for_doc_retrieval(question)),
+                cls._normalize_for_search(cls._normalize_egyptian_question(question)),
+            ):
+                if phrase and phrase in normalized_text:
+                    score += 8
             if re.search(r"\b[A-Z]{2,4}\d{3}\b", question):
                 for code in re.findall(r"\b[A-Z]{2,4}\d{3}\b", question):
                     if code.lower() in normalized_text:
                         score += 6
-            if any(token in normalized_text for token in normalized_question.split() if len(token) >= 4):
-                score += 1
-            if score >= 4:
+            shared_tokens = {
+                token for token in normalized_question.split()
+                if len(token) >= 4 and token in normalized_text
+            }
+            score += min(len(shared_tokens), 8)
+            if score >= 5:
                 scored.append({**chunk, "score": score})
 
         scored.sort(
@@ -1023,12 +990,39 @@ class RAGService:
         )
         return scored
 
-    @staticmethod
-    def _condense_chunk(text: str) -> str:
+    @classmethod
+    def _condense_chunk(cls, text: str, question: str = "") -> str:
         """Trim noisy page text to a short, readable snippet."""
         compact = re.sub(r"\s+", " ", text).strip()
         compact = compact.replace("Faculty of Artificial Intelligence – Student Guide", "").strip()
-        return compact[:320].rstrip() + ("..." if len(compact) > 320 else "")
+        compact = re.sub(r"#+\s*", "", compact)
+        if question:
+            terms = [term for term in cls._expanded_search_terms(question) if len(term) >= 4]
+            required_markers = cls._required_detail_markers(question)
+            section_matches = list(re.finditer(r"(?m)^#{2,3}\s+(.+?)\s*$", text))
+            segments = []
+            for index, match in enumerate(section_matches):
+                end = section_matches[index + 1].start() if index + 1 < len(section_matches) else len(text)
+                segments.append(text[match.start():end].strip())
+            if not segments:
+                segments = [
+                    segment.strip()
+                    for segment in re.split(r"\s+-\s+|(?<=[.؟])\s+|\s+###\s+|\s+##\s+", text)
+                    if segment.strip()
+                ]
+            best_segment = ""
+            best_score = 0
+            for segment in segments:
+                normalized_segment = cls._normalize_for_search(segment)
+                score = sum(2 for term in terms if term in normalized_segment)
+                score += sum(8 for marker in required_markers if marker in normalized_segment)
+                if score > best_score:
+                    best_score = score
+                    best_segment = segment
+            if best_segment:
+                compact = re.sub(r"\s+", " ", best_segment).strip()
+                compact = re.sub(r"#+\s*", "", compact)
+        return compact[:280].rstrip() + ("..." if len(compact) > 280 else "")
 
     @staticmethod
     def _contains_arabic(text: str) -> bool:
@@ -1083,32 +1077,53 @@ class RAGService:
         }
 
         expansions = {
+            "شروط التخرج": {"شروط", "التخرج", "144", "cgpa", "2", "البكالوريوس", "الساعات المعتمدة"},
+            "التخرج": {"شروط", "التخرج", "144", "cgpa", "2", "البكالوريوس"},
+            "للتخرج": {"شروط", "التخرج", "144", "cgpa", "2", "البكالوريوس", "الساعات المعتمدة"},
+            "الخريجين": {"شؤون", "الخريجين", "شهادات", "المحتوى العلمي", "التقديرات"},
+            "شؤون الخريجين": {"شؤون", "الخريجين", "شهادات", "اعتماد", "المحتوى العلمي", "التقديرات"},
+            "شروط القبول": {"شروط", "القبول", "الثانوية العامة", "علمي", "رياضيات", "علوم", "pre-mathematic"},
+            "شروط التحويل": {"شروط", "التحويل", "مقاصة", "معادلة", "المقررات", "cgpa", "2", "60"},
             "غاب": {"غياب", "تغيب", "حضور", "النهائي", "عذر", "مقبول"},
             "يغيب": {"غياب", "تغيب", "حضور", "النهائي", "عذر", "مقبول"},
             "محضرش": {"غياب", "حضور", "النهائي", "عذر", "مقبول"},
+            "تغيب": {"غياب", "تغيب", "الامتحان", "النهائي", "عذر", "fa", "abs", "غير مكتمل"},
             "عذر": {"عذر", "مقبول", "قهري", "غير مكتمل", "مكتمل"},
             "فاينال": {"النهائي", "النهايي", "الامتحان", "عذر", "مقبول"},
+            "الامتحان النهائي": {"الامتحان", "النهائي", "غياب", "حضور", "عذر", "fa", "abs", "i"},
             "ميد": {"منتصف", "الفصل", "20"},
             "ميدترم": {"منتصف", "الفصل", "20"},
             "الحضور": {"حضور", "75", "25", "حرمان"},
             "حضور": {"حضور", "75", "25", "حرمان"},
+            "نسبه الحضور": {"حضور", "75", "25", "حرمان", "الامتحان النهائي", "المواظبة"},
+            "تجاوزت": {"غياب", "25", "حرمان", "انذار", "الامتحان النهائي"},
             "مكتمل": {"غير", "مكتمل", "Incomplete", "I"},
+            "غير مكتمل": {"غير", "مكتمل", "i", "عذر", "قهري", "60", "الامتحان النهائي"},
             "تسجيل": {"التسجيل", "متطلباته", "اجتياز"},
             "الصيفي": {"الصيفي", "9", "اختياري"},
             "راسب": {"راسب", "fa", "اعاده", "انسحاب"},
+            "انسحب": {"انسحاب", "منسحب", "w", "مقرر", "الاسبوع التاسع", "المرشد الأكاديمي"},
+            "الانسحاب": {"انسحاب", "منسحب", "w", "مقرر", "الفصل الدراسي", "ايقاف القيد"},
+            "ايقاف القيد": {"ايقاف", "القيد", "الانسحاب الكلي", "الفصل الدراسي", "قبل الامتحان بشهر"},
             "مقرر": {"مقرر", "التسجيل", "متطلباته", "اجتياز"},
             "الفصل الدراسي": {"الفصل", "الدراسي", "17", "الصيفي", "8"},
             "الفصل": {"الفصل", "الكليه", "انذار", "اكاديمي", "متتاليه", "متفرقه", "80"},
             "الكليه": {"الفصل", "الكليه", "انذار", "اكاديمي"},
+            "انذار اكاديمي": {"انذار", "اكاديمي", "cgpa", "اقل", "2", "الفصل الدراسي"},
+            "اكاديمي": {"انذار", "اكاديمي", "cgpa", "2", "الفصل"},
+            "مرتبة الشرف": {"مرتبة", "الشرف", "cgpa", "3", "جيد جدا", "اربع سنوات", "ثمانية فصول"},
             "التظلمات": {"التظلمات", "الطلابيه", "نتيجه", "اسبوع", "اعلان", "النتائج"},
             "التظلمات الطلابيه": {"التظلمات", "الطلابيه", "نتيجه", "اسبوع", "اعلان", "النتائج"},
             "التقدير": {"التقدير", "العام", "cgpa", "ممتاز", "جيد", "مقبول", "ضعيف"},
             "a+": {"a+", "96", "4", "التقدير"},
             "b+": {"b+", "84", "3.2", "التقدير"},
             "f": {"f", "50", "راسب", "التقدير"},
+            "fa": {"fa", "راسب", "غياب", "الامتحان النهائي", "بدون عذر"},
             "abs": {"abs", "غياب", "النهائي", "بدون", "عذر"},
             "w": {"w", "منسحب", "انسحاب"},
+            "i": {"i", "غير مكتمل", "عذر", "60", "الامتحان النهائي"},
             "con": {"con", "مستمر", "الفصل", "التالي"},
+            "cgpa": {"cgpa", "المعدل التراكمي", "انذار", "اكاديمي", "التقدير العام"},
         }
         for trigger, values in expansions.items():
             if trigger in normalized:
