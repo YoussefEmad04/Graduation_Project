@@ -92,7 +92,7 @@ class RouterService:
 
         if os.getenv("OPENAI_API_KEY"):
             self.llm = ChatOpenAI(
-                model=os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini"),
+                model=os.getenv("OPENAI_LLM_MODEL", "gpt-4.1-mini"),
                 temperature=0,
             )
             logger.info("Router Service initialized (LLM-powered)")
