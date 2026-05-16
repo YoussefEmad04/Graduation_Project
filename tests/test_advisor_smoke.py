@@ -191,6 +191,8 @@ class _TaggedElectiveService:
 
 class _FakeNeo4jSession:
     courses = [
+        {"code": "MTH101", "name": "Mathematics 1", "credits": 3, "level": 1},
+        {"code": "MTH103", "name": "Mathematics 2", "credits": 3, "level": 1},
         {"code": "CS102", "name": "Programming 2", "credits": 3, "level": 1},
         {"code": "CS201", "name": "Object Oriented Programming", "credits": 3, "level": 2},
         {"code": "SW201", "name": "Software Engineering", "credits": 3, "level": 2},
@@ -211,6 +213,9 @@ class _FakeNeo4jSession:
         {"code": "AI413", "name": "AI for Robotics", "credits": 3, "level": 4},
     ]
     prereqs = {
+        "MTH103": [
+            {"code": "MTH101", "name": "Mathematics 1"},
+        ],
         "CS201": [
             {"code": "CS102", "name": "Programming 2"},
         ],
@@ -253,6 +258,17 @@ class _FakeNeo4jSession:
     def run(self, query, **params):
         if "MATCH (c:Course) RETURN c.code AS code" in query:
             return list(self.courses)
+        if "RETURN count(p) > 0 AS requires" in query:
+            required = any(
+                prereq["code"] == params["prereq"]
+                for prereq in self.prereqs.get(params["course"], [])
+            )
+
+            class _SingleResult:
+                def single(self_inner):
+                    return {"requires": required}
+
+            return _SingleResult()
         if "MATCH (c:Course {code: $code})-[:REQUIRES]->(p:Course)" in query:
             return list(self.prereqs.get(params["code"], []))
         if "MATCH (f:Course)-[:REQUIRES]->(c:Course {code: $code})" in query:
@@ -913,6 +929,21 @@ class CourseMatchingSmokeTests(unittest.TestCase):
         self.assertIn("Introduction to Artificial Intelligence [AI201]", answer)
         self.assertIn("Probability and Statistics 1 [MTH104]", answer)
         self.assertNotIn("Natural Language Processing [AI302]", answer)
+
+    def test_registration_order_question_rejects_course_before_prerequisite(self):
+        answer = _InMemoryPrereqKG().query("ينفع اسجل math2 قبل math1؟")
+        self.assertIn("لا، مينفعش تسجل Mathematics 2 [MTH103] قبل Mathematics 1 [MTH101]", answer)
+        self.assertIn("لازم تخلص Mathematics 1 [MTH101] الأول", answer)
+
+    def test_registration_order_question_accepts_prerequisite_before_course(self):
+        answer = _InMemoryPrereqKG().query("can I take math 1 before math 2?")
+        self.assertIn("Yes", answer)
+        self.assertIn("Mathematics 1 [MTH101] is required before Mathematics 2 [MTH103]", answer)
+
+    def test_registration_order_question_works_for_non_math_courses(self):
+        answer = _InMemoryPrereqKG().query("ينفع اسجل software engineering قبل oop؟")
+        self.assertIn("لا، مينفعش تسجل Software Engineering [SW201] قبل Object Oriented Programming [CS201]", answer)
+        self.assertIn("لازم تخلص Object Oriented Programming [CS201] الأول", answer)
 
     def test_software_engineering_prerequisite_arabic_english_mix(self):
         answer = _InMemoryPrereqKG().query("ايه المطلوب قبل software engineering")

@@ -22,7 +22,7 @@ The implementation was completed in phases:
 
 4. **Knowledge Graph implementation**
    - Neo4j Aura was used to store programs, categories, courses, and prerequisite relationships.
-   - KG queries support course prerequisites, reverse prerequisites, course information, category requirements, and level-based study paths.
+   - KG queries support course prerequisites, reverse prerequisites, registration-order checks between two courses, course information, category requirements, and level-based study paths.
 
 5. **Regulation RAG implementation**
    - OpenAI vector stores and file search were used for semantic retrieval over academic regulation documents.
@@ -30,7 +30,8 @@ The implementation was completed in phases:
 
 6. **Session and history implementation**
    - Supabase was integrated to persist sessions and message history.
-   - The backend stores previous messages for session history and UI retrieval. Runtime routing intentionally uses the current user message only to avoid slow or incorrect follow-up rewrites.
+   - The backend stores previous messages for session history, recents, and UI retrieval.
+   - The semantic router classifies the current user message without older history so that context switches are not misrouted. Previous history is still available to downstream services for carefully scoped cases, such as short course relationship follow-ups.
 
 7. **Deployment and validation**
    - The API was deployed to Vercel as a Python serverless application.
@@ -193,8 +194,9 @@ python -m compileall advisor_ai scripts tests
 | `api/index.py` | Vercel serverless entrypoint | FastAPI on Vercel | Vercel HTTP events | FastAPI app execution | Implemented and deployed |
 | `advisor_ai.graph` | Main chatbot workflow and semantic routing | LangGraph, OpenAI, Python | Current user question, student level/major | Routed answer from RAG/KG/mental/elective nodes | Implemented and validated |
 | `advisor_ai.router_service` | LLM semantic intent extraction | LangChain, OpenAI, Pydantic | Current question | Strict structured routing decision | Implemented and refactored |
+| `advisor_ai.followup_resolver` | Optional semantic follow-up classifier/rewriter retained for controlled follow-up experiments | LangChain, OpenAI, Pydantic | Current question and compact history | Follow-up decision or standalone rewrite | Implemented but not used for main runtime routing |
 | `advisor_ai.rag_service` | Academic regulation RAG | OpenAI vector store, file search, local fallback | Regulation/policy question | Grounded regulation answer | Implemented and validated |
-| `advisor_ai.kg_service` | Course and prerequisite knowledge graph queries | Neo4j Aura, Cypher, LangChain | Course/category/study-plan question | Course info, prerequisites, unlocks, study path | Implemented and validated |
+| `advisor_ai.kg_service` | Course and prerequisite knowledge graph queries | Neo4j Aura, Cypher, LangChain | Course/category/study-plan/registration-order question | Course info, prerequisites, unlocks, registration eligibility, study path | Implemented and validated |
 | `advisor_ai.populate_kg` | Loads graph data into Neo4j | Neo4j driver, Cypher | Course/category/prerequisite constants | Neo4j graph database | Implemented |
 | `advisor_ai.chat_controller` | Session and history management | Supabase, LangChain messages | Student ID, session ID, message | Persisted history and final chatbot response | Implemented |
 | `advisor_ai.supabase_client` | Supabase connection wrapper | Supabase SDK | Supabase env vars | Supabase client/status | Implemented |
@@ -204,6 +206,7 @@ python -m compileall advisor_ai scripts tests
 | `admin_upload.py` | Admin CLI helper | Python CLI | Term/elective inputs | Updated elective service state | Implemented |
 | `scripts/setup_openai_vector_store.py` | Uploads regulation text to OpenAI vector store | OpenAI SDK | Cleaned regulation Markdown | Vector store ID | Implemented |
 | `tests/test_advisor_smoke.py` | Regression and smoke tests | unittest | Simulated service calls and prompts | Pass/fail validation | Implemented |
+| `tests/test_rag_production_regression.py` | Broad regulation regression suite | unittest, local RAG fallback helpers | 98 production-style regulation prompts | Marker-based pass/fail validation | Implemented |
 
 ### FastAPI API Layer
 
@@ -214,7 +217,6 @@ The API layer is implemented in `advisor_ai/main.py`. It defines the main endpoi
 - `POST /chat`: sends a student message to the advisor.
 - `GET /history`: retrieves previous messages.
 - `POST /admin/upload-electives`: uploads active electives.
-- `POST /admin/set-term`: updates active term.
 - `GET /admin/kg/status`: checks Neo4j KG status.
 - `GET /admin/rag/status`: checks RAG/vector-store status.
 - `GET /admin/history/status`: checks Supabase status.
@@ -226,15 +228,16 @@ The API uses Pydantic models for strict request and response validation. Service
 
 `advisor_ai/chat_controller.py` is responsible for conversation management. It creates and updates sessions, saves user and assistant messages, retrieves previous messages, and supports chat history endpoints for the frontend.
 
-The controller keeps session history in Supabase, but runtime routing no longer depends on previous turns. This was changed after production testing showed that context-dependent follow-up rewriting could slow responses and could incorrectly reuse the previous question's intent.
+The controller keeps session history in Supabase and builds a compact memory summary for the graph. Main semantic routing no longer depends on previous turns. This was changed after production testing showed that broad context-dependent follow-up rewriting could slow responses and could incorrectly reuse the previous question's intent.
 
 The controller sends each message to `AdvisorGraph.run()`, along with:
 
 - `question`
+- compact `history`
 - `student_level`
 - `student_major`
 
-This keeps the chatbot stable and predictable: each answer is based on the current message plus explicit entities in that message.
+This keeps the chatbot stable and predictable: route selection is controlled by the current message and explicit entities, while history is used only where a service can handle it safely, such as short KG follow-ups like "what does it open?" after a known course.
 
 ### Semantic Routing and Graph Workflow
 
@@ -257,6 +260,7 @@ The routing layer uses a semantic-first design:
 3. Use the LLM router as the main semantic intent extractor.
 4. Validate and correct the LLM decision using deterministic signals.
 5. Use fallback heuristics only when the LLM has low confidence or lacks required entities.
+6. Return clear unsupported messages for student-record questions, instructor/room/timetable questions, and other data that is not present in the current backend.
 
 Supported semantic intents include:
 
@@ -287,6 +291,7 @@ The public route names remain compatible with the rest of the system:
 - CGPA-based credit load limits
 - attendance and absence rules
 - withdrawal rules
+- registration, add/drop, final absence, academic warning, honor, dismissal, final-chance, grade-symbol, grievance, transfer, admission, and graduate-affairs rules
 
 If file search does not return a strong answer, a local cleaned-text fallback searches the extracted regulation Markdown and clean excerpts.
 
@@ -298,6 +303,7 @@ If file search does not return a strong answer, a local cleaned-text fallback se
 - course aliases such as `ML`, `OOP`, `Intro AI`
 - prerequisite queries
 - reverse prerequisite/unlock queries
+- registration-order checks such as whether `Math 2` can be registered before `Math 1`
 - blocked-course queries
 - category course lists
 - category required credit hours
@@ -377,6 +383,7 @@ Examples of graph query outputs include:
 
 - prerequisites for `AI301`
 - courses unlocked by `AI301`
+- whether `MTH103` Mathematics 2 can be registered before `MTH101` Mathematics 1
 - level 3 AI courses
 - university compulsory requirements
 
@@ -390,7 +397,7 @@ Supabase stores:
 - generated session titles
 - optional student level and major
 
-The chat controller retrieves previous messages for `/history` and session display, while LangGraph routing uses the current message only.
+The chat controller retrieves previous messages for `/history`, session display, and compact memory context. The semantic router still makes the route decision from the current message, while KG follow-up handling can use recent course context when the user asks a short relationship question.
 
 ### Deployment Integration
 
@@ -510,7 +517,10 @@ docs/production_multilingual_chat_checks_2026_05_12.md
 | RAG local fallback differed from production vector-store behavior | Local validation did not always match production answers | Tested both local scripts and production `/chat`; added deterministic RAG fixes for high-confidence facts. |
 | Graduation-hours Arabic prompt missed `144` | Arabic-only production prompt returned out-of-scope | Added direct RAG rules for `كم ساعة`, `ساعه معتمده`, `يتخرج`, and `اتخرج` wording. |
 | Mental Arabic prompt with `قلقان` missed support routing | Arabic mental-support prompt returned out-of-scope | Added Arabic mental routing terms such as `قلقان`, `قلقانه`, and `نصائح للمذاكرة`. |
-| Follow-up rewriting caused latency and wrong intent reuse | Questions like "what does it open?" could inherit the previous prerequisite intent and slow production requests | Disabled runtime follow-up routing/rewrite; kept Supabase history for UI and session review only. |
+| Follow-up rewriting caused latency and wrong intent reuse | Questions like "what does it open?" could inherit the previous prerequisite intent and slow production requests | Disabled broad runtime follow-up routing/rewrite; kept Supabase history for UI, recents, and compact memory only. |
+| Vague short course follow-ups still needed limited context | A student may ask "after it?" or "what does it open?" after asking about a course | Kept compact history available to KG relationship handling, while keeping semantic route classification current-message-first. |
+| Students ask registration order as a yes/no question | A prerequisite list alone does not directly answer "Can I register Math 2 before Math 1?" | Added two-course KG registration-order checks that compare prerequisite paths and answer yes/no in the user's language. |
+| Some regulation topics needed broader coverage than stable hardcoded facts | Production-style prompts about transfer, admission, dismissal, grade symbols, grievances, and graduate affairs could retrieve weak snippets | Added formalization, search-term expansion, local clean-text fallback, and a 98-case RAG regression suite. |
 | Vercel serverless deployment has package and file-size limits | Local PDF/desktop assets should not be uploaded | Used `.vercelignore` and hosted OpenAI vector stores instead of local vector databases. |
 | Secrets must not be committed | API keys and database passwords are sensitive | Used `.env` locally and Vercel environment variables in production. |
 | Neo4j availability may vary | KG queries can fail if database is unavailable | Added status endpoints and graceful fallback messages. |
@@ -526,8 +536,10 @@ docs/production_multilingual_chat_checks_2026_05_12.md
 | Neo4j KG | Complete and production-tested |
 | Supabase history | Complete and production-tested |
 | Semantic routing | Refactored and tested |
+| Follow-up handling | Current-message-first routing with limited KG history support |
+| KG registration-order checks | Implemented and tested |
 | Arabic/Egyptian Arabic support | Implemented and production-tested |
 | Mixed Arabic-English support | Implemented and production-tested |
 | Mental academic support | Implemented and production-tested |
 | Mobile API documentation | Available |
-| Automated tests | Passing |
+| Automated tests | Passing: 123 local tests plus focused script checks |

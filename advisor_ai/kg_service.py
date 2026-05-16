@@ -278,6 +278,10 @@ class KGService:
             if category_hours_answer:
                 return category_hours_answer
 
+            registration_order_answer = self._answer_registration_order_question(question)
+            if registration_order_answer:
+                return registration_order_answer
+
             direct_course = self._find_course_node(question)
             prereq_direction = self._classify_prerequisite_direction(question)
             if not direct_course:
@@ -927,6 +931,135 @@ class KGService:
             return best_c
 
         return None
+
+    def _answer_registration_order_question(self, question: str) -> Optional[str]:
+        """Answer whether one course can be registered before another course."""
+        if not self._looks_like_registration_order_question(question):
+            return None
+
+        courses = self._extract_ordered_course_mentions(question)
+        if len(courses) < 2:
+            return None
+
+        first, second = courses[0], courses[1]
+        respond_arabic = should_respond_arabic(question)
+
+        with self._session() as session:
+            first_requires_second = self._course_requires(
+                session,
+                first["code"],
+                second["code"],
+            )
+            second_requires_first = self._course_requires(
+                session,
+                second["code"],
+                first["code"],
+            )
+
+        first_label = f"{first['name']} [{first['code']}]"
+        second_label = f"{second['name']} [{second['code']}]"
+
+        if first_requires_second:
+            if respond_arabic:
+                return (
+                    f"لا، مينفعش تسجل {first_label} قبل {second_label}. "
+                    f"لازم تخلص {second_label} الأول علشان تقدر تسجل {first_label}."
+                )
+            return (
+                f"No, you cannot register {first_label} before {second_label}. "
+                f"You must complete {second_label} first because it is a prerequisite for {first_label}."
+            )
+
+        if second_requires_first:
+            if respond_arabic:
+                return (
+                    f"أيوه، من ناحية المتطلبات السابقة ينفع تاخد {first_label} قبل {second_label}. "
+                    f"{first_label} مطلوب قبل {second_label}."
+                )
+            return (
+                f"Yes, from the prerequisite side you can take {first_label} before {second_label}. "
+                f"{first_label} is required before {second_label}."
+            )
+
+        if respond_arabic:
+            return (
+                f"من ناحية المتطلبات السابقة في الـ KG، مش ظاهر إن فيه ترتيب مباشر بين "
+                f"{first_label} و {second_label}. راجع متطلبات كل مادة قبل التسجيل النهائي."
+            )
+        return (
+            f"From the KG prerequisite data, there is no direct prerequisite order between "
+            f"{first_label} and {second_label}. Check each course's prerequisites before final registration."
+        )
+
+    @staticmethod
+    def _looks_like_registration_order_question(question: str) -> bool:
+        normalized = KGService._normalize_query(question.lower())
+        has_before = any(term in normalized for term in ("before", "قبل"))
+        has_action = any(
+            term in normalized
+            for term in (
+                "can i", "can we", "allowed", "register", "take",
+                "ينفع", "اقدر", "اقدر اسجل", "اسجل", "اخد", "آخد",
+            )
+        )
+        return has_before and has_action
+
+    def _extract_ordered_course_mentions(self, question: str) -> List[dict]:
+        """Return course nodes mentioned in the question, ordered by mention position."""
+        normalized = self._normalize_query(question.lower())
+        aliased = self._apply_course_aliases(normalized)
+
+        with self._session() as session:
+            result = session.run(
+                "MATCH (c:Course) RETURN c.code AS code, c.name AS name, "
+                "c.credit_hours AS credits, c.level AS level"
+            )
+            courses = [dict(r) for r in result]
+
+        mentions: Dict[str, dict] = {}
+        for course in courses:
+            code = course["code"].lower()
+            name = course["name"].lower()
+            candidates = {code, name}
+            for alias, canonical in COURSE_ALIASES.items():
+                if canonical.lower() in {code, name}:
+                    candidates.add(alias.lower())
+
+            positions = []
+            for candidate in candidates:
+                pos = normalized.find(candidate)
+                if pos >= 0:
+                    positions.append(pos)
+                aliased_pos = aliased.find(candidate)
+                if aliased_pos >= 0:
+                    positions.append(aliased_pos)
+
+            if positions:
+                existing = mentions.get(course["code"])
+                position = min(positions)
+                if not existing or position < existing["position"]:
+                    mentions[course["code"]] = {
+                        **course,
+                        "position": position,
+                    }
+
+        return [
+            {k: v for k, v in item.items() if k != "position"}
+            for item in sorted(mentions.values(), key=lambda item: item["position"])
+        ]
+
+    @staticmethod
+    def _course_requires(session, course_code: str, prereq_code: str) -> bool:
+        result = session.run(
+            """
+            MATCH (c:Course {code: $course})-[:REQUIRES*1..]->(p:Course {code: $prereq})
+            RETURN count(p) > 0 AS requires
+            """,
+            course=course_code,
+            prereq=prereq_code,
+        )
+        record = result.single()
+        return bool(record and record["requires"])
 
     @staticmethod
     def _apply_course_aliases(text: str) -> str:
